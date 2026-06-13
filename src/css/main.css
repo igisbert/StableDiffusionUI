@@ -429,23 +429,6 @@ input:checked + .slider:before {
 
 /* Phase 1 additions */
 
-.arch-badge {
-    font-size: 10px;
-    font-family: monospace;
-    padding: 2px 6px;
-    border-radius: 2px;
-    background-color: var(--surface-high);
-    color: var(--primary);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-.input-label-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
 #preview-img {
     max-width: 100%;
     max-height: 100%;
@@ -462,10 +445,6 @@ input:checked + .slider:before {
 .path-display[data-action]:hover {
     border-color: var(--primary);
     color: var(--on-surface);
-}
-
-.field-group[data-arch].hidden {
-    display: none;
 }
 
 .presets-bar {
@@ -528,4 +507,28 @@ input:checked + .slider:before {
     color: var(--on-surface-variant);
     opacity: 0.5;
     margin-top: -4px;
+}
+
+.model-type-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    justify-content: flex-end;
+}
+
+.radio-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--on-surface-variant);
+    cursor: pointer;
+}
+
+.radio-label:hover {
+    color: var(--on-surface);
+}
+
+.radio-label input[type="radio"] {
+    accent-color: var(--primary);
 }

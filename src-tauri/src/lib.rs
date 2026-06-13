@@ -9,7 +9,6 @@ pub fn run() {
             commands::fs::pick_folder,
             commands::fs::scan_models,
             commands::fs::ensure_output_dir,
-            commands::model::detect_model_arch,
             commands::inference::run_inference,
         ])
         .run(tauri::generate_context!())

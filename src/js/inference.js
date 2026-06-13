@@ -29,6 +29,7 @@ export function initInference() {
       llm_path:         llmPath,
       lora_path:        loraPath,
       model:            val('select-model'),
+      model_type:       document.querySelector('input[name="model-type"]:checked')?.value || 'monolithic',
       llm:              val('select-llm'),
       vae:              val('select-vae'),
       lora:             val('select-lora'),
@@ -51,6 +52,8 @@ export function initInference() {
     }
 
     clearConsole()
+    appendLine(`[INFO] SD path: ${sdPath}`)
+    appendLine(`[INFO] Output path: ${outputPath}`)
     document.getElementById('btn-run').classList.add('running')
 
     try {

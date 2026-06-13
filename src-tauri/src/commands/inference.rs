@@ -13,6 +13,7 @@ pub struct InferenceParams {
     pub llm_path: String,
     pub lora_path: String,
     pub model: String,
+    pub model_type: String,
     pub llm: String,
     pub vae: String,
     pub lora: String,
@@ -66,13 +67,21 @@ pub async fn run_inference(
         .to_string();
 
     let sd_bin = Path::new(&params.sd_path)
-        .join(format!("sd-cli{}", std::env::consts::EXE_EXTENSION));
+        .join(format!("sd-cli.{}", std::env::consts::EXE_EXTENSION));
+
+    let _ = app.emit("console-line", format!("[DEBUG] Looking for: {:?}", sd_bin));
+    let _ = app.emit("console-line", format!("[DEBUG] File exists: {}", sd_bin.exists()));
 
     let mut cmd = Command::new(&sd_bin);
 
     // Modelo
     if !params.model.is_empty() {
-        cmd.arg("-m")
+        let flag = if params.model_type == "diffusion" {
+            "--diffusion-model"
+        } else {
+            "-m"
+        };
+        cmd.arg(flag)
            .arg(Path::new(&params.models_path).join(&params.model));
     }
 

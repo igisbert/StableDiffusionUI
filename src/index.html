@@ -89,21 +89,18 @@
 <!-- Model Selection -->
 <div class="model-grid">
 <div class="input-group">
-<div class="input-label-row">
 <label class="input-label">Model</label>
-<span id="arch-badge" class="arch-badge" style="display:none"></span>
-</div>
 <select id="select-model"></select>
 </div>
-<div class="input-group field-group" data-arch="flux">
+<div class="input-group">
 <label class="input-label">LLM Encoder</label>
 <select id="select-llm"></select>
 </div>
-<div class="input-group field-group" data-arch="common">
+<div class="input-group">
 <label class="input-label">VAE</label>
 <select id="select-vae"></select>
 </div>
-<div class="input-group field-group" data-arch="common">
+<div class="input-group">
 <label class="input-label">LoRA</label>
 <select id="select-lora"></select>
 </div>
@@ -111,6 +108,17 @@
 <div class="workspace-grid">
 <!-- Controls Column -->
 <div class="controls-col">
+<div class="model-type-row">
+<span class="input-label">Modelo:</span>
+<label class="radio-label">
+<input type="radio" name="model-type" value="monolithic" checked/>
+<span>Monolítico (-m)</span>
+</label>
+<label class="radio-label">
+<input type="radio" name="model-type" value="diffusion"/>
+<span>Difusión (--diffusion-model)</span>
+</label>
+</div>
 <div class="prompt-area">
 <div class="prompt-header">
 <label class="input-label">Prompt</label>
@@ -118,7 +126,7 @@
 </div>
 <textarea id="input-prompt" placeholder="Enter descriptive text for image generation..."></textarea>
 </div>
-<div class="negative-prompt field-group" data-arch="common">
+<div class="negative-prompt">
 <div class="prompt-header">
 <label class="input-label">Negative Prompt</label>
 </div>
@@ -142,7 +150,7 @@
 <label class="input-label">CFG Scale</label>
 <input id="input-cfg" step="0.5" type="number" value="7.5"/>
 </div>
-<div class="input-group field-group" data-arch="flux">
+<div class="input-group">
 <label class="input-label">Guidance</label>
 <input id="input-guidance" step="0.1" type="number" value="3.5"/>
 <p class="input-hint">Flux / Qwen only</p>
@@ -173,35 +181,35 @@
 </select>
 </div>
 <div class="toggles-list">
-<label class="toggle-row field-group" data-arch="classic">
+<label class="toggle-row">
 <span class="input-label">VAE on CPU</span>
 <div class="switch">
 <input id="toggle-vae-cpu" checked="" type="checkbox"/>
 <span class="slider"></span>
 </div>
 </label>
-<label class="toggle-row field-group" data-arch="classic">
+<label class="toggle-row">
 <span class="input-label">CLIP on CPU</span>
 <div class="switch">
 <input id="toggle-clip-cpu" type="checkbox"/>
 <span class="slider"></span>
 </div>
 </label>
-<label class="toggle-row field-group" data-arch="flux">
+<label class="toggle-row">
 <span class="input-label">Offload to CPU</span>
 <div class="switch">
 <input id="toggle-offload-cpu" type="checkbox"/>
 <span class="slider"></span>
 </div>
 </label>
-<label class="toggle-row field-group" data-arch="flux">
+<label class="toggle-row">
 <span class="input-label">Diffusion Flash Attn</span>
 <div class="switch">
 <input id="toggle-diffusion-fa" checked="" type="checkbox"/>
 <span class="slider"></span>
 </div>
 </label>
-<label class="toggle-row field-group" data-arch="common">
+<label class="toggle-row">
 <span class="input-label">VAE Tiling</span>
 <div class="switch">
 <input id="toggle-vae-tiling" type="checkbox"/>
