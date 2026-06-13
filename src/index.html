@@ -16,14 +16,21 @@
 </div>
 <nav>
 <label class="config-label">Presets</label>
-<div class="presets-bar">
+<div class="presets-section">
+<div class="presets-load">
 <select id="select-preset">
-<option value="">— Load preset —</option>
+<option value="">— Select preset —</option>
 </select>
+<div class="presets-load-actions">
 <button id="btn-load-preset" class="btn-secondary">Load</button>
-<input id="input-preset-name" type="text" placeholder="Preset name…" />
-<button id="btn-save-preset" class="btn-secondary">Save</button>
 <button id="btn-delete-preset" class="btn-danger">Delete</button>
+</div>
+</div>
+<div class="presets-divider"></div>
+<div class="presets-save">
+<input id="input-preset-name" type="text" placeholder="New preset name…" />
+<button id="btn-save-preset" class="btn-secondary">Save</button>
+</div>
 </div>
 </nav>
 <div class="sidebar-footer">
