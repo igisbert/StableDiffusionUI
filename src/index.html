@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AInference - StableDiffusionCpp</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="css/main.css"/>
+</head>
+<body>
+<aside>
+<div class="sidebar-header">
+<h2>AI Engine</h2>
+<p>Local Inference</p>
+</div>
+<nav>
+<label class="config-label">Presets</label>
+<div class="presets-bar">
+<select id="select-preset">
+<option value="">— Load preset —</option>
+</select>
+<button id="btn-load-preset" class="btn-secondary">Load</button>
+<input id="input-preset-name" type="text" placeholder="Preset name…" />
+<button id="btn-save-preset" class="btn-secondary">Save</button>
+<button id="btn-delete-preset" class="btn-danger">Delete</button>
+</div>
+</nav>
+<div class="sidebar-footer">
+<div class="config-group">
+<label class="config-label">Stable Diffusion cpp path</label>
+<div class="path-display" id="path-sdcpp" data-action="pick-sdcpp" style="cursor:pointer">
+<span class="material-symbols-outlined" style="font-size: 14px;">terminal</span>
+<span id="path-sdcpp-text">No configurado</span>
+</div>
+</div>
+<div class="config-group">
+<label class="config-label">Output Path</label>
+<div class="path-display" id="path-output" data-action="pick-output" style="cursor:pointer">
+<span class="material-symbols-outlined" style="font-size: 14px;">storage</span>
+<span id="path-output-text">No configurado</span>
+</div>
+</div>
+<div class="config-group">
+<label class="config-label">Models Path</label>
+<div class="path-display" id="path-models" data-action="pick-models" style="cursor:pointer">
+<span class="material-symbols-outlined" style="font-size: 14px;">folder</span>
+<span id="path-models-text">No configurado</span>
+</div>
+</div>
+<div class="config-group">
+<label class="config-label">VAE Path</label>
+<div class="path-display" id="path-vae" data-action="pick-vae" style="cursor:pointer">
+<span class="material-symbols-outlined" style="font-size: 14px;">folder</span>
+<span id="path-vae-text">No configurado</span>
+</div>
+</div>
+<div class="config-group">
+<label class="config-label">LLM Encoder Path</label>
+<div class="path-display" id="path-llm" data-action="pick-llm" style="cursor:pointer">
+<span class="material-symbols-outlined" style="font-size: 14px;">folder</span>
+<span id="path-llm-text">No configurado</span>
+</div>
+</div>
+<div class="config-group">
+<label class="config-label">LoRA Path</label>
+<div class="path-display" id="path-lora" data-action="pick-lora" style="cursor:pointer">
+<span class="material-symbols-outlined" style="font-size: 14px;">folder</span>
+<span id="path-lora-text">No configurado</span>
+</div>
+</div>
+</div>
+</aside>
+<main>
+<header>
+<div class="brand-box">
+<span class="brand-name">AInference</span>
+<span class="version-tag">STABLE_DIFFUSION_CPP_V1.2</span>
+</div>
+<div class="header-actions">
+<button class="icon-btn">
+<span class="material-symbols-outlined">refresh</span>
+</button>
+<button class="icon-btn">
+<span class="material-symbols-outlined">terminal</span>
+</button>
+</div>
+</header>
+<div class="content-wrapper">
+<!-- Model Selection -->
+<div class="model-grid">
+<div class="input-group field-group" data-arch="classic">
+<div class="input-label-row">
+<label class="input-label">Model</label>
+<span id="arch-badge" class="arch-badge" style="display:none"></span>
+</div>
+<select id="select-model"></select>
+</div>
+<div class="input-group field-group" data-arch="flux">
+<label class="input-label">LLM Encoder</label>
+<select id="select-llm"></select>
+</div>
+<div class="input-group field-group" data-arch="common">
+<label class="input-label">VAE</label>
+<select id="select-vae"></select>
+</div>
+<div class="input-group field-group" data-arch="common">
+<label class="input-label">LoRA</label>
+<select id="select-lora"></select>
+</div>
+</div>
+<div class="workspace-grid">
+<!-- Controls Column -->
+<div class="controls-col">
+<div class="prompt-area">
+<div class="prompt-header">
+<label class="input-label">Prompt</label>
+<span class="token-count">Tokens: 42/75</span>
+</div>
+<textarea id="input-prompt" placeholder="Enter descriptive text for image generation..."></textarea>
+</div>
+<div class="negative-prompt field-group" data-arch="common">
+<div class="prompt-header">
+<label class="input-label">Negative Prompt</label>
+</div>
+<textarea id="input-negative" placeholder="Things to avoid..."></textarea>
+</div>
+<div class="params-card">
+<div class="params-grid">
+<div class="input-group">
+<label class="input-label">Width</label>
+<input id="input-width" type="number" value="1024"/>
+</div>
+<div class="input-group">
+<label class="input-label">Height</label>
+<input id="input-height" type="number" value="1024"/>
+</div>
+<div class="input-group">
+<label class="input-label">Steps</label>
+<input id="input-steps" type="number" value="30"/>
+</div>
+<div class="input-group">
+<label class="input-label">CFG Scale</label>
+<input id="input-cfg" step="0.5" type="number" value="7.5"/>
+</div>
+<div class="input-group field-group" data-arch="flux">
+<label class="input-label">Guidance</label>
+<input id="input-guidance" step="0.1" type="number" value="3.5"/>
+<p class="input-hint">Flux / Qwen only</p>
+</div>
+<div class="input-group">
+<label class="input-label">Seed</label>
+<input id="input-seed" type="number" value="-1"/>
+<p class="input-hint">-1 = random</p>
+</div>
+<div class="input-group">
+<label class="input-label">Batch Count</label>
+<input id="input-batch-count" type="number" value="1" min="1"/>
+</div>
+<div class="input-group">
+<label class="input-label">Max VRAM</label>
+<input id="input-max-vram" step="0.1" type="number" value="-0.5"/>
+<p class="input-hint">Negative = auto</p>
+</div>
+</div>
+<div class="input-group">
+<label class="input-label">Sampler</label>
+<select id="select-sampler">
+<option>DPM++ 2M Karras</option>
+<option>Euler a</option>
+<option>DPM++ SDE</option>
+<option>Heun</option>
+<option>DDIM</option>
+</select>
+</div>
+<div class="toggles-list">
+<label class="toggle-row field-group" data-arch="classic">
+<span class="input-label">VAE on CPU</span>
+<div class="switch">
+<input id="toggle-vae-cpu" checked="" type="checkbox"/>
+<span class="slider"></span>
+</div>
+</label>
+<label class="toggle-row field-group" data-arch="classic">
+<span class="input-label">CLIP on CPU</span>
+<div class="switch">
+<input id="toggle-clip-cpu" type="checkbox"/>
+<span class="slider"></span>
+</div>
+</label>
+<label class="toggle-row field-group" data-arch="flux">
+<span class="input-label">Offload to CPU</span>
+<div class="switch">
+<input id="toggle-offload-cpu" type="checkbox"/>
+<span class="slider"></span>
+</div>
+</label>
+<label class="toggle-row field-group" data-arch="flux">
+<span class="input-label">Diffusion Flash Attn</span>
+<div class="switch">
+<input id="toggle-diffusion-fa" checked="" type="checkbox"/>
+<span class="slider"></span>
+</div>
+</label>
+<label class="toggle-row field-group" data-arch="common">
+<span class="input-label">VAE Tiling</span>
+<div class="switch">
+<input id="toggle-vae-tiling" type="checkbox"/>
+<span class="slider"></span>
+</div>
+</label>
+</div>
+</div>
+<button id="btn-run" class="run-btn">
+<span class="material-symbols-outlined">play_arrow</span>
+RUN INFERENCE
+</button>
+</div>
+<!-- Preview Column -->
+<div class="preview-col">
+<div class="canvas-area">
+<div class="canvas-placeholder" id="canvas-placeholder">
+<span class="material-symbols-outlined">image</span>
+<p>Output Preview Canvas</p>
+</div>
+<img id="preview-img" />
+</div>
+<pre id="console-output" class="console-area"></pre>
+</div>
+</div>
+</div>
+</main>
+<script type="module" src="js/main.js"></script>
+</body></html>
