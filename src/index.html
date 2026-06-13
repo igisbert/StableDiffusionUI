@@ -10,8 +10,9 @@
 <body>
 <aside>
 <div class="sidebar-header">
-<h2>AI Engine</h2>
-<p>Local Inference</p>
+<div class="logo-placeholder">
+<span class="material-symbols-outlined" style="font-size: 48px;">image</span>
+</div>
 </div>
 <nav>
 <label class="config-label">Presets</label>
@@ -73,7 +74,7 @@
 <main>
 <header>
 <div class="brand-box">
-<span class="brand-name">AInference</span>
+<span class="brand-name">StableDiffusionUI</span>
 <span class="version-tag">STABLE_DIFFUSION_CPP_V1.2</span>
 </div>
 <div class="header-actions">
@@ -122,7 +123,6 @@
 <div class="prompt-area">
 <div class="prompt-header">
 <label class="input-label">Prompt</label>
-<span class="token-count">Tokens: 42/75</span>
 </div>
 <textarea id="input-prompt" placeholder="Enter descriptive text for image generation..."></textarea>
 </div>
@@ -233,6 +233,7 @@ RUN INFERENCE
 <img id="preview-img" />
 </div>
 <pre id="console-output" class="console-area"></pre>
+<div class="actions-bar" id="actions-bar"></div>
 </div>
 </div>
 </div>

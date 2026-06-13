@@ -52,8 +52,6 @@ export function initInference() {
     }
 
     clearConsole()
-    appendLine(`[INFO] SD path: ${sdPath}`)
-    appendLine(`[INFO] Output path: ${outputPath}`)
     document.getElementById('btn-run').classList.add('running')
 
     try {
