@@ -119,12 +119,12 @@
 <div class="model-type-row">
 <span class="input-label">Modelo:</span>
 <label class="radio-label">
-<input type="radio" name="model-type" value="monolithic" checked/>
-<span>Monolítico (-m)</span>
+<input type="radio" name="model-type" value="diffusion" checked/>
+<span>Difusión (--diffusion-model)</span>
 </label>
 <label class="radio-label">
-<input type="radio" name="model-type" value="diffusion"/>
-<span>Difusión (--diffusion-model)</span>
+<input type="radio" name="model-type" value="monolithic"/>
+<span>Monolítico (-m)</span>
 </label>
 </div>
 <div class="prompt-area">
@@ -225,10 +225,15 @@
 </label>
 </div>
 </div>
+<div class="run-row">
+<button id="btn-copy" class="btn-outline" title="Copy command">
+<span class="material-symbols-outlined">content_copy</span>
+</button>
 <button id="btn-run" class="run-btn">
 <span class="material-symbols-outlined">play_arrow</span>
 RUN INFERENCE
 </button>
+</div>
 </div>
 <!-- Preview Column -->
 <div class="preview-col">

@@ -319,6 +319,7 @@ input:checked + .slider:before {
 }
 
 .run-btn {
+    flex: 1;
     background-color: var(--primary);
     color: var(--on-primary);
     border: none;
@@ -336,6 +337,35 @@ input:checked + .slider:before {
 
 .run-btn:hover {
     filter: brightness(1.1);
+}
+
+.run-row {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+}
+
+.btn-outline {
+    background: transparent;
+    color: var(--primary);
+    border: 1px solid var(--primary);
+    aspect-ratio: 1 / 1;
+    padding: 0;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.btn-outline:hover {
+    background-color: rgba(255, 148, 254, 0.1);
+}
+
+.btn-outline .material-symbols-outlined {
+    font-size: 20px;
 }
 
 /* Preview Area */
