@@ -154,6 +154,8 @@ pub async fn run_inference(
     let status = child.wait().map_err(|e| e.to_string())?;
 
     if status.success() {
+        let _ = app.emit("console-line", format!("[DEBUG] Output file: {}", output_file));
+        let _ = app.emit("console-line", format!("[DEBUG] File exists: {}", std::path::Path::new(&output_file).exists()));
         let _ = app.emit("inference-done", &output_file);
         Ok(())
     } else {
