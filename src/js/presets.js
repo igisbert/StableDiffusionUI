@@ -1,6 +1,6 @@
 import { Store } from '@tauri-apps/plugin-store'
 
-const store = new Store('presets.json')
+let store
 
 const FIELDS = [
   { id: 'select-model',           type: 'select' },
@@ -61,6 +61,7 @@ async function loadPresetList() {
 }
 
 export async function initPresets() {
+  store = await Store.load('presets.json')
   await loadPresetList()
 
   document.getElementById('btn-save-preset').addEventListener('click', async () => {
