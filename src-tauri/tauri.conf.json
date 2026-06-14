@@ -13,7 +13,7 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "AInference",
+        "title": "StableDiffusionCppUI",
         "width": 1400,
         "height": 900
       }

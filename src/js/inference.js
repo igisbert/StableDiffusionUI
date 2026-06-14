@@ -91,6 +91,12 @@ export function initInference() {
       return
     }
 
+    const prompt = document.getElementById('input-prompt')?.value?.trim() ?? ''
+    if (!prompt) {
+      appendLine('[ERROR] El prompt es obligatorio.')
+      return
+    }
+
     const val = function (id) { return document.getElementById(id)?.value ?? '' }
     const checked = function (id) { return document.getElementById(id)?.checked ?? false }
     const num = function (id, fallback) { return parseFloat(val(id)) || fallback || 0 }
