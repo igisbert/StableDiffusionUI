@@ -3,6 +3,26 @@ import { invoke } from '@tauri-apps/api/core'
 
 let store
 
+const SAMPLERS = [
+  { value: 'euler',           label: 'Euler' },
+  { value: 'euler_cfg_pp',    label: 'Euler CFG++' },
+  { value: 'euler_a',         label: 'Euler Ancestral' },
+  { value: 'euler_a_cfg_pp',  label: 'Euler Ancestral CFG++' },
+  { value: 'heun',            label: 'Heun' },
+  { value: 'dpm2',            label: 'DPM Solver 2' },
+  { value: 'dpmpp2s_a',       label: 'DPM++ 2S Ancestral' },
+  { value: 'dpmpp2m',         label: 'DPM++ 2M' },
+  { value: 'dpmpp2mv2',       label: 'DPM++ 2M v2' },
+  { value: 'er_sde',          label: 'Extended Reverse SDE' },
+  { value: 'ipndm',           label: 'Improved PNDM' },
+  { value: 'ipndm_v',         label: 'Improved PNDM var' },
+  { value: 'lcm',             label: 'Latent Consistency' },
+  { value: 'ddim_trailing',   label: 'DDIM Trailing' },
+  { value: 'tcd',             label: 'Trajectory Consistency' },
+  { value: 'res_2s',          label: 'RES 2S' },
+  { value: 'res_multistep',   label: 'RES Multipaso' },
+]
+
 const PATH_KEYS = [
   { key: 'sd_path',     action: 'pick-sdcpp', display: 'path-sdcpp-text' },
   { key: 'output_path', action: 'pick-output', display: 'path-output-text' },
@@ -14,6 +34,8 @@ const PATH_KEYS = [
 
 export async function initConfig() {
   store = await Store.load('config.json')
+
+  populateSamplers()
 
   for (const { key, display } of PATH_KEYS) {
     const path = await store.get(key)
@@ -98,4 +120,16 @@ export async function getLoraPath() { return store.get('lora_path') }
 function updatePathDisplay(id, path) {
   const el = document.getElementById(id)
   if (el) el.textContent = path
+}
+
+function populateSamplers() {
+  const sel = document.getElementById('select-sampler')
+  if (!sel) return
+  sel.innerHTML = ''
+  for (const { value, label } of SAMPLERS) {
+    const opt = document.createElement('option')
+    opt.value = value
+    opt.textContent = label
+    sel.appendChild(opt)
+  }
 }

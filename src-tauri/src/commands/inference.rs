@@ -41,23 +41,6 @@ pub struct InferenceParams {
     pub vae_tiling: bool,
 }
 
-fn sampler_flag(name: &str) -> &str {
-    match name {
-        "Euler"           => "euler",
-        "Euler a"         => "euler_a",
-        "Heun"            => "heun",
-        "DPM2"            => "dpm2",
-        "DPM++ 2S a"      => "dpm++2s_a",
-        "DPM++ 2M"        => "dpm++2m",
-        "DPM++ 2M v2"     => "dpm++2mv2",
-        "DPM++ SDE"       => "dpm++2mv2",
-        "LCM"             => "lcm",
-        "DDIM"            => "ddim_trailing",
-        "TCD"             => "tcd",
-        _                 => "euler_a",
-    }
-}
-
 #[tauri::command]
 pub async fn run_inference(
     app: tauri::AppHandle,
@@ -115,7 +98,7 @@ pub async fn run_inference(
        .arg("--guidance").arg(params.guidance.to_string())
        .arg("-s").arg(params.seed.to_string())
        .arg("-b").arg(params.batch_count.to_string())
-       .arg("--sampling-method").arg(sampler_flag(&params.sampler))
+       .arg("--sampling-method").arg(&params.sampler)
        .arg("-o").arg(&output_file);
 
     if params.max_vram != 0.0 {
