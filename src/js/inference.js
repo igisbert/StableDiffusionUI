@@ -78,7 +78,7 @@ export function initInference() {
       try {
         await invoke('abort_inference')
       } catch (e) {
-        appendLine('[ERROR] Abort failed: ' + e)
+appendLine('[ERROR] Error al abortar: ' + e)
       }
       return
     }
@@ -148,7 +148,7 @@ export function initInference() {
     try {
       await invoke('abort_inference')
     } catch (e) {
-      appendLine('[ERROR] Abort failed: ' + e)
+      appendLine('[ERROR] Error al abortar: ' + e)
     }
   })
 

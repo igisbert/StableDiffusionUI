@@ -77,7 +77,7 @@ function populateSelect(id, items, withNone = false) {
   if (withNone) {
     const opt = document.createElement('option')
     opt.value = ''
-    opt.textContent = 'None'
+    opt.textContent = 'Ninguno'
     sel.appendChild(opt)
   }
   for (const item of items) {

@@ -171,7 +171,7 @@ pub async fn run_inference(
                     Ok(None) => {}
                     Err(e) => break Err(e.to_string()),
                 },
-                None => break Err("No child process".to_string()),
+                None => break Err("No hay proceso hijo".to_string()),
             }
         }
         std::thread::sleep(Duration::from_secs(1));
@@ -184,7 +184,7 @@ pub async fn run_inference(
     let _ = t_stderr.join();
 
     if !was_running {
-        let _ = app.emit("console-line", "[ABORTED] Inference cancelled.");
+        let _ = app.emit("console-line", "[ABORTADO] Inferencia cancelada.");
         let _ = app.emit("inference-aborted", ());
         return Ok(());
     }
@@ -205,7 +205,7 @@ pub async fn abort_inference(app: tauri::AppHandle) -> Result<(), String> {
     let mut guard = CHILD.lock().unwrap();
     if let Some(child) = guard.as_mut() {
         let _ = child.kill();
-        let _ = app.emit("console-line", "[ABORTED] Killing process...");
+        let _ = app.emit("console-line", "[ABORTADO] Terminando proceso...");
     }
     Ok(())
 }

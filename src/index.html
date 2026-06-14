@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 
-<html lang="en"><head>
+<html lang="es"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>AInference - StableDiffusionCpp</title>
+<title>StableDiffusionCppUI</title>
 <link rel="stylesheet" href="css/main.css"/>
 </head>
 <body>
@@ -14,62 +14,62 @@
 </div>
 </div>
 <nav>
-<label class="config-label">Presets</label>
+<label class="config-label">Preajustes</label>
 <div class="presets-section">
 <div class="presets-load">
 <select id="select-preset">
-<option value="">— Select preset —</option>
+<option value="">— Seleccionar preajuste —</option>
 </select>
 <div class="presets-load-actions">
-<button id="btn-load-preset" class="btn-secondary">Load</button>
-<button id="btn-delete-preset" class="btn-danger">Delete</button>
+<button id="btn-load-preset" class="btn-secondary">Cargar</button>
+<button id="btn-delete-preset" class="btn-danger">Eliminar</button>
 </div>
 </div>
 <div class="presets-divider"></div>
 <div class="presets-save">
-<input id="input-preset-name" type="text" placeholder="New preset name…" />
-<button id="btn-save-preset" class="btn-secondary">Save</button>
+<input id="input-preset-name" type="text" placeholder="Nombre del nuevo preajuste…" />
+<button id="btn-save-preset" class="btn-secondary">Guardar</button>
 </div>
 </div>
 </nav>
 <div class="sidebar-footer">
 <div class="config-group">
-<label class="config-label">Stable Diffusion cpp path</label>
+<label class="config-label">Ruta de Stable Diffusion cpp</label>
 <div class="path-display" id="path-sdcpp" data-action="pick-sdcpp" style="cursor:pointer">
 <i data-lucide="terminal" style="width: 14px; height: 14px;"></i>
 <span id="path-sdcpp-text">No configurado</span>
 </div>
 </div>
 <div class="config-group">
-<label class="config-label">Output Path</label>
+<label class="config-label">Ruta de salida</label>
 <div class="path-display" id="path-output" data-action="pick-output" style="cursor:pointer">
 <i data-lucide="hard-drive" style="width: 14px; height: 14px;"></i>
 <span id="path-output-text">No configurado</span>
 </div>
 </div>
 <div class="config-group">
-<label class="config-label">Models Path</label>
+<label class="config-label">Ruta de modelos</label>
 <div class="path-display" id="path-models" data-action="pick-models" style="cursor:pointer">
 <i data-lucide="folder" style="width: 14px; height: 14px;"></i>
 <span id="path-models-text">No configurado</span>
 </div>
 </div>
 <div class="config-group">
-<label class="config-label">VAE Path</label>
+<label class="config-label">Ruta de VAE</label>
 <div class="path-display" id="path-vae" data-action="pick-vae" style="cursor:pointer">
 <i data-lucide="folder" style="width: 14px; height: 14px;"></i>
 <span id="path-vae-text">No configurado</span>
 </div>
 </div>
 <div class="config-group">
-<label class="config-label">LLM Encoder Path</label>
+<label class="config-label">Ruta de LLM Encoder</label>
 <div class="path-display" id="path-llm" data-action="pick-llm" style="cursor:pointer">
 <i data-lucide="folder" style="width: 14px; height: 14px;"></i>
 <span id="path-llm-text">No configurado</span>
 </div>
 </div>
 <div class="config-group">
-<label class="config-label">LoRA Path</label>
+<label class="config-label">Ruta de LoRA</label>
 <div class="path-display" id="path-lora" data-action="pick-lora" style="cursor:pointer">
 <i data-lucide="folder" style="width: 14px; height: 14px;"></i>
 <span id="path-lora-text">No configurado</span>
@@ -89,7 +89,7 @@
 <!-- Model Selection -->
 <div class="model-grid">
 <div class="input-group">
-<label class="input-label">Model</label>
+<label class="input-label">Modelo</label>
 <select id="select-model"></select>
 </div>
 <div class="input-group">
@@ -123,22 +123,22 @@
 <div class="prompt-header">
 <label class="input-label">Prompt <i data-lucide="circle-question-mark" class="help-icon"></i></label>
 </div>
-<textarea id="input-prompt" placeholder="Enter descriptive text for image generation..."></textarea>
+<textarea id="input-prompt" placeholder="Introduce el texto descriptivo para la generación de imagen..."></textarea>
 </div>
 <div class="negative-prompt">
 <div class="prompt-header">
 <label class="input-label">Negative Prompt <i data-lucide="circle-question-mark" class="help-icon"></i></label>
 </div>
-<textarea id="input-negative" placeholder="Things to avoid..."></textarea>
+<textarea id="input-negative" placeholder="Elementos a evitar..."></textarea>
 </div>
 <div class="params-card">
 <div class="params-grid">
 <div class="input-group">
-<label class="input-label">Width <i data-lucide="circle-question-mark" class="help-icon"></i></label>
+<label class="input-label">Ancho <i data-lucide="circle-question-mark" class="help-icon"></i></label>
 <input id="input-width" type="number" value="1024"/>
 </div>
 <div class="input-group">
-<label class="input-label">Height <i data-lucide="circle-question-mark" class="help-icon"></i></label>
+<label class="input-label">Alto <i data-lucide="circle-question-mark" class="help-icon"></i></label>
 <input id="input-height" type="number" value="1024"/>
 </div>
 <div class="input-group">
@@ -152,21 +152,21 @@
 <div class="input-group">
 <label class="input-label">Guidance <i data-lucide="circle-question-mark" class="help-icon"></i></label>
 <input id="input-guidance" step="0.1" type="number" value="3.5"/>
-<p class="input-hint">Flux / Qwen only</p>
+<p class="input-hint">Solo Flux / Qwen</p>
 </div>
 <div class="input-group">
 <label class="input-label">Seed <i data-lucide="circle-question-mark" class="help-icon"></i></label>
 <input id="input-seed" type="number" value="-1"/>
-<p class="input-hint">-1 = random</p>
+<p class="input-hint">-1 = aleatorio</p>
 </div>
 <div class="input-group">
-<label class="input-label">Batch Count <i data-lucide="circle-question-mark" class="help-icon"></i></label>
+<label class="input-label">Lote <i data-lucide="circle-question-mark" class="help-icon"></i></label>
 <input id="input-batch-count" type="number" value="1" min="1"/>
 </div>
 <div class="input-group">
-<label class="input-label">Max VRAM <i data-lucide="circle-question-mark" class="help-icon"></i></label>
+<label class="input-label">VRAM máx. <i data-lucide="circle-question-mark" class="help-icon"></i></label>
 <input id="input-max-vram" step="0.1" type="number" value="-0.5"/>
-<p class="input-hint">Negative = auto</p>
+<p class="input-hint">Negativo = auto</p>
 </div>
 </div>
 <div class="input-group">
@@ -181,21 +181,21 @@
 </div>
 <div class="toggles-list">
 <label class="toggle-row">
-<span class="input-label">VAE on CPU <i data-lucide="circle-question-mark" class="help-icon"></i></span>
+<span class="input-label">VAE en CPU <i data-lucide="circle-question-mark" class="help-icon"></i></span>
 <div class="switch">
 <input id="toggle-vae-cpu" checked="" type="checkbox"/>
 <span class="slider"></span>
 </div>
 </label>
 <label class="toggle-row">
-<span class="input-label">CLIP on CPU <i data-lucide="circle-question-mark" class="help-icon"></i></span>
+<span class="input-label">CLIP en CPU <i data-lucide="circle-question-mark" class="help-icon"></i></span>
 <div class="switch">
 <input id="toggle-clip-cpu" type="checkbox"/>
 <span class="slider"></span>
 </div>
 </label>
 <label class="toggle-row">
-<span class="input-label">Offload to CPU <i data-lucide="circle-question-mark" class="help-icon"></i></span>
+<span class="input-label">Descargar a CPU <i data-lucide="circle-question-mark" class="help-icon"></i></span>
 <div class="switch">
 <input id="toggle-offload-cpu" type="checkbox"/>
 <span class="slider"></span>
@@ -218,14 +218,14 @@
 </div>
 </div>
 <div class="run-row">
-<button id="btn-copy" class="btn-outline" title="Copy command">
+<button id="btn-copy" class="btn-outline" title="Copiar comando">
 <i data-lucide="copy"></i>
 </button>
 <button id="btn-run" class="run-btn">
 <i data-lucide="play"></i>
-RUN INFERENCE
+EJECUTAR
 </button>
-<button id="btn-abort" class="btn-abort" title="Abort" hidden>
+<button id="btn-abort" class="btn-abort" title="Cancelar" hidden>
 <i data-lucide="x"></i>
 </button>
 </div>
@@ -235,7 +235,7 @@ RUN INFERENCE
 <div class="canvas-area">
 <div class="canvas-placeholder" id="canvas-placeholder">
 <i data-lucide="image" style="width: 64px; height: 64px;"></i>
-<p>Output Preview Canvas</p>
+<p>Vista previa de salida</p>
 </div>
 <img id="preview-img" />
 </div>

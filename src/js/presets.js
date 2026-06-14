@@ -49,7 +49,7 @@ function applyForm(values) {
 async function loadPresetList() {
   const keys = await store.keys()
   const sel = document.getElementById('select-preset')
-  sel.innerHTML = '<option value="">— Load preset —</option>'
+  sel.innerHTML = '<option value="">— Seleccionar preajuste —</option>'
   for (const key of keys.sort()) {
     const opt = document.createElement('option')
     opt.value = key
