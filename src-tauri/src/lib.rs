@@ -10,6 +10,7 @@ pub fn run() {
             commands::fs::scan_models,
             commands::fs::ensure_output_dir,
             commands::inference::run_inference,
+            commands::inference::abort_inference,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

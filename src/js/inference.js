@@ -1,6 +1,25 @@
 import { invoke } from '@tauri-apps/api/core'
+import { listen } from '@tauri-apps/api/event'
 import { getSdPath, getOutputPath, getModelsPath, getVaePath, getLlmPath, getLoraPath } from './config.js'
 import { clearConsole, appendLine } from './console.js'
+
+let isRunning = false
+
+function setRunning(running) {
+  isRunning = running
+  const btnRun = document.getElementById('btn-run')
+  const btnAbort = document.getElementById('btn-abort')
+
+  if (running) {
+    btnRun.classList.add('running')
+    btnRun.innerHTML = '<span class="material-symbols-outlined">stop</span> ABORT'
+    btnAbort.hidden = false
+  } else {
+    btnRun.classList.remove('running')
+    btnRun.innerHTML = '<span class="material-symbols-outlined">play_arrow</span> RUN INFERENCE'
+    btnAbort.hidden = true
+  }
+}
 
 async function buildCommand() {
   const sdPath = await getSdPath()
@@ -54,6 +73,15 @@ export function initInference() {
   })
 
   document.getElementById('btn-run').addEventListener('click', async function () {
+    if (isRunning) {
+      try {
+        await invoke('abort_inference')
+      } catch (e) {
+        appendLine('[ERROR] Abort failed: ' + e)
+      }
+      return
+    }
+
     const sdPath = await getSdPath()
     const outputPath = await getOutputPath()
 
@@ -98,13 +126,26 @@ export function initInference() {
     }
 
     clearConsole()
-    document.getElementById('btn-run').classList.add('running')
+    setRunning(true)
 
     try {
       await invoke('run_inference', { params: params })
     } catch (e) {
       appendLine('[ERROR] ' + e)
-      document.getElementById('btn-run').classList.remove('running')
+    } finally {
+      setRunning(false)
     }
+  })
+
+  document.getElementById('btn-abort').addEventListener('click', async function () {
+    try {
+      await invoke('abort_inference')
+    } catch (e) {
+      appendLine('[ERROR] Abort failed: ' + e)
+    }
+  })
+
+  listen('inference-aborted', () => {
+    setRunning(false)
   })
 }

@@ -620,3 +620,74 @@ input:checked + .slider:before {
 .radio-label input[type="radio"] {
     display: none;
 }
+
+.btn-abort {
+    background: transparent;
+    color: #ff4444;
+    border: 1px solid #ff4444;
+    aspect-ratio: 1 / 1;
+    padding: 0;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+.btn-abort[hidden] {
+    display: none;
+}
+
+.btn-abort .material-symbols-outlined {
+    font-size: 20px;
+}
+
+.btn-abort:hover {
+    background-color: rgba(255, 68, 68, 0.15);
+}
+
+.run-btn {
+    flex: 1;
+    min-width: 0;
+    transition: flex 0.3s ease, padding 0.3s ease, background-color 0.2s;
+}
+
+.run-btn.running {
+    flex: 0 0 auto;
+    padding: 16px 24px;
+    background-color: #333;
+    cursor: pointer;
+    pointer-events: auto;
+    opacity: 1;
+}
+
+.run-btn.running .material-symbols-outlined {
+    font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 0, 'opsz' 20;
+    color: #ff4444;
+}
+
+.running-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 999;
+    pointer-events: none;
+    opacity: 0;
+    animation: fadeIn 0.3s forwards;
+}
+
+@keyframes fadeIn {
+    to { opacity: 1; }
+}
+
+.controls-col:has(.run-btn.running) select,
+.controls-col:has(.run-btn.running) input,
+.controls-col:has(.run-btn.running) textarea {
+    opacity: 0.5;
+    pointer-events: none;
+}

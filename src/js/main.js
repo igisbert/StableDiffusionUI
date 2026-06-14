@@ -16,6 +16,5 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   await listen('inference-done', (event) => {
     showPreview(event.payload)
-    document.getElementById('btn-run').classList.remove('running')
   })
 })

@@ -2,7 +2,13 @@ use serde::Deserialize;
 use std::io::{BufRead, BufReader};
 use std::process::{Command, Stdio};
 use std::path::Path;
+use std::sync::Mutex;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::time::Duration;
 use tauri::Emitter;
+
+static CHILD: Mutex<Option<std::process::Child>> = Mutex::new(None);
+static RUNNING: AtomicBool = AtomicBool::new(false);
 
 #[derive(Deserialize)]
 pub struct InferenceParams {
@@ -69,12 +75,8 @@ pub async fn run_inference(
     let sd_bin = Path::new(&params.sd_path)
         .join(format!("sd-cli.{}", std::env::consts::EXE_EXTENSION));
 
-    let _ = app.emit("console-line", format!("[DEBUG] Looking for: {:?}", sd_bin));
-    let _ = app.emit("console-line", format!("[DEBUG] File exists: {}", sd_bin.exists()));
-
     let mut cmd = Command::new(&sd_bin);
 
-    // Modelo
     if !params.model.is_empty() {
         let flag = if params.model_type == "diffusion" {
             "--diffusion-model"
@@ -85,13 +87,11 @@ pub async fn run_inference(
            .arg(Path::new(&params.models_path).join(&params.model));
     }
 
-    // LLM encoder
     if !params.llm.is_empty() {
         let p = Path::new(&params.llm_path).join(&params.llm);
         if p.exists() { cmd.arg("--llm").arg(p); }
     }
 
-    // VAE
     if !params.vae.is_empty() {
         let p = Path::new(&params.vae_path).join(&params.vae);
         if p.exists() {
@@ -99,7 +99,6 @@ pub async fn run_inference(
         }
     }
 
-    // LoRA
     if !params.lora.is_empty() {
         let p = Path::new(&params.lora_path).join(&params.lora);
         if p.exists() {
@@ -107,7 +106,6 @@ pub async fn run_inference(
         }
     }
 
-    // Prompt y parámetros
     cmd.arg("-p").arg(&params.prompt)
        .arg("-n").arg(&params.negative_prompt)
        .arg("-W").arg(params.width.to_string())
@@ -135,28 +133,79 @@ pub async fn run_inference(
     let mut child = cmd.spawn()
         .map_err(|e| format!("No se pudo lanzar sd-cli: {}", e))?;
 
-    if let Some(stdout) = child.stdout.take() {
-        let app_c = app.clone();
-        let reader = BufReader::new(stdout);
-        for line in reader.lines().flatten() {
-            let _ = app_c.emit("console-line", &line);
+    let stdout = child.stdout.take();
+    let stderr = child.stderr.take();
+
+    RUNNING.store(true, Ordering::SeqCst);
+    *CHILD.lock().unwrap() = Some(child);
+
+    let app_stdout = app.clone();
+    let app_stderr = app.clone();
+
+    let t_stdout = std::thread::spawn(move || {
+        if let Some(stdout) = stdout {
+            let reader = BufReader::new(stdout);
+            for line in reader.lines().flatten() {
+                if !RUNNING.load(Ordering::SeqCst) { break; }
+                let _ = app_stdout.emit("console-line", &line);
+            }
         }
-    }
+    });
 
-    if let Some(stderr) = child.stderr.take() {
-        let app_c = app.clone();
-        let reader = BufReader::new(stderr);
-        for line in reader.lines().flatten() {
-            let _ = app_c.emit("console-line", &line);
+    let t_stderr = std::thread::spawn(move || {
+        if let Some(stderr) = stderr {
+            let reader = BufReader::new(stderr);
+            for line in reader.lines().flatten() {
+                if !RUNNING.load(Ordering::SeqCst) { break; }
+                let _ = app_stderr.emit("console-line", &line);
+            }
         }
+    });
+
+    let status = loop {
+        {
+            let mut guard = CHILD.lock().unwrap();
+            match guard.as_mut() {
+                Some(child) => match child.try_wait() {
+                    Ok(Some(exit)) => break Ok(exit),
+                    Ok(None) => {}
+                    Err(e) => break Err(e.to_string()),
+                },
+                None => break Err("No child process".to_string()),
+            }
+        }
+        std::thread::sleep(Duration::from_secs(1));
+    };
+
+    RUNNING.store(false, Ordering::SeqCst);
+    *CHILD.lock().unwrap() = None;
+
+    let _ = t_stdout.join();
+    let _ = t_stderr.join();
+
+    if !RUNNING.load(Ordering::SeqCst) {
+        let _ = app.emit("console-line", "[ABORTED] Inference cancelled.");
+        let _ = app.emit("inference-aborted", ());
+        return Ok(());
     }
 
-    let status = child.wait().map_err(|e| e.to_string())?;
-
-    if status.success() {
-        let _ = app.emit("inference-done", &output_file);
-        Ok(())
-    } else {
-        Err(format!("sd-cli terminó con código {:?}", status.code()))
+    match status {
+        Ok(s) if s.success() => {
+            let _ = app.emit("inference-done", &output_file);
+            Ok(())
+        }
+        Ok(s) => Err(format!("sd-cli terminó con código {:?}", s.code())),
+        Err(e) => Err(e),
     }
+}
+
+#[tauri::command]
+pub async fn abort_inference(app: tauri::AppHandle) -> Result<(), String> {
+    RUNNING.store(false, Ordering::SeqCst);
+    let mut guard = CHILD.lock().unwrap();
+    if let Some(child) = guard.as_mut() {
+        let _ = child.kill();
+        let _ = app.emit("console-line", "[ABORTED] Killing process...");
+    }
+    Ok(())
 }
