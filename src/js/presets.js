@@ -7,8 +7,6 @@ const FIELDS = [
   { id: 'select-llm',             type: 'select' },
   { id: 'select-vae',             type: 'select' },
   { id: 'select-lora',            type: 'select' },
-  { id: 'input-prompt',           type: 'text'   },
-  { id: 'input-negative',         type: 'text'   },
   { id: 'input-width',            type: 'text'   },
   { id: 'input-height',           type: 'text'   },
   { id: 'input-steps',            type: 'text'   },
