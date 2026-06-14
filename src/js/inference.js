@@ -1,5 +1,6 @@
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
+import { createIcons, icons } from 'lucide'
 import { getSdPath, getOutputPath, getModelsPath, getVaePath, getLlmPath, getLoraPath } from './config.js'
 import { clearConsole, appendLine } from './console.js'
 
@@ -64,9 +65,11 @@ export function initInference() {
     const cmd = await buildCommand()
     await navigator.clipboard.writeText(cmd)
     const btn = document.getElementById('btn-copy')
-    btn.innerHTML = '<span class="material-symbols-outlined">check</span>'
+    btn.innerHTML = '<i data-lucide="check"></i>'
+    createIcons({ icons })
     setTimeout(function () {
-      btn.innerHTML = '<span class="material-symbols-outlined">content_copy</span>'
+      btn.innerHTML = '<i data-lucide="copy"></i>'
+      createIcons({ icons })
     }, 1500)
   })
 

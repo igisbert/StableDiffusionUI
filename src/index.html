@@ -4,14 +4,13 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>AInference - StableDiffusionCpp</title>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="css/main.css"/>
 </head>
 <body>
 <aside>
 <div class="sidebar-header">
 <div class="logo-placeholder">
-<span class="material-symbols-outlined" style="font-size: 48px;">image</span>
+<i data-lucide="image" style="width: 48px; height: 48px;"></i>
 </div>
 </div>
 <nav>
@@ -37,42 +36,42 @@
 <div class="config-group">
 <label class="config-label">Stable Diffusion cpp path</label>
 <div class="path-display" id="path-sdcpp" data-action="pick-sdcpp" style="cursor:pointer">
-<span class="material-symbols-outlined" style="font-size: 14px;">terminal</span>
+<i data-lucide="terminal" style="width: 14px; height: 14px;"></i>
 <span id="path-sdcpp-text">No configurado</span>
 </div>
 </div>
 <div class="config-group">
 <label class="config-label">Output Path</label>
 <div class="path-display" id="path-output" data-action="pick-output" style="cursor:pointer">
-<span class="material-symbols-outlined" style="font-size: 14px;">storage</span>
+<i data-lucide="hard-drive" style="width: 14px; height: 14px;"></i>
 <span id="path-output-text">No configurado</span>
 </div>
 </div>
 <div class="config-group">
 <label class="config-label">Models Path</label>
 <div class="path-display" id="path-models" data-action="pick-models" style="cursor:pointer">
-<span class="material-symbols-outlined" style="font-size: 14px;">folder</span>
+<i data-lucide="folder" style="width: 14px; height: 14px;"></i>
 <span id="path-models-text">No configurado</span>
 </div>
 </div>
 <div class="config-group">
 <label class="config-label">VAE Path</label>
 <div class="path-display" id="path-vae" data-action="pick-vae" style="cursor:pointer">
-<span class="material-symbols-outlined" style="font-size: 14px;">folder</span>
+<i data-lucide="folder" style="width: 14px; height: 14px;"></i>
 <span id="path-vae-text">No configurado</span>
 </div>
 </div>
 <div class="config-group">
 <label class="config-label">LLM Encoder Path</label>
 <div class="path-display" id="path-llm" data-action="pick-llm" style="cursor:pointer">
-<span class="material-symbols-outlined" style="font-size: 14px;">folder</span>
+<i data-lucide="folder" style="width: 14px; height: 14px;"></i>
 <span id="path-llm-text">No configurado</span>
 </div>
 </div>
 <div class="config-group">
 <label class="config-label">LoRA Path</label>
 <div class="path-display" id="path-lora" data-action="pick-lora" style="cursor:pointer">
-<span class="material-symbols-outlined" style="font-size: 14px;">folder</span>
+<i data-lucide="folder" style="width: 14px; height: 14px;"></i>
 <span id="path-lora-text">No configurado</span>
 </div>
 </div>
@@ -220,14 +219,14 @@
 </div>
 <div class="run-row">
 <button id="btn-copy" class="btn-outline" title="Copy command">
-<span class="material-symbols-outlined">content_copy</span>
+<i data-lucide="copy"></i>
 </button>
 <button id="btn-run" class="run-btn">
-<span class="material-symbols-outlined">play_arrow</span>
+<i data-lucide="play"></i>
 RUN INFERENCE
 </button>
 <button id="btn-abort" class="btn-abort" title="Abort" hidden>
-<span class="material-symbols-outlined">close</span>
+<i data-lucide="x"></i>
 </button>
 </div>
 </div>
@@ -235,7 +234,7 @@ RUN INFERENCE
 <div class="preview-col">
 <div class="canvas-area">
 <div class="canvas-placeholder" id="canvas-placeholder">
-<span class="material-symbols-outlined">image</span>
+<i data-lucide="image" style="width: 64px; height: 64px;"></i>
 <p>Output Preview Canvas</p>
 </div>
 <img id="preview-img" />
