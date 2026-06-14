@@ -16,6 +16,7 @@ const FIELDS = [
   { id: 'input-batch-count',      type: 'text'   },
   { id: 'input-max-vram',         type: 'text'   },
   { id: 'select-sampler',         type: 'select' },
+  { id: 'select-scheduler',       type: 'select' },
   { id: 'toggle-vae-cpu',         type: 'toggle' },
   { id: 'toggle-clip-cpu',        type: 'toggle' },
   { id: 'toggle-offload-cpu',     type: 'toggle' },

@@ -23,6 +23,16 @@ const SAMPLERS = [
   { value: 'res_multistep',   label: 'RES Multipaso' },
 ]
 
+const SCHEDULERS = [
+  { value: 'normal',          label: 'Normal' },
+  { value: 'karras',          label: 'Karras' },
+  { value: 'exponential',     label: 'Exponential' },
+  { value: 'sgm_uniform',     label: 'SGM Uniform' },
+  { value: 'simple',          label: 'Simple' },
+  { value: 'ddim_uniform',    label: 'DDIM Uniform' },
+  { value: 'beta',            label: 'Beta' },
+]
+
 const PATH_KEYS = [
   { key: 'sd_path',     action: 'pick-sdcpp', display: 'path-sdcpp-text' },
   { key: 'output_path', action: 'pick-output', display: 'path-output-text' },
@@ -36,6 +46,7 @@ export async function initConfig() {
   store = await Store.load('config.json')
 
   populateSamplers()
+  populateSchedulers()
 
   for (const { key, display } of PATH_KEYS) {
     const path = await store.get(key)
@@ -127,6 +138,18 @@ function populateSamplers() {
   if (!sel) return
   sel.innerHTML = ''
   for (const { value, label } of SAMPLERS) {
+    const opt = document.createElement('option')
+    opt.value = value
+    opt.textContent = label
+    sel.appendChild(opt)
+  }
+}
+
+function populateSchedulers() {
+  const sel = document.getElementById('select-scheduler')
+  if (!sel) return
+  sel.innerHTML = ''
+  for (const { value, label } of SCHEDULERS) {
     const opt = document.createElement('option')
     opt.value = value
     opt.textContent = label

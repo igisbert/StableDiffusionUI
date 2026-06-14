@@ -49,6 +49,7 @@ async function buildCommand() {
   cmd += ' -s ' + int('input-seed', -1)
   cmd += ' -b ' + int('input-batch-count', 1)
   cmd += ' --sampling-method ' + val('select-sampler')
+  cmd += ' --schedule ' + val('select-scheduler')
   const maxVram = num('input-max-vram', -0.5)
   if (maxVram !== 0) cmd += ' --max-vram ' + maxVram
   if (checked('toggle-vae-cpu')) cmd += ' --vae-on-cpu'
@@ -125,6 +126,7 @@ appendLine('[ERROR] Error al abortar: ' + e)
       batch_count: int('input-batch-count', 1),
       max_vram: num('input-max-vram', -0.5),
       sampler: val('select-sampler'),
+      scheduler: val('select-scheduler'),
       vae_on_cpu: checked('toggle-vae-cpu'),
       clip_on_cpu: checked('toggle-clip-cpu'),
       offload_to_cpu: checked('toggle-offload-cpu'),

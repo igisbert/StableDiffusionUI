@@ -34,6 +34,7 @@ pub struct InferenceParams {
     pub batch_count: u32,
     pub max_vram: f32,
     pub sampler: String,
+    pub scheduler: String,
     pub vae_on_cpu: bool,
     pub clip_on_cpu: bool,
     pub offload_to_cpu: bool,
@@ -99,6 +100,7 @@ pub async fn run_inference(
        .arg("-s").arg(params.seed.to_string())
        .arg("-b").arg(params.batch_count.to_string())
        .arg("--sampling-method").arg(&params.sampler)
+       .arg("--schedule").arg(&params.scheduler)
        .arg("-o").arg(&output_file);
 
     if params.max_vram != 0.0 {
