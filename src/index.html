@@ -109,7 +109,7 @@
 <!-- Controls Column -->
 <div class="controls-col">
 <div class="model-type-row">
-<span class="input-label">Modelo:</span>
+<span class="input-label">Modelo: <i data-lucide="circle-question-mark" class="help-icon"></i></span>
 <label class="radio-label">
 <input type="radio" name="model-type" value="diffusion" checked/>
 <span>Difusión (--diffusion-model)</span>
@@ -121,56 +121,56 @@
 </div>
 <div class="prompt-area">
 <div class="prompt-header">
-<label class="input-label">Prompt</label>
+<label class="input-label">Prompt <i data-lucide="circle-question-mark" class="help-icon"></i></label>
 </div>
 <textarea id="input-prompt" placeholder="Enter descriptive text for image generation..."></textarea>
 </div>
 <div class="negative-prompt">
 <div class="prompt-header">
-<label class="input-label">Negative Prompt</label>
+<label class="input-label">Negative Prompt <i data-lucide="circle-question-mark" class="help-icon"></i></label>
 </div>
 <textarea id="input-negative" placeholder="Things to avoid..."></textarea>
 </div>
 <div class="params-card">
 <div class="params-grid">
 <div class="input-group">
-<label class="input-label">Width</label>
+<label class="input-label">Width <i data-lucide="circle-question-mark" class="help-icon"></i></label>
 <input id="input-width" type="number" value="1024"/>
 </div>
 <div class="input-group">
-<label class="input-label">Height</label>
+<label class="input-label">Height <i data-lucide="circle-question-mark" class="help-icon"></i></label>
 <input id="input-height" type="number" value="1024"/>
 </div>
 <div class="input-group">
-<label class="input-label">Steps</label>
+<label class="input-label">Steps <i data-lucide="circle-question-mark" class="help-icon"></i></label>
 <input id="input-steps" type="number" value="30"/>
 </div>
 <div class="input-group">
-<label class="input-label">CFG Scale</label>
+<label class="input-label">CFG Scale <i data-lucide="circle-question-mark" class="help-icon"></i></label>
 <input id="input-cfg" step="0.5" type="number" value="7.5"/>
 </div>
 <div class="input-group">
-<label class="input-label">Guidance</label>
+<label class="input-label">Guidance <i data-lucide="circle-question-mark" class="help-icon"></i></label>
 <input id="input-guidance" step="0.1" type="number" value="3.5"/>
 <p class="input-hint">Flux / Qwen only</p>
 </div>
 <div class="input-group">
-<label class="input-label">Seed</label>
+<label class="input-label">Seed <i data-lucide="circle-question-mark" class="help-icon"></i></label>
 <input id="input-seed" type="number" value="-1"/>
 <p class="input-hint">-1 = random</p>
 </div>
 <div class="input-group">
-<label class="input-label">Batch Count</label>
+<label class="input-label">Batch Count <i data-lucide="circle-question-mark" class="help-icon"></i></label>
 <input id="input-batch-count" type="number" value="1" min="1"/>
 </div>
 <div class="input-group">
-<label class="input-label">Max VRAM</label>
+<label class="input-label">Max VRAM <i data-lucide="circle-question-mark" class="help-icon"></i></label>
 <input id="input-max-vram" step="0.1" type="number" value="-0.5"/>
 <p class="input-hint">Negative = auto</p>
 </div>
 </div>
 <div class="input-group">
-<label class="input-label">Sampler</label>
+<label class="input-label">Sampler <i data-lucide="circle-question-mark" class="help-icon"></i></label>
 <select id="select-sampler">
 <option>DPM++ 2M Karras</option>
 <option>Euler a</option>
@@ -181,35 +181,35 @@
 </div>
 <div class="toggles-list">
 <label class="toggle-row">
-<span class="input-label">VAE on CPU</span>
+<span class="input-label">VAE on CPU <i data-lucide="circle-question-mark" class="help-icon"></i></span>
 <div class="switch">
 <input id="toggle-vae-cpu" checked="" type="checkbox"/>
 <span class="slider"></span>
 </div>
 </label>
 <label class="toggle-row">
-<span class="input-label">CLIP on CPU</span>
+<span class="input-label">CLIP on CPU <i data-lucide="circle-question-mark" class="help-icon"></i></span>
 <div class="switch">
 <input id="toggle-clip-cpu" type="checkbox"/>
 <span class="slider"></span>
 </div>
 </label>
 <label class="toggle-row">
-<span class="input-label">Offload to CPU</span>
+<span class="input-label">Offload to CPU <i data-lucide="circle-question-mark" class="help-icon"></i></span>
 <div class="switch">
 <input id="toggle-offload-cpu" type="checkbox"/>
 <span class="slider"></span>
 </div>
 </label>
 <label class="toggle-row">
-<span class="input-label">Diffusion Flash Attn</span>
+<span class="input-label">Diffusion Flash Attn <i data-lucide="circle-question-mark" class="help-icon"></i></span>
 <div class="switch">
 <input id="toggle-diffusion-fa" checked="" type="checkbox"/>
 <span class="slider"></span>
 </div>
 </label>
 <label class="toggle-row">
-<span class="input-label">VAE Tiling</span>
+<span class="input-label">VAE Tiling <i data-lucide="circle-question-mark" class="help-icon"></i></span>
 <div class="switch">
 <input id="toggle-vae-tiling" type="checkbox"/>
 <span class="slider"></span>

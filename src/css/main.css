@@ -189,6 +189,9 @@ header {
 .input-label {
     font-size: 12px;
     color: var(--on-surface-variant);
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
 select {
@@ -469,6 +472,29 @@ input:checked + .slider:before {
 
 i[data-lucide] {
     vertical-align: middle;
+}
+
+.help-icon {
+    width: 14px;
+    height: 14px;
+    opacity: 0.4;
+    cursor: help;
+    vertical-align: baseline;
+}
+
+#tooltip {
+    position: fixed;
+    background-color: var(--surface-lowest);
+    border: 1px solid var(--outline);
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: var(--on-surface);
+    max-width: 280px;
+    z-index: 1000;
+    pointer-events: none;
+    display: none;
+    line-height: 1.4;
 }
 
 /* Custom Scrollbar */
