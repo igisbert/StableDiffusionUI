@@ -177,13 +177,13 @@ pub async fn run_inference(
         std::thread::sleep(Duration::from_secs(1));
     };
 
-    RUNNING.store(false, Ordering::SeqCst);
+    let was_running = RUNNING.swap(false, Ordering::SeqCst);
     *CHILD.lock().unwrap() = None;
 
     let _ = t_stdout.join();
     let _ = t_stderr.join();
 
-    if !RUNNING.load(Ordering::SeqCst) {
+    if !was_running {
         let _ = app.emit("console-line", "[ABORTED] Inference cancelled.");
         let _ = app.emit("inference-aborted", ());
         return Ok(());

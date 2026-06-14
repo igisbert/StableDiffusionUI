@@ -11,12 +11,10 @@ function setRunning(running) {
   const btnAbort = document.getElementById('btn-abort')
 
   if (running) {
-    btnRun.classList.add('running')
-    btnRun.innerHTML = '<span class="material-symbols-outlined">stop</span> ABORT'
+    btnRun.disabled = true
     btnAbort.hidden = false
   } else {
-    btnRun.classList.remove('running')
-    btnRun.innerHTML = '<span class="material-symbols-outlined">play_arrow</span> RUN INFERENCE'
+    btnRun.disabled = false
     btnAbort.hidden = true
   }
 }
