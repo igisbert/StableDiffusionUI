@@ -100,8 +100,11 @@ pub async fn run_inference(
        .arg("-s").arg(params.seed.to_string())
        .arg("-b").arg(params.batch_count.to_string())
        .arg("--sampling-method").arg(&params.sampler)
-       .arg("--scheduler").arg(&params.scheduler)
        .arg("-o").arg(&output_file);
+
+    if !params.scheduler.is_empty() {
+        cmd.arg("--scheduler").arg(&params.scheduler);
+    }
 
     if params.max_vram != 0.0 {
         cmd.arg("--max-vram").arg(params.max_vram.to_string());

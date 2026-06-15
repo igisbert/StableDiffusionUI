@@ -49,7 +49,7 @@ async function buildCommand() {
   cmd += ' -s ' + int('input-seed', -1)
   cmd += ' -b ' + int('input-batch-count', 1)
   cmd += ' --sampling-method ' + val('select-sampler')
-  cmd += ' --scheduler ' + val('select-scheduler')
+  if (val('select-scheduler')) cmd += ' --scheduler ' + val('select-scheduler')
   const maxVram = num('input-max-vram', -0.5)
   if (maxVram !== 0) cmd += ' --max-vram ' + maxVram
   if (checked('toggle-vae-cpu')) cmd += ' --vae-on-cpu'

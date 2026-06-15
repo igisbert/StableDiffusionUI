@@ -24,13 +24,18 @@ const SAMPLERS = [
 ]
 
 const SCHEDULERS = [
-  { value: 'normal',          label: 'Normal' },
-  { value: 'karras',          label: 'Karras' },
-  { value: 'exponential',     label: 'Exponential' },
-  { value: 'sgm_uniform',     label: 'SGM Uniform' },
-  { value: 'simple',          label: 'Simple' },
-  { value: 'ddim_uniform',    label: 'DDIM Uniform' },
-  { value: 'beta',            label: 'Beta' },
+  { value: '',              label: 'Ninguno (default)' },
+  { value: 'discrete',      label: 'Discrete' },
+  { value: 'simple',        label: 'Simple' },
+  { value: 'karras',        label: 'Karras' },
+  { value: 'ays',           label: 'AYS' },
+  { value: 'bong_tangent',  label: 'Bong Tangent' },
+  { value: 'exponential',   label: 'Exponential' },
+  { value: 'gits',          label: 'GITS' },
+  { value: 'kl_optimal',    label: 'KL Optimal' },
+  { value: 'lcm',           label: 'LCM' },
+  { value: 'sgm_uniform',   label: 'SGM Uniform' },
+  { value: 'smoothstep',    label: 'Smoothstep' },
 ]
 
 const PATH_KEYS = [
