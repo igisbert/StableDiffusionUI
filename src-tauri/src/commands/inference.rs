@@ -100,7 +100,7 @@ pub async fn run_inference(
        .arg("-s").arg(params.seed.to_string())
        .arg("-b").arg(params.batch_count.to_string())
        .arg("--sampling-method").arg(&params.sampler)
-       .arg("--schedule").arg(&params.scheduler)
+       .arg("--scheduler").arg(&params.scheduler)
        .arg("-o").arg(&output_file);
 
     if params.max_vram != 0.0 {
@@ -176,7 +176,26 @@ pub async fn run_inference(
 
     match status {
         Ok(s) if s.success() => {
-            let _ = app.emit("inference-done", &output_file);
+            let prefix = format!("gen_{}", timestamp);
+            let out_dir = Path::new(&params.output_path);
+            let mut files: Vec<String> = Vec::new();
+
+            if let Ok(entries) = std::fs::read_dir(out_dir) {
+                for entry in entries.flatten() {
+                    let name = entry.file_name();
+                    let name_str = name.to_string_lossy();
+                    if name_str.starts_with(&prefix) && name_str.ends_with(".png") {
+                        files.push(entry.path().to_string_lossy().to_string());
+                    }
+                }
+            }
+
+            files.sort();
+            if files.is_empty() {
+                files.push(output_file);
+            }
+
+            let _ = app.emit("inference-done", &files);
             Ok(())
         }
         Ok(s) => Err(format!("sd-cli terminó con código {:?}", s.code())),
