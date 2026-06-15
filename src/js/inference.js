@@ -1,7 +1,7 @@
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
 import { createIcons, icons } from 'lucide'
-import { getSdPath, getOutputPath, getModelsPath, getVaePath, getLlmPath, getLoraPath } from './config.js'
+import { getSdPath, getOutputPath, getModelsPath, getVaePath, getLlmPath, getLoraPath, getClipLPath, getClipGPath, getT5xxlPath } from './config.js'
 import { clearConsole, appendLine } from './console.js'
 
 let isRunning = false
@@ -26,6 +26,9 @@ async function buildCommand() {
   const vaePath = await getVaePath()
   const llmPath = await getLlmPath()
   const loraPath = await getLoraPath()
+  const clipLPath = await getClipLPath()
+  const clipGPath = await getClipGPath()
+  const t5xxlPath = await getT5xxlPath()
 
   const val = (id) => document.getElementById(id)?.value ?? ''
   const checked = (id) => document.getElementById(id)?.checked ?? false
@@ -40,6 +43,9 @@ async function buildCommand() {
   if (val('select-llm')) cmd += ' --llm "' + llmPath + '\\' + val('select-llm') + '"'
   if (val('select-vae')) cmd += ' --vae "' + vaePath + '\\' + val('select-vae') + '"'
   if (val('select-lora')) cmd += ' --lora-model-dir "' + loraPath + '"'
+  if (val('select-clip-l')) cmd += ' --clip_l "' + clipLPath + '\\' + val('select-clip-l') + '"'
+  if (val('select-clip-g')) cmd += ' --clip_g "' + clipGPath + '\\' + val('select-clip-g') + '"'
+  if (val('select-t5xxl')) cmd += ' --t5xxl "' + t5xxlPath + '\\' + val('select-t5xxl') + '"'
 
   let prompt = val('input-prompt')
   if (val('select-lora')) {
@@ -121,11 +127,17 @@ appendLine('[ERROR] Error al abortar: ' + e)
       vae_path: await getVaePath(),
       llm_path: await getLlmPath(),
       lora_path: await getLoraPath(),
+      clip_l_path: await getClipLPath(),
+      clip_g_path: await getClipGPath(),
+      t5xxl_path: await getT5xxlPath(),
       model: val('select-model'),
       model_type: (document.querySelector('input[name="model-type"]:checked')?.value) || 'monolithic',
       llm: val('select-llm'),
       vae: val('select-vae'),
       lora: val('select-lora'),
+      clip_l: val('select-clip-l'),
+      clip_g: val('select-clip-g'),
+      t5xxl: val('select-t5xxl'),
       prompt: val('input-prompt'),
       lora_weight: num('input-lora-weight', 1),
       negative_prompt: val('input-negative'),

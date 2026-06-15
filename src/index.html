@@ -75,6 +75,27 @@
 <span id="path-lora-text">No configurado</span>
 </div>
 </div>
+<div class="config-group">
+<label class="config-label">Ruta de CLIP-L</label>
+<div class="path-display" id="path-clip-l" data-action="pick-clip-l" style="cursor:pointer">
+<i data-lucide="folder" style="width: 14px; height: 14px;"></i>
+<span id="path-clip-l-text">No configurado</span>
+</div>
+</div>
+<div class="config-group">
+<label class="config-label">Ruta de CLIP-G</label>
+<div class="path-display" id="path-clip-g" data-action="pick-clip-g" style="cursor:pointer">
+<i data-lucide="folder" style="width: 14px; height: 14px;"></i>
+<span id="path-clip-g-text">No configurado</span>
+</div>
+</div>
+<div class="config-group">
+<label class="config-label">Ruta de T5XXL</label>
+<div class="path-display" id="path-t5xxl" data-action="pick-t5xxl" style="cursor:pointer">
+<i data-lucide="folder" style="width: 14px; height: 14px;"></i>
+<span id="path-t5xxl-text">No configurado</span>
+</div>
+</div>
 </div>
 </aside>
 <main>
@@ -91,19 +112,31 @@
 <div class="model-grid">
 <div class="input-group">
 <label class="input-label">Modelo</label>
-<select id="select-model"></select>
+<select id="select-model"><option value="">Ninguno</option></select>
 </div>
 <div class="input-group">
 <label class="input-label">LLM Encoder</label>
-<select id="select-llm"></select>
+<select id="select-llm"><option value="">Ninguno</option></select>
 </div>
 <div class="input-group">
 <label class="input-label">VAE</label>
-<select id="select-vae"></select>
+<select id="select-vae"><option value="">Ninguno</option></select>
 </div>
 <div class="input-group">
 <label class="input-label">LoRA</label>
-<select id="select-lora"></select>
+<select id="select-lora"><option value="">Ninguno</option></select>
+</div>
+<div class="input-group">
+<label class="input-label">CLIP-L</label>
+<select id="select-clip-l"><option value="">Ninguno</option></select>
+</div>
+<div class="input-group">
+<label class="input-label">CLIP-G</label>
+<select id="select-clip-g"><option value="">Ninguno</option></select>
+</div>
+<div class="input-group">
+<label class="input-label">T5XXL</label>
+<select id="select-t5xxl"><option value="">Ninguno</option></select>
 </div>
 </div>
 <div class="workspace-grid">

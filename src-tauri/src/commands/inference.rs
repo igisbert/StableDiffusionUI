@@ -18,12 +18,18 @@ pub struct InferenceParams {
     pub vae_path: String,
     pub llm_path: String,
     pub lora_path: String,
+    pub clip_l_path: String,
+    pub clip_g_path: String,
+    pub t5xxl_path: String,
     pub model: String,
     pub model_type: String,
     pub llm: String,
     pub vae: String,
     pub lora: String,
     pub lora_weight: f32,
+    pub clip_l: String,
+    pub clip_g: String,
+    pub t5xxl: String,
     pub prompt: String,
     pub negative_prompt: String,
     pub width: u32,
@@ -89,6 +95,21 @@ pub async fn run_inference(
         if lora_dir.exists() {
             cmd.arg("--lora-model-dir").arg(lora_dir);
         }
+    }
+
+    if !params.clip_l.is_empty() {
+        let p = Path::new(&params.clip_l_path).join(&params.clip_l);
+        if p.exists() { cmd.arg("--clip_l").arg(p); }
+    }
+
+    if !params.clip_g.is_empty() {
+        let p = Path::new(&params.clip_g_path).join(&params.clip_g);
+        if p.exists() { cmd.arg("--clip_g").arg(p); }
+    }
+
+    if !params.t5xxl.is_empty() {
+        let p = Path::new(&params.t5xxl_path).join(&params.t5xxl);
+        if p.exists() { cmd.arg("--t5xxl").arg(p); }
     }
 
     let mut prompt = params.prompt.clone();
