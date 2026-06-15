@@ -90,7 +90,7 @@ export async function initConfig() {
 
 async function scanModels(modelsPath) {
   const result = await invoke('scan_models', { basePath: modelsPath })
-  populateSelect('select-model', result.models)
+  populateSelect('select-model', result.models, true)
 }
 
 async function scanVae(vaePath) {
