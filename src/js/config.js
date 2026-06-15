@@ -108,6 +108,18 @@ async function scanLoras(loraPath) {
   populateSelect('select-lora', result.models, true)
 }
 
+export async function refreshAllSelects() {
+  const store = await Store.load('config.json')
+  const modelsPath = store.get('models_path')
+  const vaePath = store.get('vae_path')
+  const llmPath = store.get('llm_path')
+  const loraPath = store.get('lora_path')
+  if (modelsPath) await scanModels(modelsPath)
+  if (vaePath) await scanVae(vaePath)
+  if (llmPath) await scanEncoders(llmPath)
+  if (loraPath) await scanLoras(loraPath)
+}
+
 function populateSelect(id, items, withNone = false) {
   const sel = document.getElementById(id)
   if (!sel) return

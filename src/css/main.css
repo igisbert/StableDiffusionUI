@@ -149,6 +149,28 @@ header {
     gap: 16px;
 }
 
+.refresh-btn {
+    background: none;
+    border: 1px solid var(--outline);
+    color: var(--on-surface);
+    padding: 6px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+}
+
+.refresh-btn:hover {
+    background-color: var(--surface-high);
+}
+
+.refresh-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
 .icon-btn {
     background: none;
     border: none;
