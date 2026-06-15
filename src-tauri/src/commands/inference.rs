@@ -23,6 +23,7 @@ pub struct InferenceParams {
     pub llm: String,
     pub vae: String,
     pub lora: String,
+    pub lora_weight: f32,
     pub prompt: String,
     pub negative_prompt: String,
     pub width: u32,
@@ -84,13 +85,22 @@ pub async fn run_inference(
     }
 
     if !params.lora.is_empty() {
-        let p = Path::new(&params.lora_path).join(&params.lora);
-        if p.exists() {
-            cmd.arg("--lora-model-dir").arg(p);
+        let lora_dir = Path::new(&params.lora_path);
+        if lora_dir.exists() {
+            cmd.arg("--lora-model-dir").arg(lora_dir);
         }
     }
 
-    cmd.arg("-p").arg(&params.prompt)
+    let mut prompt = params.prompt.clone();
+    if !params.lora.is_empty() {
+        let lora_name = Path::new(&params.lora)
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or(&params.lora);
+        prompt.push_str(&format!(" <lora:{}:{}>", lora_name, params.lora_weight));
+    }
+
+    cmd.arg("-p").arg(&prompt)
        .arg("-n").arg(&params.negative_prompt)
        .arg("-W").arg(params.width.to_string())
        .arg("-H").arg(params.height.to_string())

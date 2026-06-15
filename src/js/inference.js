@@ -39,8 +39,15 @@ async function buildCommand() {
   if (val('select-model')) cmd += ' ' + flag + ' "' + modelsPath + '\\' + val('select-model') + '"'
   if (val('select-llm')) cmd += ' --llm "' + llmPath + '\\' + val('select-llm') + '"'
   if (val('select-vae')) cmd += ' --vae "' + vaePath + '\\' + val('select-vae') + '"'
-  if (val('select-lora')) cmd += ' --lora-model-dir "' + loraPath + '\\' + val('select-lora') + '"'
-  cmd += ' -p "' + val('input-prompt') + '"'
+  if (val('select-lora')) cmd += ' --lora-model-dir "' + loraPath + '"'
+
+  let prompt = val('input-prompt')
+  if (val('select-lora')) {
+    const loraName = val('select-lora').replace(/\.[^.]+$/, '')
+    const weight = num('input-lora-weight', 1)
+    prompt += ' <lora:' + loraName + ':' + weight + '>'
+  }
+  cmd += ' -p "' + prompt + '"'
   if (val('input-negative')) cmd += ' -n "' + val('input-negative') + '"'
   cmd += ' -W ' + int('input-width', 512) + ' -H ' + int('input-height', 512)
   cmd += ' --steps ' + int('input-steps', 20)
@@ -62,6 +69,10 @@ async function buildCommand() {
 }
 
 export function initInference() {
+  document.getElementById('select-lora').addEventListener('change', function() {
+    document.getElementById('input-lora-weight').disabled = !this.value
+  })
+
   document.getElementById('btn-copy').addEventListener('click', async function () {
     const cmd = await buildCommand()
     await navigator.clipboard.writeText(cmd)
@@ -116,6 +127,7 @@ appendLine('[ERROR] Error al abortar: ' + e)
       vae: val('select-vae'),
       lora: val('select-lora'),
       prompt: val('input-prompt'),
+      lora_weight: num('input-lora-weight', 1),
       negative_prompt: val('input-negative'),
       width: int('input-width', 512),
       height: int('input-height', 512),

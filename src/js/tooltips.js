@@ -10,6 +10,7 @@ export const tooltips = {
   'Seed': 'Semilla del generador aleatorio. -1 = aleatorio cada vez. Fijar un valor permite replicar resultados exactos.',
   'Lote': 'Número de imágenes a generar en secuencia. Cada imagen usa una semilla diferente si seed es -1.',
   'VRAM máx.': 'Máxima memoria VRAM a usar en GB. Negativo = auto-detectar. Útil si tienes otras aplicaciones usando la GPU.',
+  'Peso LoRA': 'Peso del adaptador LoRA. Rango: 0 a 2. Valores altos = más influencia del LoRA sobre el prompt.',
   'Sampler': 'Algoritmo de muestreo. DPM++ 2M es buena calidad/velocidad. Euler a es más rápido pero menos detallado.',
   'Scheduler': 'Curva de ruido aplicada durante el denoising. Karras mejora calidad. Normal es el valor por defecto.',
   'VAE en CPU': 'Carga el VAE en CPU en vez de GPU. Útil si el VAE es muy grande para la VRAM disponible.',

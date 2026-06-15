@@ -357,6 +357,13 @@ input:checked + .slider:before {
     cursor: not-allowed;
 }
 
+input:disabled,
+select:disabled,
+textarea:disabled {
+    opacity: 0.2;
+    cursor: not-allowed;
+}
+
 .run-row {
     display: grid;
     grid-template-columns: auto 1fr auto;
