@@ -72,6 +72,14 @@ async function buildCommand() {
   if (checked('toggle-vae-tiling')) cmd += ' --vae-tiling'
   if (checked('toggle-verbose')) cmd += ' -v'
 
+  const customFlags = val('input-custom-flags')
+  if (customFlags) {
+    for (const line of customFlags.split('\n')) {
+      const trimmed = line.trim()
+      if (trimmed) cmd += ' ' + trimmed
+    }
+  }
+
   return cmd
 }
 

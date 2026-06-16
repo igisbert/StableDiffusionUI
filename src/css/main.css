@@ -390,6 +390,56 @@ textarea:disabled {
     cursor: not-allowed;
 }
 
+.custom-flags-section {
+    border: 1px solid var(--outline);
+    border-radius: 4px;
+    padding: 0;
+}
+
+.custom-flags-section summary {
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--on-surface-variant);
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    list-style: none;
+}
+
+.custom-flags-section summary::-webkit-details-marker {
+    display: none;
+}
+
+.custom-flags-section summary .details-chevron {
+    width: 14px;
+    height: 14px;
+    transition: transform 0.2s ease;
+}
+
+.custom-flags-section[open] summary .details-chevron {
+    transform: rotate(90deg);
+}
+
+.custom-flags-section textarea {
+    width: 100%;
+    border: none;
+    border-top: 1px solid var(--outline);
+    border-radius: 0 0 4px 4px;
+    padding: 8px 12px;
+    font-family: monospace;
+    font-size: 12px;
+    resize: vertical;
+    background-color: var(--surface);
+    color: var(--on-surface);
+    box-sizing: border-box;
+}
+
+.custom-flags-section textarea:focus {
+    outline: none;
+}
+
 .run-row {
     display: grid;
     grid-template-columns: auto 1fr auto;

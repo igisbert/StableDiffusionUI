@@ -27,6 +27,7 @@ const FIELDS = [
   { id: 'toggle-diffusion-fa',    type: 'toggle' },
   { id: 'toggle-vae-tiling',      type: 'toggle' },
   { id: 'toggle-verbose',         type: 'toggle' },
+  { id: 'input-custom-flags',     type: 'text'   },
 ]
 
 function captureForm() {
