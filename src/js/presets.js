@@ -7,6 +7,9 @@ const FIELDS = [
   { id: 'select-llm',             type: 'select' },
   { id: 'select-vae',             type: 'select' },
   { id: 'select-lora',            type: 'select' },
+  { id: 'select-clip-l',          type: 'select' },
+  { id: 'select-clip-g',          type: 'select' },
+  { id: 'select-t5xxl',           type: 'select' },
   { id: 'input-width',            type: 'text'   },
   { id: 'input-height',           type: 'text'   },
   { id: 'input-steps',            type: 'text'   },
@@ -15,6 +18,7 @@ const FIELDS = [
   { id: 'input-seed',             type: 'text'   },
   { id: 'input-batch-count',      type: 'text'   },
   { id: 'input-max-vram',         type: 'text'   },
+  { id: 'input-lora-weight',      type: 'text'   },
   { id: 'select-sampler',         type: 'select' },
   { id: 'select-scheduler',       type: 'select' },
   { id: 'toggle-vae-cpu',         type: 'toggle' },
@@ -22,6 +26,7 @@ const FIELDS = [
   { id: 'toggle-offload-cpu',     type: 'toggle' },
   { id: 'toggle-diffusion-fa',    type: 'toggle' },
   { id: 'toggle-vae-tiling',      type: 'toggle' },
+  { id: 'toggle-verbose',         type: 'toggle' },
 ]
 
 function captureForm() {
@@ -45,6 +50,7 @@ function applyForm(values) {
     }
   }
   document.getElementById('select-model')?.dispatchEvent(new Event('change'))
+  document.getElementById('select-lora')?.dispatchEvent(new Event('change'))
 }
 
 async function loadPresetList() {
