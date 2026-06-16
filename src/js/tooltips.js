@@ -22,7 +22,7 @@ export const tooltips = {
   'Diffusion Flash Attn': 'Usa Flash Attention para el modelo de difusión. Acelera la inferencia y reduce VRAM. Requiere soporte de hardware.',
   'VAE Tiling': 'Procesa el VAE en tiles para imágenes grandes. Permite generar imágenes más grandes con menos VRAM.',
   'Verbose': 'Muestra información detallada durante la inferencia. Útil para depurar problemas.',
-  'Flags personalizados': 'Añade flags extra al comando. Un flag por línea. Ejemplo: --vae-only',
+  'Flags personalizados': 'Añade flags extra al comando. Un flag por línea.',
 }
 
 export function initTooltips() {
