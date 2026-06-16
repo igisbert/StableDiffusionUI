@@ -139,14 +139,13 @@ async function scanT5xxl(t5xxlPath) {
 }
 
 export async function refreshAllSelects() {
-  const store = await Store.load('config.json')
-  const modelsPath = store.get('models_path')
-  const vaePath = store.get('vae_path')
-  const llmPath = store.get('llm_path')
-  const loraPath = store.get('lora_path')
-  const clipLPath = store.get('clip_l_path')
-  const clipGPath = store.get('clip_g_path')
-  const t5xxlPath = store.get('t5xxl_path')
+  const modelsPath = await store.get('models_path')
+  const vaePath = await store.get('vae_path')
+  const llmPath = await store.get('llm_path')
+  const loraPath = await store.get('lora_path')
+  const clipLPath = await store.get('clip_l_path')
+  const clipGPath = await store.get('clip_g_path')
+  const t5xxlPath = await store.get('t5xxl_path')
   if (modelsPath) await scanModels(modelsPath)
   if (vaePath) await scanVae(vaePath)
   if (llmPath) await scanEncoders(llmPath)
