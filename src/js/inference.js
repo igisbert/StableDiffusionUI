@@ -70,6 +70,7 @@ async function buildCommand() {
   if (checked('toggle-offload-cpu')) cmd += ' --offload-to-cpu'
   if (checked('toggle-diffusion-fa')) cmd += ' --diffusion-fa'
   if (checked('toggle-vae-tiling')) cmd += ' --vae-tiling'
+  if (checked('toggle-verbose')) cmd += ' -v'
 
   return cmd
 }
@@ -156,6 +157,7 @@ appendLine('[ERROR] Error al abortar: ' + e)
       offload_to_cpu: checked('toggle-offload-cpu'),
       diffusion_fa: checked('toggle-diffusion-fa'),
       vae_tiling: checked('toggle-vae-tiling'),
+      verbose: checked('toggle-verbose'),
     }
 
     clearConsole()

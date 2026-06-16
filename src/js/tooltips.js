@@ -21,6 +21,7 @@ export const tooltips = {
   'Descargar a CPU': 'Descarga capas a CPU cuando no se usan. Reduce VRAM pero aumenta tiempo de inferencia.',
   'Diffusion Flash Attn': 'Usa Flash Attention para el modelo de difusión. Acelera la inferencia y reduce VRAM. Requiere soporte de hardware.',
   'VAE Tiling': 'Procesa el VAE en tiles para imágenes grandes. Permite generar imágenes más grandes con menos VRAM.',
+  'Verbose': 'Muestra información detallada durante la inferencia. Útil para depurar problemas.',
 }
 
 export function initTooltips() {

@@ -47,6 +47,7 @@ pub struct InferenceParams {
     pub offload_to_cpu: bool,
     pub diffusion_fa: bool,
     pub vae_tiling: bool,
+    pub verbose: bool,
 }
 
 #[tauri::command]
@@ -146,6 +147,7 @@ pub async fn run_inference(
     if params.offload_to_cpu { cmd.arg("--offload-to-cpu"); }
     if params.diffusion_fa  { cmd.arg("--diffusion-fa"); }
     if params.vae_tiling    { cmd.arg("--vae-tiling"); }
+    if params.verbose       { cmd.arg("-v"); }
 
     cmd.stdout(Stdio::piped()).stderr(Stdio::piped());
 
