@@ -155,6 +155,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     btnEnhance.disabled = true
     btnEnhance.innerHTML = '<i data-lucide="loader"></i>'
+    createIcons({ icons })
 
     try {
       const model = document.getElementById('select-model')?.value || ''

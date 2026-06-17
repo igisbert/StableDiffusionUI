@@ -900,6 +900,7 @@ i[data-lucide] {
     align-items: center;
     gap: 4px;
     font-size: 11px;
+    aspect-ratio: 1 / 1;
 }
 
 .btn-enhance:hover {
@@ -913,8 +914,17 @@ i[data-lucide] {
 }
 
 .btn-enhance:disabled {
-    opacity: 0.2;
+    opacity: 1;
     cursor: not-allowed;
+}
+
+.btn-enhance:disabled svg {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
 
 /* Gemini Dialog */
