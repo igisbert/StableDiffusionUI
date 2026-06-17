@@ -9,6 +9,7 @@ pub fn run() {
             commands::fs::pick_folder,
             commands::fs::scan_models,
             commands::fs::ensure_output_dir,
+            commands::fs::open_folder,
             commands::inference::run_inference,
             commands::inference::abort_inference,
         ])

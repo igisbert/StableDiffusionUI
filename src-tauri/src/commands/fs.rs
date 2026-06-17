@@ -54,3 +54,12 @@ fn read_dir_files(path: &str, exts: &[&str]) -> Vec<String> {
 pub fn ensure_output_dir(path: String) -> Result<(), String> {
     fs::create_dir_all(&path).map_err(|e| e.to_string())
 }
+
+#[tauri::command]
+pub fn open_folder(path: String) -> Result<(), String> {
+    std::process::Command::new("explorer")
+        .arg(path)
+        .spawn()
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
