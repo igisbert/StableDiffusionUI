@@ -34,9 +34,9 @@ pub struct InferenceParams {
     pub negative_prompt: String,
     pub width: u32,
     pub height: u32,
-    pub steps: u32,
-    pub cfg_scale: f32,
-    pub guidance: f32,
+    pub steps: Option<u32>,
+    pub cfg_scale: Option<f32>,
+    pub guidance: Option<f32>,
     pub seed: i64,
     pub batch_count: u32,
     pub max_vram: f32,
@@ -126,13 +126,22 @@ pub async fn run_inference(
        .arg("-n").arg(&params.negative_prompt)
        .arg("-W").arg(params.width.to_string())
        .arg("-H").arg(params.height.to_string())
-       .arg("--steps").arg(params.steps.to_string())
-       .arg("--cfg-scale").arg(params.cfg_scale.to_string())
-       .arg("--guidance").arg(params.guidance.to_string())
        .arg("-s").arg(params.seed.to_string())
        .arg("-b").arg(params.batch_count.to_string())
        .arg("--sampling-method").arg(&params.sampler)
        .arg("-o").arg(&output_file);
+
+    if let Some(steps) = params.steps {
+        cmd.arg("--steps").arg(steps.to_string());
+    }
+
+    if let Some(cfg) = params.cfg_scale {
+        cmd.arg("--cfg-scale").arg(cfg.to_string());
+    }
+
+    if let Some(guid) = params.guidance {
+        cmd.arg("--guidance").arg(guid.to_string());
+    }
 
     if !params.scheduler.is_empty() {
         cmd.arg("--scheduler").arg(&params.scheduler);

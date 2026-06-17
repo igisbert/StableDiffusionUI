@@ -62,14 +62,14 @@ async function buildCommand() {
   cmd += ' -p "' + prompt + '"'
   if (val('input-negative')) cmd += ' -n "' + val('input-negative') + '"'
   cmd += ' -W ' + int('input-width', 512) + ' -H ' + int('input-height', 512)
-  cmd += ' --steps ' + int('input-steps', 20)
-  cmd += ' --cfg-scale ' + num('input-cfg', 7.0)
-  cmd += ' --guidance ' + num('input-guidance', 3.5)
+  if (val('input-steps') !== '') cmd += ' --steps ' + int('input-steps', 15)
+  if (val('input-cfg') !== '') cmd += ' --cfg-scale ' + num('input-cfg', 1)
+  if (val('input-guidance') !== '') cmd += ' --guidance ' + num('input-guidance', 1)
   cmd += ' -s ' + int('input-seed', -1)
   cmd += ' -b ' + int('input-batch-count', 1)
   cmd += ' --sampling-method ' + val('select-sampler')
   if (val('select-scheduler')) cmd += ' --scheduler ' + val('select-scheduler')
-  const maxVram = num('input-max-vram', -0.5)
+  const maxVram = num('input-max-vram', -1)
   if (maxVram !== 0) cmd += ' --max-vram ' + maxVram
   if (checked('toggle-vae-cpu')) cmd += ' --vae-on-cpu'
   if (checked('toggle-clip-cpu')) cmd += ' --clip-on-cpu'
@@ -158,12 +158,12 @@ appendLine('[ERROR] Error al abortar: ' + e)
       negative_prompt: val('input-negative'),
       width: int('input-width', 512),
       height: int('input-height', 512),
-      steps: int('input-steps', 20),
-      cfg_scale: num('input-cfg', 7.0),
-      guidance: num('input-guidance', 3.5),
+      steps: val('input-steps') !== '' ? int('input-steps', 15) : null,
+      cfg_scale: val('input-cfg') !== '' ? num('input-cfg', 1) : null,
+      guidance: val('input-guidance') !== '' ? num('input-guidance', 1) : null,
       seed: int('input-seed', -1),
       batch_count: int('input-batch-count', 1),
-      max_vram: num('input-max-vram', -0.5),
+      max_vram: num('input-max-vram', -1),
       sampler: val('select-sampler'),
       scheduler: val('select-scheduler'),
       vae_on_cpu: checked('toggle-vae-cpu'),
