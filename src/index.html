@@ -105,7 +105,26 @@
 </div>
 <div class="header-actions">
 <button id="btn-refresh" class="refresh-btn"><i data-lucide="refresh-cw"></i> Actualizar recursos</button>
+<button id="btn-gemini-settings" class="refresh-btn" style="display:none"><i data-lucide="sparkles"></i> Gemini API Key</button>
 </div>
+<dialog id="dialog-gemini" class="gemini-dialog">
+<div class="dialog-header">
+<h3>Gemini API Key</h3>
+<button id="btn-close-gemini" class="dialog-close"><i data-lucide="x"></i></button>
+</div>
+<div class="dialog-body">
+<label class="input-label">API Key</label>
+<input id="input-api-key" type="password" placeholder="Introduce tu API key de Google AI"/>
+<div class="model-select-row" id="model-select-row" style="display:none">
+<label class="input-label">Modelo</label>
+<select id="select-gemini-model"></select>
+</div>
+</div>
+<div class="dialog-footer">
+<button id="btn-delete-api-key" class="btn-secondary" style="display:none">Eliminar API Key</button>
+<button id="btn-save-api-key" class="run-btn">Guardar</button>
+</div>
+</dialog>
 </header>
 <div class="content-wrapper">
 <!-- Model Selection -->
@@ -157,7 +176,10 @@
 <div class="prompt-header">
 <label class="input-label">Prompt <i data-lucide="circle-question-mark" class="help-icon"></i></label>
 </div>
+<div class="prompt-container">
 <textarea id="input-prompt" placeholder="Introduce el texto descriptivo para la generación de imagen..."></textarea>
+<button id="btn-enhance" class="btn-enhance" style="display:none" title="Mejorar prompt con IA"><i data-lucide="sparkles"></i></button>
+</div>
 </div>
 <div class="negative-prompt">
 <div class="prompt-header">

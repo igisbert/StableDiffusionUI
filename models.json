@@ -1,0 +1,10 @@
+{
+  "gemma": {
+    "id": "gemma-4-31b-it",
+    "name": "Gemma 4"
+  },
+  "flash": {
+    "id": "gemini-3.1-flash-lite",
+    "name": "Gemini 3.1"
+  }
+}
