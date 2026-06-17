@@ -8,9 +8,13 @@ lighting, quality descriptors and artistic references relevant to the active mod
 Return ONLY the enhanced prompt, no explanation, no quotes.`
 
 function cleanResponse(text) {
-  const noThink = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim()
-  const lines = noThink.split('\n').map(l => l.trim()).filter(Boolean)
-  return lines[lines.length - 1]
+  let clean = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim()
+  clean = clean.replace(/^\*+\s*\*+[^*]*\*+\s*/gm, '')
+  clean = clean.replace(/^\*([^*]+)\*\s*/gm, '$1')
+  clean = clean.replace(/^[-•]\s+/gm, '')
+  clean = clean.replace(/^\s*\*+\s*/gm, '')
+  const lines = clean.split('\n').map(l => l.trim()).filter(Boolean)
+  return lines[lines.length - 1] || text.trim()
 }
 
 let store = null
