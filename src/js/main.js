@@ -5,8 +5,10 @@ import { initConfig, refreshAllSelects, getOutputPath } from './config.js'
 import { initInference } from './inference.js'
 import { initPresets } from './presets.js'
 import { initTooltips } from './tooltips.js'
-import { appendLine } from './console.js'
+import { appendLine, clearConsole } from './console.js'
 import { showPreview } from './preview.js'
+
+let capturedSeeds = []
 
 document.addEventListener('DOMContentLoaded', async () => {
   createIcons({ icons })
@@ -22,8 +24,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   })
 
   document.getElementById('btn-copy-seed').addEventListener('click', async () => {
-    const seed = document.getElementById('input-seed')?.value ?? ''
-    await navigator.clipboard.writeText(seed)
+    const text = capturedSeeds.length === 1
+      ? capturedSeeds[0]
+      : capturedSeeds.join(', ')
+    if (!text) return
+    await navigator.clipboard.writeText(text)
     const btn = document.getElementById('btn-copy-seed')
     btn.innerHTML = '<i data-lucide="check"></i> Copiar semilla'
     createIcons({ icons })
@@ -39,7 +44,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   })
 
   await listen('console-line', (event) => {
-    appendLine(event.payload)
+    const line = event.payload
+    const match = line.match(/generating image: \d+\/\d+ - seed (\d+)/)
+    if (match) capturedSeeds.push(match[1])
+    appendLine(line)
+  })
+
+  await listen('inference-started', () => {
+    capturedSeeds = []
   })
 
   await listen('inference-done', (event) => {

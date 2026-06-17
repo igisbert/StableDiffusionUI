@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core'
-import { listen } from '@tauri-apps/api/event'
+import { listen, emit } from '@tauri-apps/api/event'
 import { createIcons, icons } from 'lucide'
 import { getSdPath, getOutputPath, getModelsPath, getVaePath, getLlmPath, getLoraPath, getClipLPath, getClipGPath, getT5xxlPath } from './config.js'
 import { clearConsole, appendLine } from './console.js'
@@ -170,6 +170,7 @@ appendLine('[ERROR] Error al abortar: ' + e)
 
     clearConsole()
     setRunning(true)
+    emit('inference-started')
 
     try {
       await invoke('run_inference', { params: params })

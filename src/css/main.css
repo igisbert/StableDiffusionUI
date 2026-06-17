@@ -789,9 +789,9 @@ i[data-lucide] {
     gap: 6px;
 }
 
-.actions-bar .btn-outline:hover {
-    background-color: #1a1a1a;
-    color: var(--on-surface);
+.actions-bar .btn-outline svg {
+    width: 12px;
+    height: 12px;
 }
 
 .actions-bar .btn-outline svg {
