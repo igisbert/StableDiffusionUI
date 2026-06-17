@@ -385,7 +385,8 @@ input:checked+.slider:before {
 
 input:disabled,
 select:disabled,
-textarea:disabled {
+textarea:disabled,
+button:disabled {
     opacity: 0.2;
     cursor: not-allowed;
 }

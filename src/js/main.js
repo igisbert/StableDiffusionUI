@@ -38,6 +38,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     }, 1500)
   })
 
+  document.getElementById('btn-copy-console').addEventListener('click', async () => {
+    const consoleOutput = document.getElementById('console-output')?.textContent ?? ''
+    if (!consoleOutput) return
+    await navigator.clipboard.writeText(consoleOutput)
+    const btn = document.getElementById('btn-copy-console')
+    btn.innerHTML = '<i data-lucide="check"></i> Copiar salida de la consola'
+    createIcons({ icons })
+    setTimeout(() => {
+      btn.innerHTML = '<i data-lucide="copy"></i> Copiar salida de la consola'
+      createIcons({ icons })
+    }, 1500)
+  })
+
   document.getElementById('btn-open-output').addEventListener('click', async () => {
     const output = await getOutputPath()
     if (output) await invoke('open_folder', { path: output })

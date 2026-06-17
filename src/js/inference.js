@@ -10,13 +10,19 @@ function setRunning(running) {
   isRunning = running
   const btnRun = document.getElementById('btn-run')
   const btnAbort = document.getElementById('btn-abort')
+  const btnCopySeed = document.getElementById('btn-copy-seed')
+  const btnCopyConsole = document.getElementById('btn-copy-console')
 
   if (running) {
     btnRun.disabled = true
     btnAbort.hidden = false
+    btnCopySeed.disabled = true
+    btnCopyConsole.disabled = true
   } else {
     btnRun.disabled = false
     btnAbort.hidden = true
+    btnCopySeed.disabled = false
+    btnCopyConsole.disabled = false
   }
 }
 
