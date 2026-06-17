@@ -1,6 +1,6 @@
 import { Store } from '@tauri-apps/plugin-store'
 
-const MODELS_URL = 'https://raw.githubusercontent.com/user/repo/main/models.json'
+const MODELS_URL = 'https://raw.githubusercontent.com/igisbert/StableDiffusionUI/refs/heads/master/models.json'
 
 const ENHANCE_SYSTEM_PROMPT = `You are an expert at writing prompts for Stable Diffusion, 
 Flux and similar image generation models. Enhance the user's prompt adding visual style, 
