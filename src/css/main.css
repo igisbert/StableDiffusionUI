@@ -515,6 +515,15 @@ button:disabled {
 .canvas-placeholder i[data-lucide] {
     width: 64px;
     height: 64px;
+    color: var(--on-surface-variant);
+    opacity: 0.4;
+}
+
+.canvas-placeholder svg {
+    width: 64px;
+    height: 64px;
+    color: var(--on-surface-variant);
+    opacity: 0.4;
 }
 
 .canvas-placeholder p {
