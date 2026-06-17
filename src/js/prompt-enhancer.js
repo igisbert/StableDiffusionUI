@@ -7,6 +7,12 @@ Flux and similar image generation models. Enhance the user's prompt adding visua
 lighting, quality descriptors and artistic references relevant to the active model. 
 Return ONLY the enhanced prompt, no explanation, no quotes.`
 
+function cleanResponse(text) {
+  const noThink = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim()
+  const lines = noThink.split('\n').map(l => l.trim()).filter(Boolean)
+  return lines[lines.length - 1]
+}
+
 let store = null
 let models = null
 
@@ -89,5 +95,6 @@ export async function enhancePrompt(promptText, modelContext) {
   }
 
   const data = await res.json()
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || promptText
+  const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || promptText
+  return cleanResponse(raw)
 }
