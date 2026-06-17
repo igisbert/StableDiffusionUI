@@ -770,6 +770,7 @@ i[data-lucide] {
 
 .actions-bar {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
     flex-shrink: 0;
     padding: 12px 16px;
@@ -788,6 +789,7 @@ i[data-lucide] {
     cursor: pointer;
     font-size: 12px;
     gap: 6px;
+    white-space: nowrap;
 }
 
 .actions-bar .btn-outline svg {
