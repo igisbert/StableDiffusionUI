@@ -130,10 +130,33 @@ appendLine('[ERROR] Error al abortar: ' + e)
       return
     }
 
+    const model = document.getElementById('select-model')?.value ?? ''
+    if (!model) {
+      appendLine('[ERROR] Selecciona un modelo antes de ejecutar.')
+      return
+    }
+
     const val = function (id) { return document.getElementById(id)?.value ?? '' }
     const checked = function (id) { return document.getElementById(id)?.checked ?? false }
     const num = function (id, fallback) { const v = parseFloat(val(id)); return isNaN(v) ? (fallback || 0) : v }
     const int = function (id, fallback) { const v = parseInt(val(id)); return isNaN(v) ? (fallback || 0) : v }
+
+    const width = int('input-width', 512)
+    const height = int('input-height', 512)
+    const batchCount = int('input-batch-count', 1)
+
+    if (width < 8) {
+      appendLine('[ERROR] El ancho debe ser al menos 8 píxeles.')
+      return
+    }
+    if (height < 8) {
+      appendLine('[ERROR] El alto debe ser al menos 8 píxeles.')
+      return
+    }
+    if (batchCount < 1 || batchCount > 8) {
+      appendLine('[ERROR] El lote debe ser entre 1 y 8.')
+      return
+    }
 
     const params = {
       sd_path: sdPath,
