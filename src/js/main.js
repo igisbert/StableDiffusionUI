@@ -4,6 +4,7 @@ import { createIcons, icons } from 'lucide'
 import { initConfig, refreshAllSelects, getOutputPath } from './config.js'
 import { initInference } from './inference.js'
 import { initPresets } from './presets.js'
+import { initPromptTemplates } from './prompt-templates.js'
 import { initTooltips } from './tooltips.js'
 import { appendLine, clearConsole } from './console.js'
 import { showPreview } from './preview.js'
@@ -31,6 +32,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   await initConfig()
   await initPresets()
+  await initPromptTemplates()
   initInference()
   initTooltips()
   await updateEnhancerUI()

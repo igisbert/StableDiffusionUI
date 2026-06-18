@@ -49,8 +49,9 @@ aside {
 }
 
 .logo-placeholder {
-    width: 100%;
+    width: 50%;
     aspect-ratio: 1 / 1;
+    margin: 0 auto;
     background-color: var(--surface-container);
     border: 1px dashed var(--outline);
     border-radius: 8px;
