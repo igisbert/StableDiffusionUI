@@ -38,8 +38,8 @@ async function buildCommand() {
 
   const val = (id) => document.getElementById(id)?.value ?? ''
   const checked = (id) => document.getElementById(id)?.checked ?? false
-  const num = (id, fallback = 0) => parseFloat(val(id)) || fallback
-  const int = (id, fallback = 0) => parseInt(val(id)) || fallback
+  const num = (id, fallback = 0) => { const v = parseFloat(val(id)); return isNaN(v) ? fallback : v }
+  const int = (id, fallback = 0) => { const v = parseInt(val(id)); return isNaN(v) ? fallback : v }
 
   const modelType = document.querySelector('input[name="model-type"]:checked')?.value || 'monolithic'
   const flag = modelType === 'diffusion' ? '--diffusion-model' : '-m'
@@ -132,8 +132,8 @@ appendLine('[ERROR] Error al abortar: ' + e)
 
     const val = function (id) { return document.getElementById(id)?.value ?? '' }
     const checked = function (id) { return document.getElementById(id)?.checked ?? false }
-    const num = function (id, fallback) { return parseFloat(val(id)) || fallback || 0 }
-    const int = function (id, fallback) { return parseInt(val(id)) || fallback || 0 }
+    const num = function (id, fallback) { const v = parseFloat(val(id)); return isNaN(v) ? (fallback || 0) : v }
+    const int = function (id, fallback) { const v = parseInt(val(id)); return isNaN(v) ? (fallback || 0) : v }
 
     const params = {
       sd_path: sdPath,
@@ -172,6 +172,7 @@ appendLine('[ERROR] Error al abortar: ' + e)
       diffusion_fa: checked('toggle-diffusion-fa'),
       vae_tiling: checked('toggle-vae-tiling'),
       verbose: checked('toggle-verbose'),
+      custom_flags: val('input-custom-flags'),
     }
 
     clearConsole()

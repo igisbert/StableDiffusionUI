@@ -48,6 +48,7 @@ pub struct InferenceParams {
     pub diffusion_fa: bool,
     pub vae_tiling: bool,
     pub verbose: bool,
+    pub custom_flags: String,
 }
 
 #[tauri::command]
@@ -157,6 +158,17 @@ pub async fn run_inference(
     if params.diffusion_fa  { cmd.arg("--diffusion-fa"); }
     if params.vae_tiling    { cmd.arg("--vae-tiling"); }
     if params.verbose       { cmd.arg("-v"); }
+
+    if !params.custom_flags.is_empty() {
+        for line in params.custom_flags.lines() {
+            let trimmed = line.trim();
+            if !trimmed.is_empty() {
+                for arg in trimmed.split_whitespace() {
+                    cmd.arg(arg);
+                }
+            }
+        }
+    }
 
     cmd.stdout(Stdio::piped()).stderr(Stdio::piped());
 
