@@ -806,11 +806,6 @@ i[data-lucide] {
     height: 12px;
 }
 
-.actions-bar .btn-outline svg {
-    width: 12px;
-    height: 12px;
-}
-
 .model-type-row {
     display: flex;
     align-items: center;
