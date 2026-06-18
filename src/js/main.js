@@ -41,31 +41,39 @@ document.addEventListener('DOMContentLoaded', async () => {
   })
 
   document.getElementById('btn-copy-seed').addEventListener('click', async () => {
-    const text = capturedSeeds.length === 1
-      ? capturedSeeds[0]
-      : capturedSeeds.join(', ')
-    if (!text) return
-    await navigator.clipboard.writeText(text)
-    const btn = document.getElementById('btn-copy-seed')
-    btn.innerHTML = '<i data-lucide="check"></i> Copiar semilla'
-    createIcons({ icons })
-    setTimeout(() => {
-      btn.innerHTML = '<i data-lucide="copy"></i> Copiar semilla'
+    try {
+      const text = capturedSeeds.length === 1
+        ? capturedSeeds[0]
+        : capturedSeeds.join(', ')
+      if (!text) return
+      await navigator.clipboard.writeText(text)
+      const btn = document.getElementById('btn-copy-seed')
+      btn.innerHTML = '<i data-lucide="check"></i> Copiar semilla'
       createIcons({ icons })
-    }, 1500)
+      setTimeout(() => {
+        btn.innerHTML = '<i data-lucide="copy"></i> Copiar semilla'
+        createIcons({ icons })
+      }, 1500)
+    } catch (e) {
+      appendLine('[ERROR] No se pudo copiar al portapapeles: ' + e)
+    }
   })
 
   document.getElementById('btn-copy-console').addEventListener('click', async () => {
-    const consoleOutput = document.getElementById('console-output')?.textContent ?? ''
-    if (!consoleOutput) return
-    await navigator.clipboard.writeText(consoleOutput)
-    const btn = document.getElementById('btn-copy-console')
-    btn.innerHTML = '<i data-lucide="check"></i> Copiar salida de la consola'
-    createIcons({ icons })
-    setTimeout(() => {
-      btn.innerHTML = '<i data-lucide="copy"></i> Copiar salida de la consola'
+    try {
+      const consoleOutput = document.getElementById('console-output')?.textContent ?? ''
+      if (!consoleOutput) return
+      await navigator.clipboard.writeText(consoleOutput)
+      const btn = document.getElementById('btn-copy-console')
+      btn.innerHTML = '<i data-lucide="check"></i> Copiar salida de la consola'
       createIcons({ icons })
-    }, 1500)
+      setTimeout(() => {
+        btn.innerHTML = '<i data-lucide="copy"></i> Copiar salida de la consola'
+        createIcons({ icons })
+      }, 1500)
+    } catch (e) {
+      appendLine('[ERROR] No se pudo copiar al portapapeles: ' + e)
+    }
   })
 
   document.getElementById('btn-open-output').addEventListener('click', async () => {

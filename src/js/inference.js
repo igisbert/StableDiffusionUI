@@ -95,15 +95,19 @@ export function initInference() {
   })
 
   document.getElementById('btn-copy').addEventListener('click', async function () {
-    const cmd = await buildCommand()
-    await navigator.clipboard.writeText(cmd)
-    const btn = document.getElementById('btn-copy')
-    btn.innerHTML = '<i data-lucide="check"></i>'
-    createIcons({ icons })
-    setTimeout(function () {
-      btn.innerHTML = '<i data-lucide="copy"></i>'
+    try {
+      const cmd = await buildCommand()
+      await navigator.clipboard.writeText(cmd)
+      const btn = document.getElementById('btn-copy')
+      btn.innerHTML = '<i data-lucide="check"></i>'
       createIcons({ icons })
-    }, 1500)
+      setTimeout(function () {
+        btn.innerHTML = '<i data-lucide="copy"></i>'
+        createIcons({ icons })
+      }, 1500)
+    } catch (e) {
+      appendLine('[ERROR] No se pudo copiar al portapapeles: ' + e)
+    }
   })
 
   document.getElementById('btn-run').addEventListener('click', async function () {
