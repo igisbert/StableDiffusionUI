@@ -996,7 +996,7 @@ i[data-lucide] {
     border-top: 1px solid var(--outline);
 }
 
-.btn-secondary {
+.btn-secondary-outline {
     background: none;
     border: 1px solid var(--outline);
     border-radius: 4px;
@@ -1006,7 +1006,7 @@ i[data-lucide] {
     font-size: 12px;
 }
 
-.btn-secondary:hover {
+.btn-secondary-outline:hover {
     background-color: var(--surface-high);
     color: var(--on-surface);
 }
