@@ -113,6 +113,13 @@
 <span id="path-t5xxl-text">No configurado</span>
 </div>
 </div>
+<div class="config-group">
+<label class="config-label">Ruta de Upscalers</label>
+<div class="path-display" id="path-upscalers" data-action="pick-upscalers" style="cursor:pointer">
+<i data-lucide="folder" style="width: 14px; height: 14px;"></i>
+<span id="path-upscalers-text">No configurado</span>
+</div>
+</div>
 </div>
 </aside>
 <main>
@@ -330,6 +337,13 @@ EJECUTAR
 <button id="btn-copy-seed" class="btn-outline" title="Copiar semilla" disabled><i data-lucide="copy"></i> Copiar semilla</button>
 <button id="btn-copy-console" class="btn-outline" title="Copiar salida de la consola" disabled><i data-lucide="copy"></i> Copiar salida de la consola</button>
 <button id="btn-open-output" class="btn-outline" title="Abrir carpeta de salida"><i data-lucide="folder-open"></i> Abrir carpeta de salida</button>
+<button id="btn-upscale" class="btn-outline" title="Upscale" disabled><i data-lucide="maximize-2"></i> Upscale</button>
+</div>
+<div class="popover-upscale" id="popover-upscale">
+<button id="btn-close-upscale" class="btn-icon popover-close"><i data-lucide="x"></i></button>
+<label class="config-label">Modelo de upscale</label>
+<div id="radio-upscale-models" class="radio-upscale-group"></div>
+<button id="btn-run-upscale" class="btn-secondary">Upscale</button>
 </div>
 <pre id="console-output" class="console-area"></pre>
 </div>

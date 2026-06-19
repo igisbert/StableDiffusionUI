@@ -1,11 +1,21 @@
 import { convertFileSrc } from '@tauri-apps/api/core'
 
+let currentPaths = []
+let selectedIndex = 0
+
+export function getSelectedImage() {
+  if (currentPaths.length === 0) return null
+  return currentPaths[selectedIndex]
+}
+
 export function showPreview(paths) {
   const img = document.getElementById('preview-img')
   const placeholder = document.getElementById('canvas-placeholder')
   const gallery = document.getElementById('preview-gallery')
 
   const files = Array.isArray(paths) ? paths : [paths]
+  currentPaths = files
+  selectedIndex = 0
 
   placeholder.style.display = 'none'
 
@@ -28,6 +38,7 @@ export function showPreview(paths) {
     thumb.addEventListener('click', () => {
       gallery.querySelectorAll('.preview-thumb').forEach(t => t.classList.remove('active'))
       thumb.classList.add('active')
+      selectedIndex = i
       img.src = convertFileSrc(path)
       img.style.display = 'block'
     })

@@ -270,3 +270,102 @@ pub async fn abort_inference(app: tauri::AppHandle) -> Result<(), String> {
     }
     Ok(())
 }
+
+#[tauri::command]
+pub async fn run_upscale(
+    app: tauri::AppHandle,
+    sd_path: String,
+    output_path: String,
+    upscalers_path: String,
+    model: String,
+    input_image: String,
+) -> Result<(), String> {
+    let scaled_dir = Path::new(&output_path).join("scaled");
+    if !scaled_dir.exists() {
+        std::fs::create_dir_all(&scaled_dir).map_err(|e| e.to_string())?;
+    }
+
+    let input_name = Path::new(&input_image)
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("image");
+    let output_file = scaled_dir.join(format!("{}_scaled.png", input_name));
+
+    let sd_bin = Path::new(&sd_path)
+        .join(format!("sd-cli.{}", std::env::consts::EXE_EXTENSION));
+
+    let upscale_model = Path::new(&upscalers_path).join(&model);
+
+    let mut cmd = Command::new(&sd_bin);
+    cmd.arg("--mode").arg("upscale")
+       .arg("--upscale-model").arg(upscale_model)
+       .arg("-i").arg(&input_image)
+       .arg("-o").arg(&output_file);
+
+    let mut child = cmd
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .map_err(|e| e.to_string())?;
+
+    RUNNING.store(true, Ordering::SeqCst);
+    *CHILD.lock().unwrap() = Some(child);
+
+    let app_stdout = app.clone();
+    let app_stderr = app.clone();
+
+    let t_stdout = std::thread::spawn(move || {
+        if let Some(stdout) = CHILD.lock().unwrap().as_mut().and_then(|c| c.stdout.take()) {
+            let reader = BufReader::new(stdout);
+            for line in reader.lines().flatten() {
+                if !RUNNING.load(Ordering::SeqCst) { break; }
+                let _ = app_stdout.emit("console-line", &line);
+            }
+        }
+    });
+
+    let t_stderr = std::thread::spawn(move || {
+        if let Some(stderr) = CHILD.lock().unwrap().as_mut().and_then(|c| c.stderr.take()) {
+            let reader = BufReader::new(stderr);
+            for line in reader.lines().flatten() {
+                if !RUNNING.load(Ordering::SeqCst) { break; }
+                let _ = app_stderr.emit("console-line", &line);
+            }
+        }
+    });
+
+    let status = loop {
+        {
+            let mut guard = CHILD.lock().unwrap();
+            match guard.as_mut() {
+                Some(child) => match child.try_wait() {
+                    Ok(Some(exit)) => break Ok(exit),
+                    Ok(None) => {}
+                    Err(e) => break Err(e.to_string()),
+                },
+                None => break Err("No hay proceso hijo".to_string()),
+            }
+        }
+        std::thread::sleep(Duration::from_secs(1));
+    };
+
+    let was_running = RUNNING.swap(false, Ordering::SeqCst);
+    *CHILD.lock().unwrap() = None;
+
+    let _ = t_stdout.join();
+    let _ = t_stderr.join();
+
+    if !was_running {
+        let _ = app.emit("console-line", "[ABORTADO] Upscale cancelado.");
+        return Ok(());
+    }
+
+    match status {
+        Ok(s) if s.success() => {
+            let _ = app.emit("upscale-done", output_file.to_string_lossy().to_string());
+            Ok(())
+        }
+        Ok(s) => Err(format!("sd-cli terminó con código {:?}", s.code())),
+        Err(e) => Err(e),
+    }
+}

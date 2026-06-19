@@ -48,6 +48,7 @@ const PATH_KEYS = [
   { key: 'clip_l_path', action: 'pick-clip-l', display: 'path-clip-l-text' },
   { key: 'clip_g_path', action: 'pick-clip-g', display: 'path-clip-g-text' },
   { key: 't5xxl_path',  action: 'pick-t5xxl',  display: 'path-t5xxl-text' },
+  { key: 'upscalers_path', action: 'pick-upscalers', display: 'path-upscalers-text' },
 ]
 
 export async function initConfig() {
@@ -82,11 +83,14 @@ export async function initConfig() {
   const t5xxlPath = await store.get('t5xxl_path')
   if (t5xxlPath) await scanT5xxl(t5xxlPath)
 
+  const upscalersPath = await store.get('upscalers_path')
+  if (upscalersPath) await scanUpscanners(upscalersPath)
+
   for (const { key, action, display } of PATH_KEYS) {
     document.querySelector(`[data-action="${action}"]`)?.addEventListener('click', async () => {
       const path = await invoke('pick_folder')
       if (!path) return
-      if (key === 'output_path' || key === 'models_path' || key === 'vae_path' || key === 'llm_path' || key === 'lora_path' || key === 'clip_l_path' || key === 'clip_g_path' || key === 't5xxl_path') {
+      if (key === 'output_path' || key === 'models_path' || key === 'vae_path' || key === 'llm_path' || key === 'lora_path' || key === 'clip_l_path' || key === 'clip_g_path' || key === 't5xxl_path' || key === 'upscalers_path') {
         await invoke('ensure_output_dir', { path })
       }
       await store.set(key, path)
@@ -138,6 +142,27 @@ async function scanT5xxl(t5xxlPath) {
   populateSelect('select-t5xxl', result.models, true)
 }
 
+async function scanUpscanners(upscalersPath) {
+  const result = await invoke('scan_models', { basePath: upscalersPath })
+  populateRadios('radio-upscale-models', result.models)
+}
+
+function populateRadios(containerId, items) {
+  const container = document.getElementById(containerId)
+  if (!container) return
+  container.innerHTML = ''
+  for (const item of items) {
+    const label = document.createElement('label')
+    const input = document.createElement('input')
+    input.type = 'radio'
+    input.name = 'upscale-model'
+    input.value = item
+    label.appendChild(input)
+    label.appendChild(document.createTextNode(item))
+    container.appendChild(label)
+  }
+}
+
 export async function refreshAllSelects() {
   const modelsPath = await store.get('models_path')
   const vaePath = await store.get('vae_path')
@@ -146,6 +171,7 @@ export async function refreshAllSelects() {
   const clipLPath = await store.get('clip_l_path')
   const clipGPath = await store.get('clip_g_path')
   const t5xxlPath = await store.get('t5xxl_path')
+  const upscalersPath = await store.get('upscalers_path')
   if (modelsPath) await scanModels(modelsPath)
   if (vaePath) await scanVae(vaePath)
   if (llmPath) await scanEncoders(llmPath)
@@ -153,6 +179,7 @@ export async function refreshAllSelects() {
   if (clipLPath) await scanClipL(clipLPath)
   if (clipGPath) await scanClipG(clipGPath)
   if (t5xxlPath) await scanT5xxl(t5xxlPath)
+  if (upscalersPath) await scanUpscanners(upscalersPath)
 }
 
 function populateSelect(id, items, withNone = false) {
@@ -182,6 +209,7 @@ export async function getLoraPath() { return (await store.get('lora_path')) || '
 export async function getClipLPath() { return (await store.get('clip_l_path')) || '' }
 export async function getClipGPath() { return (await store.get('clip_g_path')) || '' }
 export async function getT5xxlPath() { return (await store.get('t5xxl_path')) || '' }
+export async function getUpscannersPath() { return (await store.get('upscalers_path')) || '' }
 
 function updatePathDisplay(id, path) {
   const el = document.getElementById(id)

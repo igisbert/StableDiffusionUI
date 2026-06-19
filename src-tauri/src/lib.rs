@@ -12,6 +12,7 @@ pub fn run() {
             commands::fs::open_folder,
             commands::inference::run_inference,
             commands::inference::abort_inference,
+            commands::inference::run_upscale,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

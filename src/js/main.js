@@ -1,13 +1,13 @@
 import { listen } from '@tauri-apps/api/event'
 import { invoke } from '@tauri-apps/api/core'
 import { createIcons, icons } from 'lucide'
-import { initConfig, refreshAllSelects, getOutputPath } from './config.js'
+import { initConfig, refreshAllSelects, getOutputPath, getSdPath, getUpscannersPath } from './config.js'
 import { initInference } from './inference.js'
 import { initPresets } from './presets.js'
 import { initPromptTemplates } from './prompt-templates.js'
 import { initTooltips } from './tooltips.js'
 import { appendLine, clearConsole } from './console.js'
-import { showPreview } from './preview.js'
+import { showPreview, getSelectedImage } from './preview.js'
 import {
   loadEnhancerConfig,
   isEnhancerConfigured,
@@ -181,6 +181,50 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   })
 
+  document.getElementById('btn-upscale').addEventListener('click', () => {
+    document.getElementById('popover-upscale').classList.toggle('open')
+  })
+
+  document.getElementById('btn-close-upscale').addEventListener('click', () => {
+    document.getElementById('popover-upscale').classList.remove('open')
+  })
+
+  document.getElementById('btn-run-upscale').addEventListener('click', async () => {
+    const selectedRadio = document.querySelector('input[name="upscale-model"]:checked')
+    if (!selectedRadio) return
+
+    const inputImage = getSelectedImage()
+    if (!inputImage) return
+
+    const sdPath = await getSdPath()
+    const outputPath = await getOutputPath()
+    const upscalersPath = await getUpscannersPath()
+
+    if (!sdPath || !outputPath || !upscalersPath) return
+
+    document.getElementById('popover-upscale').classList.remove('open')
+
+    try {
+      await invoke('run_upscale', {
+        sdPath,
+        outputPath,
+        upscalersPath,
+        model: selectedRadio.value,
+        inputImage
+      })
+    } catch (e) {
+      console.error('Upscale error:', e)
+    }
+  })
+
+  document.addEventListener('click', (e) => {
+    const pop = document.getElementById('popover-upscale')
+    const btn = document.getElementById('btn-upscale')
+    if (!pop.contains(e.target) && !btn.contains(e.target)) {
+      pop.classList.remove('open')
+    }
+  })
+
   await listen('console-line', (event) => {
     const line = event.payload
     const match = line.match(/generating image: \d+\/\d+ - seed (\d+)/)
@@ -193,6 +237,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   })
 
   await listen('inference-done', (event) => {
+    showPreview(event.payload)
+    document.getElementById('btn-upscale').disabled = false
+  })
+
+  await listen('upscale-done', (event) => {
     showPreview(event.payload)
   })
 })
