@@ -62,7 +62,8 @@ export async function fetchModels() {
   } catch {
     models = {
       gemma: { id: 'gemma-4-31b-it', name: 'Gemma 4' },
-      flash: { id: 'gemini-3.1-flash-lite', name: 'Gemini 3.1' }
+      flash_old: { id: 'gemini-3.1-flash-lite', name: 'Gemini 3.1' },
+      flash_latest: { id: 'gemini-3.5-flash', name: 'Gemini 3.5' }
     }
   }
   return models

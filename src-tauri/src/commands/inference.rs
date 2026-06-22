@@ -7,6 +7,12 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 use tauri::Emitter;
 
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
+
+#[cfg(target_os = "windows")]
+const CREATE_NO_WINDOW: u32 = 0x08000000;
+
 static CHILD: Mutex<Option<std::process::Child>> = Mutex::new(None);
 static RUNNING: AtomicBool = AtomicBool::new(false);
 
@@ -172,6 +178,9 @@ pub async fn run_inference(
 
     cmd.stdout(Stdio::piped()).stderr(Stdio::piped());
 
+    #[cfg(target_os = "windows")]
+    cmd.creation_flags(CREATE_NO_WINDOW);
+
     let mut child = cmd.spawn()
         .map_err(|e| format!("No se pudo lanzar sd-cli: {}", e))?;
 
@@ -301,6 +310,9 @@ pub async fn run_upscale(
        .arg("--upscale-model").arg(upscale_model)
        .arg("-i").arg(&input_image)
        .arg("-o").arg(&output_file);
+
+    #[cfg(target_os = "windows")]
+    cmd.creation_flags(CREATE_NO_WINDOW);
 
     let mut child = cmd
         .stdout(Stdio::piped())
