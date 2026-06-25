@@ -1,9 +1,9 @@
 use serde::Deserialize;
 use std::io::{BufRead, BufReader};
-use std::process::{Command, Stdio};
 use std::path::Path;
-use std::sync::Mutex;
+use std::process::{Command, Stdio};
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Mutex;
 use std::time::Duration;
 use tauri::Emitter;
 
@@ -59,10 +59,7 @@ pub struct InferenceParams {
 }
 
 #[tauri::command]
-pub async fn run_inference(
-    app: tauri::AppHandle,
-    params: InferenceParams,
-) -> Result<(), String> {
+pub async fn run_inference(app: tauri::AppHandle, params: InferenceParams) -> Result<(), String> {
     let timestamp = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap_or_default()
@@ -72,14 +69,16 @@ pub async fn run_inference(
         .to_string_lossy()
         .to_string();
 
-    let sd_bin = Path::new(&params.sd_path)
-        .join(format!("sd-cli.{}", std::env::consts::EXE_EXTENSION));
+    let sd_bin =
+        Path::new(&params.sd_path).join(format!("sd-cli.{}", std::env::consts::EXE_EXTENSION));
 
     let mut cmd = Command::new(&sd_bin);
 
     if params.force_cuda {
-        cmd.arg("--backend").arg("cuda0")
-           .arg("--params-backend").arg("cpu");
+        cmd.arg("--backend")
+            .arg("cuda0")
+            .arg("--params-backend")
+            .arg("cpu");
     }
 
     if !params.model.is_empty() {
@@ -89,12 +88,14 @@ pub async fn run_inference(
             "-m"
         };
         cmd.arg(flag)
-           .arg(Path::new(&params.models_path).join(&params.model));
+            .arg(Path::new(&params.models_path).join(&params.model));
     }
 
     if !params.llm.is_empty() {
         let p = Path::new(&params.llm_path).join(&params.llm);
-        if p.exists() { cmd.arg("--llm").arg(p); }
+        if p.exists() {
+            cmd.arg("--llm").arg(p);
+        }
     }
 
     if !params.vae.is_empty() {
@@ -113,17 +114,23 @@ pub async fn run_inference(
 
     if !params.clip_l.is_empty() {
         let p = Path::new(&params.clip_l_path).join(&params.clip_l);
-        if p.exists() { cmd.arg("--clip_l").arg(p); }
+        if p.exists() {
+            cmd.arg("--clip_l").arg(p);
+        }
     }
 
     if !params.clip_g.is_empty() {
         let p = Path::new(&params.clip_g_path).join(&params.clip_g);
-        if p.exists() { cmd.arg("--clip_g").arg(p); }
+        if p.exists() {
+            cmd.arg("--clip_g").arg(p);
+        }
     }
 
     if !params.t5xxl.is_empty() {
         let p = Path::new(&params.t5xxl_path).join(&params.t5xxl);
-        if p.exists() { cmd.arg("--t5xxl").arg(p); }
+        if p.exists() {
+            cmd.arg("--t5xxl").arg(p);
+        }
     }
 
     let mut prompt = params.prompt.clone();
@@ -135,14 +142,22 @@ pub async fn run_inference(
         prompt.push_str(&format!(" <lora:{}:{}>", lora_name, params.lora_weight));
     }
 
-    cmd.arg("-p").arg(&prompt)
-       .arg("-n").arg(&params.negative_prompt)
-       .arg("-W").arg(params.width.to_string())
-       .arg("-H").arg(params.height.to_string())
-       .arg("-s").arg(params.seed.to_string())
-       .arg("-b").arg(params.batch_count.to_string())
-       .arg("--sampling-method").arg(&params.sampler)
-       .arg("-o").arg(&output_file);
+    cmd.arg("-p")
+        .arg(&prompt)
+        .arg("-n")
+        .arg(&params.negative_prompt)
+        .arg("-W")
+        .arg(params.width.to_string())
+        .arg("-H")
+        .arg(params.height.to_string())
+        .arg("-s")
+        .arg(params.seed.to_string())
+        .arg("-b")
+        .arg(params.batch_count.to_string())
+        .arg("--sampling-method")
+        .arg(&params.sampler)
+        .arg("-o")
+        .arg(&output_file);
 
     if let Some(steps) = params.steps {
         cmd.arg("--steps").arg(steps.to_string());
@@ -164,12 +179,24 @@ pub async fn run_inference(
         cmd.arg("--max-vram").arg(params.max_vram.to_string());
     }
 
-    if params.vae_on_cpu    { cmd.arg("--vae-on-cpu"); }
-    if params.clip_on_cpu   { cmd.arg("--clip-on-cpu"); }
-    if params.offload_to_cpu { cmd.arg("--offload-to-cpu"); }
-    if params.diffusion_fa  { cmd.arg("--diffusion-fa"); }
-    if params.vae_tiling    { cmd.arg("--vae-tiling"); }
-    if params.verbose       { cmd.arg("-v"); }
+    if params.vae_on_cpu {
+        cmd.arg("--vae-on-cpu");
+    }
+    if params.clip_on_cpu {
+        cmd.arg("--clip-on-cpu");
+    }
+    if params.offload_to_cpu {
+        cmd.arg("--offload-to-cpu");
+    }
+    if params.diffusion_fa {
+        cmd.arg("--diffusion-fa");
+    }
+    if params.vae_tiling {
+        cmd.arg("--vae-tiling");
+    }
+    if params.verbose {
+        cmd.arg("-v");
+    }
 
     if !params.custom_flags.is_empty() {
         for line in params.custom_flags.lines() {
@@ -187,7 +214,8 @@ pub async fn run_inference(
     #[cfg(target_os = "windows")]
     cmd.creation_flags(CREATE_NO_WINDOW);
 
-    let mut child = cmd.spawn()
+    let mut child = cmd
+        .spawn()
         .map_err(|e| format!("No se pudo lanzar sd-cli: {}", e))?;
 
     let stdout = child.stdout.take();
@@ -203,7 +231,9 @@ pub async fn run_inference(
         if let Some(stdout) = stdout {
             let reader = BufReader::new(stdout);
             for line in reader.lines().flatten() {
-                if !RUNNING.load(Ordering::SeqCst) { break; }
+                if !RUNNING.load(Ordering::SeqCst) {
+                    break;
+                }
                 let _ = app_stdout.emit("console-line", &line);
             }
         }
@@ -213,7 +243,9 @@ pub async fn run_inference(
         if let Some(stderr) = stderr {
             let reader = BufReader::new(stderr);
             for line in reader.lines().flatten() {
-                if !RUNNING.load(Ordering::SeqCst) { break; }
+                if !RUNNING.load(Ordering::SeqCst) {
+                    break;
+                }
                 let _ = app_stderr.emit("console-line", &line);
             }
         }
@@ -306,16 +338,19 @@ pub async fn run_upscale(
         .unwrap_or("image");
     let output_file = scaled_dir.join(format!("{}_scaled.png", input_name));
 
-    let sd_bin = Path::new(&sd_path)
-        .join(format!("sd-cli.{}", std::env::consts::EXE_EXTENSION));
+    let sd_bin = Path::new(&sd_path).join(format!("sd-cli.{}", std::env::consts::EXE_EXTENSION));
 
     let upscale_model = Path::new(&upscalers_path).join(&model);
 
     let mut cmd = Command::new(&sd_bin);
-    cmd.arg("--mode").arg("upscale")
-       .arg("--upscale-model").arg(upscale_model)
-       .arg("-i").arg(&input_image)
-       .arg("-o").arg(&output_file);
+    cmd.arg("--mode")
+        .arg("upscale")
+        .arg("--upscale-model")
+        .arg(upscale_model)
+        .arg("-i")
+        .arg(&input_image)
+        .arg("-o")
+        .arg(&output_file);
 
     #[cfg(target_os = "windows")]
     cmd.creation_flags(CREATE_NO_WINDOW);
@@ -336,7 +371,9 @@ pub async fn run_upscale(
         if let Some(stdout) = CHILD.lock().unwrap().as_mut().and_then(|c| c.stdout.take()) {
             let reader = BufReader::new(stdout);
             for line in reader.lines().flatten() {
-                if !RUNNING.load(Ordering::SeqCst) { break; }
+                if !RUNNING.load(Ordering::SeqCst) {
+                    break;
+                }
                 let _ = app_stdout.emit("console-line", &line);
             }
         }
@@ -346,7 +383,9 @@ pub async fn run_upscale(
         if let Some(stderr) = CHILD.lock().unwrap().as_mut().and_then(|c| c.stderr.take()) {
             let reader = BufReader::new(stderr);
             for line in reader.lines().flatten() {
-                if !RUNNING.load(Ordering::SeqCst) { break; }
+                if !RUNNING.load(Ordering::SeqCst) {
+                    break;
+                }
                 let _ = app_stderr.emit("console-line", &line);
             }
         }

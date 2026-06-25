@@ -1,6 +1,6 @@
+use serde::Serialize;
 use std::fs;
 use std::path::Path;
-use serde::Serialize;
 use tauri_plugin_dialog::DialogExt;
 
 #[derive(Serialize)]
@@ -25,21 +25,25 @@ pub async fn pick_folder(app: tauri::AppHandle) -> Result<Option<String>, String
 pub fn scan_models(base_path: String) -> Result<ModelFiles, String> {
     let exts = ["safetensors", "ckpt", "bin", "gguf"];
     Ok(ModelFiles {
-        models:        read_dir_files(&base_path, &exts),
-        vaes:          read_dir_files(&base_path, &exts),
-        loras:         read_dir_files(&base_path, &exts),
+        models: read_dir_files(&base_path, &exts),
+        vaes: read_dir_files(&base_path, &exts),
+        loras: read_dir_files(&base_path, &exts),
         text_encoders: read_dir_files(&base_path, &exts),
     })
 }
 
 fn read_dir_files(path: &str, exts: &[&str]) -> Vec<String> {
     let dir = Path::new(path);
-    let Ok(entries) = fs::read_dir(dir) else { return vec![] };
+    let Ok(entries) = fs::read_dir(dir) else {
+        return vec![];
+    };
     entries
         .filter_map(|e| e.ok())
         .filter_map(|e| {
             let p = e.path();
-            if !p.is_file() { return None }
+            if !p.is_file() {
+                return None;
+            }
             let ext = p.extension()?.to_str()?;
             if exts.contains(&ext) {
                 p.file_name()?.to_str().map(|s| s.to_string())
