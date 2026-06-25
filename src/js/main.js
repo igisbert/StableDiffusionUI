@@ -234,6 +234,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   await listen('inference-started', () => {
     capturedSeeds = []
+    document.getElementById('btn-upscale').disabled = true
   })
 
   await listen('inference-done', (event) => {
