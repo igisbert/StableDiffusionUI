@@ -45,6 +45,7 @@ async function buildCommand() {
   const flag = modelType === 'diffusion' ? '--diffusion-model' : '-m'
 
   let cmd = 'sd-cli.exe'
+  if (checked('toggle-cuda')) cmd += ' --backend cuda0 --params-backend cpu'
   if (val('select-model')) cmd += ' ' + flag + ' "' + modelsPath + '\\' + val('select-model') + '"'
   if (val('select-llm')) cmd += ' --llm "' + llmPath + '\\' + val('select-llm') + '"'
   if (val('select-vae')) cmd += ' --vae "' + vaePath + '\\' + val('select-vae') + '"'
@@ -199,6 +200,7 @@ appendLine('[ERROR] Error al abortar: ' + e)
       diffusion_fa: checked('toggle-diffusion-fa'),
       vae_tiling: checked('toggle-vae-tiling'),
       verbose: checked('toggle-verbose'),
+      force_cuda: checked('toggle-cuda'),
       custom_flags: val('input-custom-flags'),
     }
 

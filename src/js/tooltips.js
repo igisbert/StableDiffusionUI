@@ -17,6 +17,7 @@ export const tooltips = {
   'Sampler': 'Algoritmo de muestreo. DPM++ 2M es buena calidad/velocidad. Euler a es más rápido pero menos detallado.',
   'Scheduler': 'Curva de ruido aplicada durante el denoising. Karras mejora calidad. Normal es el valor por defecto.',
   'VAE en CPU': 'Carga el VAE en CPU en vez de GPU. Útil si el VAE es muy grande para la VRAM disponible.',
+  'Forzar CUDA': 'Fuerza el uso de CUDA con backend cuda0 y parámetros en CPU. Útil cuando hay problemas con el backend por defecto.',
   'CLIP en CPU': 'Carga el encoder CLIP en CPU. Reduce uso de VRAM pero es más lento.',
   'Descargar a CPU': 'Descarga capas a CPU cuando no se usan. Reduce VRAM pero aumenta tiempo de inferencia.',
   'Diffusion Flash Attn': 'Usa Flash Attention para el modelo de difusión. Acelera la inferencia y reduce VRAM. Requiere soporte de hardware.',

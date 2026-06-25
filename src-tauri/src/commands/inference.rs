@@ -54,6 +54,7 @@ pub struct InferenceParams {
     pub diffusion_fa: bool,
     pub vae_tiling: bool,
     pub verbose: bool,
+    pub force_cuda: bool,
     pub custom_flags: String,
 }
 
@@ -75,6 +76,11 @@ pub async fn run_inference(
         .join(format!("sd-cli.{}", std::env::consts::EXE_EXTENSION));
 
     let mut cmd = Command::new(&sd_bin);
+
+    if params.force_cuda {
+        cmd.arg("--backend").arg("cuda0")
+           .arg("--params-backend").arg("cpu");
+    }
 
     if !params.model.is_empty() {
         let flag = if params.model_type == "diffusion" {
