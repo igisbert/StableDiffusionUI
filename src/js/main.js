@@ -1,6 +1,7 @@
 import { listen } from '@tauri-apps/api/event'
 import { invoke } from '@tauri-apps/api/core'
 import { createIcons, icons } from 'lucide'
+import { sendNotification } from '@tauri-apps/plugin-notification'
 import { initConfig, refreshAllSelects, getOutputPath, getSdPath, getUpscannersPath } from './config.js'
 import { initInference } from './inference.js'
 import { initPresets } from './presets.js'
@@ -237,9 +238,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('btn-upscale').disabled = true
   })
 
-  await listen('inference-done', (event) => {
+  await listen('inference-done', async (event) => {
     showPreview(event.payload)
     document.getElementById('btn-upscale').disabled = false
+    sendNotification({ title: 'Generación completada', body: 'Tu imagen está lista.' })
   })
 
   await listen('upscale-done', (event) => {
