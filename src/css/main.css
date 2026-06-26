@@ -172,6 +172,35 @@ header {
     height: 14px;
 }
 
+.header-separator {
+    width: 1px;
+    background: var(--outline);
+    margin: 0 8px;
+}
+
+button.btn-notification {
+    width: 34px;
+    height: 34px;
+    padding: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+button.btn-notification svg {
+    width: 16px;
+    height: 16px;
+}
+
+button.btn-notification.active {
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+button.btn-notification.active svg {
+    color: var(--primary);
+}
+
 .icon-btn {
     background: none;
     border: none;

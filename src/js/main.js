@@ -1,12 +1,12 @@
 import { listen } from '@tauri-apps/api/event'
 import { invoke } from '@tauri-apps/api/core'
 import { createIcons, icons } from 'lucide'
-import { sendNotification } from '@tauri-apps/plugin-notification'
 import { initConfig, refreshAllSelects, getOutputPath, getSdPath, getUpscannersPath } from './config.js'
 import { initInference } from './inference.js'
 import { initPresets } from './presets.js'
 import { initPromptTemplates } from './prompt-templates.js'
 import { initTooltips } from './tooltips.js'
+import { initNotifications, notify, toggle } from './notifications.js'
 import { appendLine, clearConsole } from './console.js'
 import { showPreview, getSelectedImage } from './preview.js'
 import {
@@ -37,6 +37,34 @@ document.addEventListener('DOMContentLoaded', async () => {
   initInference()
   initTooltips()
   await updateEnhancerUI()
+
+  const btnNotif = document.getElementById('btn-notifications')
+  let notifEnabled = true
+
+  try {
+    notifEnabled = await initNotifications()
+  } catch (e) {
+    console.error('Notifications init failed:', e)
+  }
+
+  function updateNotifBtnState(enabled) {
+    btnNotif.innerHTML = enabled
+      ? '<i data-lucide="bell"></i>'
+      : '<i data-lucide="bell-off"></i>'
+    btnNotif.classList.toggle('active', enabled)
+    createIcons({ icons })
+  }
+
+  updateNotifBtnState(notifEnabled)
+
+  btnNotif.addEventListener('click', async () => {
+    try {
+      notifEnabled = await toggle()
+    } catch (e) {
+      notifEnabled = !notifEnabled
+    }
+    updateNotifBtnState(notifEnabled)
+  })
 
   document.getElementById('btn-refresh').addEventListener('click', async () => {
     await refreshAllSelects()
@@ -138,8 +166,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       modelSelectRow.style.display = 'flex'
       btnDeleteApiKey.style.display = 'block'
       btnSaveApiKey.textContent = 'Guardar'
-      await updateEnhancerUI()
-      createIcons({ icons })
     } else {
       await setSelectedModel(selectGeminiModel.value || null)
       dialogGemini.close()
@@ -241,10 +267,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   await listen('inference-done', async (event) => {
     showPreview(event.payload)
     document.getElementById('btn-upscale').disabled = false
-    sendNotification({ title: 'Generación completada', body: 'Tu imagen está lista.' })
+    notify('Generación completada', 'Tu imagen está lista.')
   })
 
   await listen('upscale-done', (event) => {
     showPreview(event.payload)
+    notify('Upscale completado', 'Tu imagen escalada está lista.')
   })
 })

@@ -103,6 +103,7 @@ export async function initConfig() {
       if (key === 'clip_l_path') await scanClipL(path)
       if (key === 'clip_g_path') await scanClipG(path)
       if (key === 't5xxl_path') await scanT5xxl(path)
+      if (key === 'upscalers_path') await scanUpscanners(path)
     })
   }
 }
