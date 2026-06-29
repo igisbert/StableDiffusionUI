@@ -344,16 +344,42 @@ textarea {
 
 /* Switches */
 .toggles-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px 20px;
+    column-rule: 1px solid var(--outline);
+    row-rule: 1px solid var(--outline);
 }
 
 .toggle-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 10px;
     cursor: pointer;
+    padding: 8px 4px;
+}
+
+.toggle-row:hover .input-label {
+    color: var(--on-surface);
+}
+
+@media (max-width: 1950px) {
+    .toggles-list {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 1550px) {
+    .toggles-list {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 1200px) {
+    .toggles-list {
+        grid-template-columns: 1fr;
+    }
 }
 
 .toggle-row:hover .input-label {
