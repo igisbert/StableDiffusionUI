@@ -321,9 +321,24 @@ textarea {
     gap: 16px;
 }
 
-@media (max-width: 1250px) {
+@media (max-width: 1300px) {
     .params-grid {
         grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.sampler-row {
+    display: flex;
+    gap: 16px;
+}
+
+.sampler-row .input-group {
+    flex: 1;
+}
+
+@media (max-width: 1300px) {
+    .sampler-row {
+        flex-direction: column;
     }
 }
 
