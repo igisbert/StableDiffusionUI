@@ -12,6 +12,7 @@
     "dialog:allow-ask",
     "dialog:allow-message",
     "store:default",
-    "notification:default"
+    "notification:default",
+    "window-state:default"
   ]
 }
