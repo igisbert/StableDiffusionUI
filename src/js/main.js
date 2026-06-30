@@ -325,6 +325,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!sdPath || !outputPath || !upscalersPath) return
     const selectedModel = document.querySelector('input[name="image-upscale-model"]:checked')
     if (!selectedModel) return
+
+    const btnRun = document.getElementById('btn-run')
+    const btnUpscale = document.getElementById('btn-upscale')
+    btnRunUpscale.disabled = true
+    btnRun.disabled = true
+    btnUpscale.disabled = true
     try {
       await invoke('run_upscale', {
         sdPath: sdPath,
@@ -335,6 +341,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       })
     } catch (e) {
       console.error('Upscale error:', e)
+    } finally {
+      btnRun.disabled = false
+      updateUpscaleButton()
     }
   })
 
@@ -347,17 +356,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   await listen('inference-started', () => {
     capturedSeeds = []
-    document.getElementById('btn-upscale').disabled = true
   })
 
   await listen('inference-done', async (event) => {
     showPreview(event.payload)
     document.getElementById('btn-upscale').disabled = false
+    updateUpscaleButton()
     notify('Generación completada', 'Tu imagen está lista.')
   })
 
   await listen('upscale-done', (event) => {
     showPreview(event.payload)
+    document.getElementById('btn-upscale').disabled = false
+    document.getElementById('btn-copy-seed').disabled = false
+    document.getElementById('btn-copy-console').disabled = false
     notify('Upscale completado', 'Tu imagen escalada está lista.')
   })
 })

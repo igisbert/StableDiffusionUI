@@ -1174,9 +1174,9 @@ i[data-lucide] {
     background-color: rgba(255, 68, 68, 0.15);
 }
 
-.controls-col:has(.run-btn:disabled) select,
-.controls-col:has(.run-btn:disabled) input,
-.controls-col:has(.run-btn:disabled) textarea {
+.controls-col:has(#btn-run:disabled) select,
+.controls-col:has(#btn-run:disabled) input,
+.controls-col:has(#btn-run:disabled) textarea {
     opacity: 0.5;
     pointer-events: none;
 }

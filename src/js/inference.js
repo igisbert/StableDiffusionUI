@@ -12,12 +12,14 @@ function setRunning(running) {
   const btnAbort = document.getElementById('btn-abort')
   const btnCopySeed = document.getElementById('btn-copy-seed')
   const btnCopyConsole = document.getElementById('btn-copy-console')
+  const btnRunUpscale = document.getElementById('btn-run-upscale')
 
   if (running) {
     btnRun.disabled = true
     btnAbort.hidden = false
     btnCopySeed.disabled = true
     btnCopyConsole.disabled = true
+    if (btnRunUpscale) btnRunUpscale.disabled = true
   } else {
     btnRun.disabled = false
     btnAbort.hidden = true
