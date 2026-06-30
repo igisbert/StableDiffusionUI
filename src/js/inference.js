@@ -13,6 +13,7 @@ function setRunning(running) {
   const btnCopySeed = document.getElementById('btn-copy-seed')
   const btnCopyConsole = document.getElementById('btn-copy-console')
   const btnRunUpscale = document.getElementById('btn-run-upscale')
+  const btnAbortUpscale = document.getElementById('btn-abort-upscale')
 
   if (running) {
     btnRun.disabled = true
@@ -20,6 +21,7 @@ function setRunning(running) {
     btnCopySeed.disabled = true
     btnCopyConsole.disabled = true
     if (btnRunUpscale) btnRunUpscale.disabled = true
+    if (btnAbortUpscale) btnAbortUpscale.hidden = true
   } else {
     btnRun.disabled = false
     btnAbort.hidden = true

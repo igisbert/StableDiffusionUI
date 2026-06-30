@@ -317,6 +317,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateUpscaleButton()
   })
 
+  let isUpscaling = false
+
+  function setUpscaling(running) {
+    isUpscaling = running
+    const btnRunUpscale = document.getElementById('btn-run-upscale')
+    const btnAbortUpscale = document.getElementById('btn-abort-upscale')
+    if (running) {
+      btnRunUpscale.hidden = true
+      btnAbortUpscale.hidden = false
+    } else {
+      btnRunUpscale.hidden = false
+      btnAbortUpscale.hidden = true
+      updateUpscaleButton()
+    }
+  }
+
+  document.getElementById('btn-abort-upscale').addEventListener('click', async () => {
+    try { await invoke('abort_inference') } catch (e) {}
+  })
+
   btnRunUpscale.addEventListener('click', async () => {
     if (!selectedImageForOp) return
     const sdPath = await getSdPath()
@@ -326,11 +346,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const selectedModel = document.querySelector('input[name="image-upscale-model"]:checked')
     if (!selectedModel) return
 
-    const btnRun = document.getElementById('btn-run')
-    const btnUpscale = document.getElementById('btn-upscale')
-    btnRunUpscale.disabled = true
-    btnRun.disabled = true
-    btnUpscale.disabled = true
+    setUpscaling(true)
     try {
       await invoke('run_upscale', {
         sdPath: sdPath,
@@ -342,8 +358,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (e) {
       console.error('Upscale error:', e)
     } finally {
-      btnRun.disabled = false
-      updateUpscaleButton()
+      setUpscaling(false)
     }
   })
 

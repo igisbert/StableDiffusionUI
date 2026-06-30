@@ -220,7 +220,15 @@
 <div id="upscale-options" class="op-option-group">
 <label class="input-label">Modelo de upscale</label>
 <div id="radio-image-upscale-models" class="radio-upscale-group"></div>
-<button id="btn-run-upscale" class="run-btn" disabled> Ejecutar</button>
+<div class="run-btn-row">
+<button id="btn-run-upscale" class="run-btn" disabled>
+<i data-lucide="play"></i>
+ Ejecutar
+</button>
+<button id="btn-abort-upscale" class="btn-abort" title="Cancelar" hidden>
+<i data-lucide="x"></i>
+</button>
+</div>
 </div>
 </div>
 </div>

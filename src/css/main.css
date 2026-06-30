@@ -405,6 +405,20 @@ input[type="number"]:focus {
     margin-top: 4px;
 }
 
+.op-option-group .run-btn-row {
+    display: flex;
+    align-items: stretch;
+    gap: 6px;
+}
+
+.op-option-group .run-btn-row .run-btn {
+    flex: 1;
+}
+
+.op-option-group .run-btn-row .btn-abort {
+    width: 48px;
+}
+
 .prompt-area {
     position: relative;
 }

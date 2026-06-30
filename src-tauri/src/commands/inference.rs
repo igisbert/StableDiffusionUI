@@ -361,6 +361,9 @@ pub async fn run_upscale(
         .spawn()
         .map_err(|e| e.to_string())?;
 
+    let stdout = child.stdout.take();
+    let stderr = child.stderr.take();
+
     RUNNING.store(true, Ordering::SeqCst);
     *CHILD.lock().unwrap() = Some(child);
 
@@ -368,7 +371,7 @@ pub async fn run_upscale(
     let app_stderr = app.clone();
 
     let t_stdout = std::thread::spawn(move || {
-        if let Some(stdout) = CHILD.lock().unwrap().as_mut().and_then(|c| c.stdout.take()) {
+        if let Some(stdout) = stdout {
             let reader = BufReader::new(stdout);
             for line in reader.lines().flatten() {
                 if !RUNNING.load(Ordering::SeqCst) {
@@ -380,7 +383,7 @@ pub async fn run_upscale(
     });
 
     let t_stderr = std::thread::spawn(move || {
-        if let Some(stderr) = CHILD.lock().unwrap().as_mut().and_then(|c| c.stderr.take()) {
+        if let Some(stderr) = stderr {
             let reader = BufReader::new(stderr);
             for line in reader.lines().flatten() {
                 if !RUNNING.load(Ordering::SeqCst) {
