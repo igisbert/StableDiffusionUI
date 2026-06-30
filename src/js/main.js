@@ -233,11 +233,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
       await invoke('run_upscale', {
-        sd_path: sdPath,
-        output_path: outputPath,
-        upscalers_path: upscalersPath,
+        sdPath: sdPath,
+        outputPath: outputPath,
+        upscalersPath: upscalersPath,
         model: selectedRadio.value,
-        input_image: inputImage
+        inputImage: inputImage
       })
     } catch (e) {
       console.error('Upscale error:', e)
@@ -327,11 +327,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!selectedModel) return
     try {
       await invoke('run_upscale', {
-        sd_path: sdPath,
-        output_path: outputPath,
-        upscalers_path: upscalersPath,
+        sdPath: sdPath,
+        outputPath: outputPath,
+        upscalersPath: upscalersPath,
         model: selectedModel.value,
-        input_image: selectedImageForOp
+        inputImage: selectedImageForOp
       })
     } catch (e) {
       console.error('Upscale error:', e)
