@@ -313,6 +313,97 @@ input[type="number"]:focus {
     gap: 24px;
 }
 
+.image-input-section {
+    border: 1px solid var(--outline);
+    border-radius: 4px;
+}
+
+.btn-toggle-section {
+    width: 100%;
+    background: none;
+    border: none;
+    color: var(--on-surface-variant);
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.btn-toggle-section:hover {
+    color: var(--on-surface);
+}
+
+.btn-toggle-section svg {
+    width: 14px;
+    height: 14px;
+}
+
+.btn-toggle-section .chevron {
+    margin-left: auto;
+    transition: transform 0.2s;
+}
+
+.btn-toggle-section.open .chevron {
+    transform: rotate(180deg);
+}
+
+.image-input-content {
+    display: none;
+    padding: 0 12px 12px;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.image-input-content.open {
+    display: flex;
+}
+
+.image-op-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.image-op-group:first-child {
+    margin-top: 1rem;
+}
+
+.image-input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.image-input-name {
+    font-size: 12px;
+    color: var(--on-surface-variant);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.image-op-row {
+    margin: 6px 0;
+}
+
+.image-op-options {
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.image-op-options.visible {
+    display: flex;
+}
+
+.op-option-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
 .prompt-area {
     position: relative;
 }

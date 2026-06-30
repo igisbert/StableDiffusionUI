@@ -9,6 +9,7 @@ pub fn run() {
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .invoke_handler(tauri::generate_handler![
             commands::fs::pick_folder,
+            commands::fs::pick_file,
             commands::fs::scan_models,
             commands::fs::ensure_output_dir,
             commands::fs::open_folder,

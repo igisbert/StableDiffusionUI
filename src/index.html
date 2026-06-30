@@ -198,6 +198,34 @@
 <span>Monolítico (-m)</span>
 </label>
 </div>
+<div class="image-input-section">
+<button id="btn-toggle-image-input" class="btn-toggle-section"><i data-lucide="image"></i> Imagen como input <i data-lucide="chevron-down" class="chevron"></i></button>
+<div class="image-input-content" id="image-input-content">
+<div class="image-op-group">
+<label class="input-label">Selecciona una imagen</label>
+<div class="image-input-row">
+<button id="btn-select-image" class="btn-secondary">Seleccionar</button>
+<span class="image-input-name" id="image-input-name">Ninguna</span>
+</div>
+</div>
+<div class="image-op-group">
+<label class="input-label">Elige una opción</label>
+<div class="model-type-row image-op-row">
+<label class="radio-label">
+<input type="radio" name="image-op" value="upscale"/>
+<span>Upscale</span>
+</label>
+</div>
+<div class="image-op-options" id="image-op-options">
+<div id="upscale-options" class="op-option-group">
+<label class="input-label">Modelo de upscale</label>
+<div id="radio-image-upscale-models" class="radio-upscale-group"></div>
+<button id="btn-run-upscale" class="run-btn" disabled> Ejecutar</button>
+</div>
+</div>
+</div>
+</div>
+</div>
 <div class="prompt-area">
 <div class="prompt-header">
 <label class="input-label">Prompt <i data-lucide="circle-question-mark" class="help-icon"></i></label>

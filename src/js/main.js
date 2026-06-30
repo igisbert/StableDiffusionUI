@@ -233,11 +233,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
       await invoke('run_upscale', {
-        sdPath,
-        outputPath,
-        upscalersPath,
+        sd_path: sdPath,
+        output_path: outputPath,
+        upscalers_path: upscalersPath,
         model: selectedRadio.value,
-        inputImage
+        input_image: inputImage
       })
     } catch (e) {
       console.error('Upscale error:', e)
@@ -249,6 +249,92 @@ document.addEventListener('DOMContentLoaded', async () => {
     const btn = document.getElementById('btn-upscale')
     if (!pop.contains(e.target) && !btn.contains(e.target)) {
       pop.classList.remove('open')
+    }
+  })
+
+  // Image input section
+  const btnToggleImageInput = document.getElementById('btn-toggle-image-input')
+  const imageInputContent = document.getElementById('image-input-content')
+  const btnSelectImage = document.getElementById('btn-select-image')
+  const imageName = document.getElementById('image-input-name')
+  const btnRunUpscale = document.getElementById('btn-run-upscale')
+  let selectedImageForOp = null
+
+  function updateUpscaleButton() {
+    const hasImage = !!selectedImageForOp
+    const hasModel = !!document.querySelector('input[name="image-upscale-model"]:checked')
+    btnRunUpscale.disabled = !(hasImage && hasModel)
+  }
+
+  async function populateImageUpscaleModels() {
+    const upscalersPath = await getUpscannersPath()
+    if (!upscalersPath) return
+    try {
+      const result = await invoke('scan_models', { basePath: upscalersPath })
+      const container = document.getElementById('radio-image-upscale-models')
+      if (!container) return
+      container.innerHTML = ''
+      for (const item of result.models) {
+        const label = document.createElement('label')
+        const input = document.createElement('input')
+        input.type = 'radio'
+        input.name = 'image-upscale-model'
+        input.value = item
+        input.addEventListener('change', updateUpscaleButton)
+        label.appendChild(input)
+        label.appendChild(document.createTextNode(item))
+        container.appendChild(label)
+      }
+    } catch (e) {
+      console.error('Error scanning upscalers:', e)
+    }
+  }
+
+  populateImageUpscaleModels()
+
+  document.querySelectorAll('input[name="image-op"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      const options = document.getElementById('image-op-options')
+      if (radio.checked) {
+        options.classList.add('visible')
+      } else {
+        options.classList.remove('visible')
+      }
+    })
+  })
+
+  btnToggleImageInput.addEventListener('click', () => {
+    btnToggleImageInput.classList.toggle('open')
+    imageInputContent.classList.toggle('open')
+  })
+
+  btnSelectImage.addEventListener('click', async () => {
+    const path = await invoke('pick_file')
+    if (!path) return
+    selectedImageForOp = path
+    const name = path.split(/[/\\]/).pop()
+    imageName.textContent = name
+    updateUpscaleButton()
+  })
+
+  btnRunUpscale.addEventListener('click', async () => {
+    if (!selectedImageForOp) return
+    const sdPath = await getSdPath()
+    const outputPath = await getOutputPath()
+    const upscalersPath = await getUpscannersPath()
+    if (!sdPath || !outputPath || !upscalersPath) return
+    const selectedModel = document.querySelector('input[name="image-upscale-model"]:checked')
+    if (!selectedModel) return
+    try {
+      await invoke('run_upscale', {
+        sd_path: sdPath,
+        output_path: outputPath,
+        upscalers_path: upscalersPath,
+        model: selectedModel.value,
+        input_image: selectedImageForOp
+      })
+    } catch (e) {
+      console.error('Upscale error:', e)
     }
   })
 
