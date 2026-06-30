@@ -216,7 +216,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('popover-upscale').classList.remove('open')
   })
 
-  document.getElementById('btn-run-upscale').addEventListener('click', async () => {
+  document.getElementById('btn-run-upscale-popover').addEventListener('click', async () => {
     const selectedRadio = document.querySelector('input[name="upscale-model"]:checked')
     if (!selectedRadio) return
 
