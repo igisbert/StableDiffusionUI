@@ -321,13 +321,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function setUpscaling(running) {
     isUpscaling = running
+    const btnRun = document.getElementById('btn-run')
     const btnRunUpscale = document.getElementById('btn-run-upscale')
     const btnAbortUpscale = document.getElementById('btn-abort-upscale')
     if (running) {
-      btnRunUpscale.hidden = true
+      btnRun.disabled = true
+      btnRunUpscale.disabled = true
       btnAbortUpscale.hidden = false
     } else {
-      btnRunUpscale.hidden = false
+      btnRun.disabled = false
       btnAbortUpscale.hidden = true
       updateUpscaleButton()
     }
