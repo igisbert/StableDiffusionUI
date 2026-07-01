@@ -32,6 +32,7 @@ function setRunning(running) {
 
 async function buildCommand() {
   const sdPath = await getSdPath()
+  const outputPath = await getOutputPath()
   const modelsPath = await getModelsPath()
   const vaePath = await getVaePath()
   const llmPath = await getLlmPath()
@@ -82,6 +83,7 @@ async function buildCommand() {
   if (checked('toggle-diffusion-fa')) cmd += ' --diffusion-fa'
   if (checked('toggle-vae-tiling')) cmd += ' --vae-tiling'
   if (checked('toggle-verbose')) cmd += ' -v'
+  if (outputPath) cmd += ' -o "' + outputPath + '"'
 
   const customFlags = val('input-custom-flags')
   if (customFlags) {
@@ -94,7 +96,7 @@ async function buildCommand() {
   return cmd
 }
 
-export function initInference() {
+export async function initInference() {
   document.getElementById('select-lora').addEventListener('change', function() {
     document.getElementById('input-lora-weight').disabled = !this.value
   })
@@ -229,7 +231,7 @@ appendLine('[ERROR] Error al abortar: ' + e)
     }
   })
 
-  listen('inference-aborted', () => {
+  await listen('inference-aborted', () => {
     setRunning(false)
   })
 }

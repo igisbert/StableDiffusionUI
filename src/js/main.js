@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await initConfig()
   await initPresets()
   await initPromptTemplates()
-  initInference()
+  await initInference()
   initTooltips()
   await updateEnhancerUI()
 

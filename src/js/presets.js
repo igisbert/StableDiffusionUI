@@ -21,6 +21,7 @@ const FIELDS = [
   { id: 'input-lora-weight',      type: 'text'   },
   { id: 'select-sampler',         type: 'select' },
   { id: 'select-scheduler',       type: 'select' },
+  { id: 'toggle-cuda',            type: 'toggle' },
   { id: 'toggle-vae-cpu',         type: 'toggle' },
   { id: 'toggle-clip-cpu',        type: 'toggle' },
   { id: 'toggle-offload-cpu',     type: 'toggle' },
@@ -37,6 +38,7 @@ function captureForm() {
     if (!el) continue
     values[field.id] = field.type === 'toggle' ? el.checked : el.value
   }
+  values['model-type'] = document.querySelector('input[name="model-type"]:checked')?.value || 'monolithic'
   return values
 }
 
@@ -49,6 +51,10 @@ function applyForm(values) {
     } else {
       el.value = values[field.id]
     }
+  }
+  if (values['model-type']) {
+    const radio = document.querySelector(`input[name="model-type"][value="${values['model-type']}"]`)
+    if (radio) radio.checked = true
   }
   document.getElementById('select-model')?.dispatchEvent(new Event('change'))
   document.getElementById('select-lora')?.dispatchEvent(new Event('change'))
