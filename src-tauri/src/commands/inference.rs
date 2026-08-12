@@ -332,11 +332,11 @@ pub async fn run_upscale(
         std::fs::create_dir_all(&scaled_dir).map_err(|e| e.to_string())?;
     }
 
-    let input_name = Path::new(&input_image)
-        .file_stem()
-        .and_then(|s| s.to_str())
-        .unwrap_or("image");
-    let output_file = scaled_dir.join(format!("{}_scaled.png", input_name));
+    let timestamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
+    let output_file = scaled_dir.join(format!("scaled_{}.png", timestamp));
 
     let sd_bin = Path::new(&sd_path).join(format!("sd-cli.{}", std::env::consts::EXE_EXTENSION));
 
