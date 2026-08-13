@@ -398,6 +398,36 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateImageOpUI()
   })
 
+  const dropZone = document.getElementById('image-drop-zone')
+  const validImageExts = ['.png', '.jpg', '.jpeg', '.webp', '.bmp']
+
+  listen('tauri://drag-over', (event) => {
+    const pos = event.payload?.position
+    if (!pos) return
+    const rect = dropZone.getBoundingClientRect()
+    const over = pos.x >= rect.left && pos.x <= rect.right && pos.y >= rect.top && pos.y <= rect.bottom
+    dropZone.classList.toggle('dragover', over)
+  })
+
+  listen('tauri://drag-leave', () => {
+    dropZone.classList.remove('dragover')
+  })
+
+  listen('tauri://drag-drop', (event) => {
+    dropZone.classList.remove('dragover')
+    const paths = event.payload?.paths
+    if (!paths || paths.length === 0) return
+    const filePath = paths[0]
+    const ext = '.' + filePath.split('.').pop().toLowerCase()
+    if (!validImageExts.includes(ext)) return
+    selectedImageForOp = filePath
+    window.__selectedImageForOp = filePath
+    const name = filePath.split(/[/\\]/).pop()
+    imageName.textContent = name
+    document.getElementById('btn-clear-image').classList.add('visible')
+    updateImageOpUI()
+  })
+
   let isUpscaling = false
 
   function setUpscaling(running) {

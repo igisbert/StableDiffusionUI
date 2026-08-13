@@ -374,6 +374,18 @@ input[type="number"]:focus {
     gap: 8px;
 }
 
+.image-drop-zone {
+    border: 2px dashed rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+    padding: 8px;
+    transition: border-color 0.2s, background-color 0.2s;
+}
+
+.image-drop-zone.dragover {
+    border-color: var(--primary);
+    background-color: rgba(255, 148, 254, 0.08);
+}
+
 .image-input-name {
     font-size: 12px;
     color: var(--on-surface-variant);
