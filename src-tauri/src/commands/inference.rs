@@ -1,11 +1,14 @@
 use serde::Deserialize;
-use std::io::{BufRead, BufReader};
+use std::io::{BufRead, BufReader, Cursor};
 use std::path::Path;
 use std::process::{Command, Stdio};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 use std::time::Duration;
 use tauri::Emitter;
+
+use exif::{In, Tag};
+use image::DynamicImage;
 
 #[cfg(target_os = "windows")]
 use std::os::windows::process::CommandExt;
@@ -58,6 +61,35 @@ pub struct InferenceParams {
     pub custom_flags: String,
     pub input_image: Option<String>,
     pub strength: Option<f32>,
+}
+
+fn normalize_orientation(bytes: &[u8]) -> Result<DynamicImage, Box<dyn std::error::Error>> {
+    let orientation = {
+        let mut cursor = Cursor::new(bytes);
+        let exifreader = exif::Reader::new();
+        match exifreader.read_from_container(&mut cursor) {
+            Ok(exif_data) => exif_data
+                .get_field(Tag::Orientation, In::PRIMARY)
+                .and_then(|f| f.value.get_uint(0))
+                .unwrap_or(1),
+            Err(_) => 1,
+        }
+    };
+
+    let img = image::load_from_memory(bytes)?;
+
+    let corrected = match orientation {
+        2 => img.fliph(),
+        3 => img.rotate180(),
+        4 => img.flipv(),
+        5 => img.rotate90().fliph(),
+        6 => img.rotate90(),
+        7 => img.rotate270().fliph(),
+        8 => img.rotate270(),
+        _ => img,
+    };
+
+    Ok(corrected)
 }
 
 #[tauri::command]
@@ -223,9 +255,16 @@ pub async fn run_inference(app: tauri::AppHandle, params: InferenceParams) -> Re
         }
     }
 
-    if let Some(ref input_image) = params.input_image {
-        cmd.arg("-i").arg(input_image);
-    }
+    let temp_input = if let Some(ref input_image) = params.input_image {
+        let bytes = std::fs::read(input_image).map_err(|e| e.to_string())?;
+        let corrected = normalize_orientation(&bytes).map_err(|e| e.to_string())?;
+        let temp_path = output_dir.join(format!("temp_input_{}.png", timestamp));
+        corrected.save(&temp_path).map_err(|e| e.to_string())?;
+        cmd.arg("-i").arg(&temp_path);
+        Some(temp_path)
+    } else {
+        None
+    };
     if let Some(strength) = params.strength {
         cmd.arg("--strength").arg(strength.to_string());
     }
@@ -294,6 +333,9 @@ pub async fn run_inference(app: tauri::AppHandle, params: InferenceParams) -> Re
     let _ = t_stderr.join();
 
     if !was_running {
+        if let Some(ref temp) = temp_input {
+            let _ = std::fs::remove_file(temp);
+        }
         let _ = app.emit("console-line", "[ABORTADO] Inferencia cancelada.");
         let _ = app.emit("inference-aborted", ());
         return Ok(());
@@ -320,11 +362,25 @@ pub async fn run_inference(app: tauri::AppHandle, params: InferenceParams) -> Re
                 files.push(output_file);
             }
 
+            if let Some(ref temp) = temp_input {
+                let _ = std::fs::remove_file(temp);
+            }
+
             let _ = app.emit("inference-done", &files);
             Ok(())
         }
-        Ok(s) => Err(format!("sd-cli terminó con código {:?}", s.code())),
-        Err(e) => Err(e),
+        Ok(s) => {
+            if let Some(ref temp) = temp_input {
+                let _ = std::fs::remove_file(temp);
+            }
+            Err(format!("sd-cli terminó con código {:?}", s.code()))
+        }
+        Err(e) => {
+            if let Some(ref temp) = temp_input {
+                let _ = std::fs::remove_file(temp);
+            }
+            Err(e)
+        }
     }
 }
 
