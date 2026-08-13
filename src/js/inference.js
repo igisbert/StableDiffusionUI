@@ -208,6 +208,8 @@ appendLine('[ERROR] Error al abortar: ' + e)
       verbose: checked('toggle-verbose'),
       force_cuda: checked('toggle-cuda'),
       custom_flags: val('input-custom-flags'),
+      input_image: window.__selectedImageForOp || null,
+      strength: num('input-strength', 0.5),
     }
 
     clearConsole()

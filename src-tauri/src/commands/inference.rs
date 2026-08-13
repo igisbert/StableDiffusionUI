@@ -56,6 +56,8 @@ pub struct InferenceParams {
     pub verbose: bool,
     pub force_cuda: bool,
     pub custom_flags: String,
+    pub input_image: Option<String>,
+    pub strength: Option<f32>,
 }
 
 #[tauri::command]
@@ -64,7 +66,19 @@ pub async fn run_inference(app: tauri::AppHandle, params: InferenceParams) -> Re
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap_or_default()
         .as_secs();
-    let output_file = Path::new(&params.output_path)
+
+    let has_input_image = params.input_image.is_some();
+    let output_dir = if has_input_image {
+        let img2img_dir = Path::new(&params.output_path).join("img2img");
+        if !img2img_dir.exists() {
+            std::fs::create_dir_all(&img2img_dir).map_err(|e| e.to_string())?;
+        }
+        img2img_dir
+    } else {
+        Path::new(&params.output_path).to_path_buf()
+    };
+
+    let output_file = output_dir
         .join(format!("gen_{}.png", timestamp))
         .to_string_lossy()
         .to_string();
@@ -209,6 +223,13 @@ pub async fn run_inference(app: tauri::AppHandle, params: InferenceParams) -> Re
         }
     }
 
+    if let Some(ref input_image) = params.input_image {
+        cmd.arg("-i").arg(input_image);
+    }
+    if let Some(strength) = params.strength {
+        cmd.arg("--strength").arg(strength.to_string());
+    }
+
     cmd.stdout(Stdio::piped()).stderr(Stdio::piped());
 
     #[cfg(target_os = "windows")]
@@ -281,7 +302,7 @@ pub async fn run_inference(app: tauri::AppHandle, params: InferenceParams) -> Re
     match status {
         Ok(s) if s.success() => {
             let prefix = format!("gen_{}", timestamp);
-            let out_dir = Path::new(&params.output_path);
+            let out_dir = &output_dir;
             let mut files: Vec<String> = Vec::new();
 
             if let Ok(entries) = std::fs::read_dir(out_dir) {

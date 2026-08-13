@@ -259,6 +259,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const imageName = document.getElementById('image-input-name')
   const btnRunUpscale = document.getElementById('btn-run-upscale')
   let selectedImageForOp = null
+  window.__selectedImageForOp = null
 
   function updateUpscaleButton() {
     const hasImage = !!selectedImageForOp
@@ -389,6 +390,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const path = await invoke('pick_file')
     if (!path) return
     selectedImageForOp = path
+    window.__selectedImageForOp = path
     const name = path.split(/[/\\]/).pop()
     imageName.textContent = name
     document.getElementById('btn-clear-image').classList.add('visible')
@@ -397,6 +399,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   document.getElementById('btn-clear-image').addEventListener('click', () => {
     selectedImageForOp = null
+    window.__selectedImageForOp = null
     imageName.textContent = 'Ninguna'
     document.getElementById('btn-clear-image').classList.remove('visible')
     updateImageOpUI()
