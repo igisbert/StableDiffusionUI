@@ -1,5 +1,5 @@
 import { listen } from '@tauri-apps/api/event'
-import { invoke } from '@tauri-apps/api/core'
+import { invoke, convertFileSrc } from '@tauri-apps/api/core'
 import { createIcons, icons } from 'lucide'
 import { initConfig, refreshAllSelects, getOutputPath, getSdPath, getUpscannersPath } from './config.js'
 import { initInference } from './inference.js'
@@ -266,6 +266,66 @@ document.addEventListener('DOMContentLoaded', async () => {
     btnRunUpscale.disabled = !(hasImage && hasModel)
   }
 
+  const btnSizeFull = document.getElementById('btn-size-full')
+  const btnSizeHalf = document.getElementById('btn-size-half')
+  const btnSizeQuarter = document.getElementById('btn-size-quarter')
+  const btnRun = document.getElementById('btn-run')
+
+  function updateImageOpUI() {
+    const hasImage = !!selectedImageForOp
+    const currentOp = document.querySelector('input[name="image-op"]:checked')?.value
+
+    btnSizeFull.disabled = !hasImage
+    btnSizeHalf.disabled = !hasImage
+    btnSizeQuarter.disabled = !hasImage
+
+    if (currentOp === 'img2img') {
+      btnRun.disabled = !hasImage
+    } else {
+      btnRun.disabled = false
+    }
+
+    updateUpscaleButton()
+  }
+
+  function getImageDimensions(url, { timeoutMs = 10000, revoke = false } = {}) {
+    return new Promise((resolve, reject) => {
+      const img = new Image()
+      const timer = setTimeout(() => {
+        cleanup()
+        reject(new Error('Timeout leyendo dimensiones de imagen'))
+      }, timeoutMs)
+
+      function cleanup() {
+        clearTimeout(timer)
+        if (revoke) URL.revokeObjectURL(url)
+      }
+
+      img.onload = () => {
+        cleanup()
+        resolve({ width: img.naturalWidth, height: img.naturalHeight })
+      }
+      img.onerror = () => {
+        cleanup()
+        reject(new Error('No se pudo cargar la imagen'))
+      }
+      img.src = url
+    })
+  }
+
+  function applyImageSize(factor) {
+    if (!selectedImageForOp) return
+    const imageUrl = convertFileSrc(selectedImageForOp)
+    getImageDimensions(imageUrl).then(({ width, height }) => {
+      document.getElementById('input-width').value = Math.round(width * factor)
+      document.getElementById('input-height').value = Math.round(height * factor)
+    }).catch(e => console.error('Error leyendo dimensiones:', e))
+  }
+
+  btnSizeFull.addEventListener('click', () => applyImageSize(1))
+  btnSizeHalf.addEventListener('click', () => applyImageSize(0.5))
+  btnSizeQuarter.addEventListener('click', () => applyImageSize(0.25))
+
   async function populateImageUpscaleModels() {
     const upscalersPath = await getUpscannersPath()
     if (!upscalersPath) return
@@ -280,7 +340,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         input.type = 'radio'
         input.name = 'image-upscale-model'
         input.value = item
-        input.addEventListener('change', updateUpscaleButton)
+        input.addEventListener('change', updateImageOpUI)
         label.appendChild(input)
         label.appendChild(document.createTextNode(item))
         container.appendChild(label)
@@ -292,14 +352,31 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   populateImageUpscaleModels()
 
+  const cancelOpLabel = document.getElementById('cancel-op-label')
+  const upscaleOptions = document.getElementById('upscale-options')
+  const img2imgOptions = document.getElementById('img2img-options')
+
   document.querySelectorAll('input[name="image-op"]').forEach(radio => {
     radio.addEventListener('change', () => {
       const options = document.getElementById('image-op-options')
-      if (radio.checked) {
-        options.classList.add('visible')
-      } else {
+      const value = radio.value
+
+      if (value === 'cancel') {
+        radio.checked = false
+        cancelOpLabel.style.display = 'none'
         options.classList.remove('visible')
+        upscaleOptions.style.display = 'none'
+        img2imgOptions.style.display = 'none'
+        return
       }
+
+      cancelOpLabel.style.display = 'inline-flex'
+      options.classList.add('visible')
+
+      upscaleOptions.style.display = value === 'upscale' ? 'flex' : 'none'
+      img2imgOptions.style.display = value === 'img2img' ? 'flex' : 'none'
+
+      updateImageOpUI()
     })
   })
 
@@ -314,14 +391,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     selectedImageForOp = path
     const name = path.split(/[/\\]/).pop()
     imageName.textContent = name
-    updateUpscaleButton()
+    document.getElementById('btn-clear-image').classList.add('visible')
+    updateImageOpUI()
+  })
+
+  document.getElementById('btn-clear-image').addEventListener('click', () => {
+    selectedImageForOp = null
+    imageName.textContent = 'Ninguna'
+    document.getElementById('btn-clear-image').classList.remove('visible')
+    updateImageOpUI()
   })
 
   let isUpscaling = false
 
   function setUpscaling(running) {
     isUpscaling = running
-    const btnRun = document.getElementById('btn-run')
     const btnRunUpscale = document.getElementById('btn-run-upscale')
     const btnAbortUpscale = document.getElementById('btn-abort-upscale')
     if (running) {
@@ -329,9 +413,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       btnRunUpscale.disabled = true
       btnAbortUpscale.hidden = false
     } else {
-      btnRun.disabled = false
       btnAbortUpscale.hidden = true
-      updateUpscaleButton()
+      updateImageOpUI()
     }
   }
 
@@ -379,7 +462,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await listen('inference-done', async (event) => {
     showPreview(event.payload)
     document.getElementById('btn-upscale').disabled = false
-    updateUpscaleButton()
+    updateImageOpUI()
     notify('Generación completada', 'Tu imagen está lista.')
   })
 

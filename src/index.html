@@ -206,14 +206,27 @@
 <div class="image-input-row">
 <button id="btn-select-image" class="btn-secondary">Seleccionar</button>
 <span class="image-input-name" id="image-input-name">Ninguna</span>
+<button id="btn-clear-image" class="btn-icon btn-danger btn-clear-image" title="Quitar imagen"><i data-lucide="x"></i></button>
 </div>
 </div>
 <div class="image-op-group">
 <label class="input-label">Elige una opción</label>
 <div class="model-type-row image-op-row">
 <label class="radio-label">
+<input type="radio" name="image-op" value="img2img"/>
+<span>img2img</span>
+</label>
+<label class="radio-label">
+<input type="radio" name="image-op" value="inpainting"/>
+<span>Inpainting</span>
+</label>
+<label class="radio-label">
 <input type="radio" name="image-op" value="upscale"/>
 <span>Upscale</span>
+</label>
+<label class="radio-label" id="cancel-op-label" style="display:none">
+<input type="radio" name="image-op" value="cancel"/>
+<span>Cancelar</span>
 </label>
 </div>
 <div class="image-op-options" id="image-op-options">
@@ -228,6 +241,22 @@
 <button id="btn-abort-upscale" class="btn-abort" title="Cancelar" hidden>
 <i data-lucide="x"></i>
 </button>
+</div>
+</div>
+<div id="img2img-options" class="op-option-group" style="display:none">
+<div class="img2img-strength-row">
+<div class="img2img-strength-input">
+<label class="input-label">Strength <i data-lucide="circle-question-mark" class="help-icon"></i></label>
+<input id="input-strength" type="number" value="0.5" min="0" max="1" step="0.05"/>
+</div>
+<div class="img2img-size-buttons">
+<span class="input-label">Rellenar ancho y alto de la imagen</span>
+<div class="size-btn-group">
+<button id="btn-size-full" class="btn-secondary" disabled>Tamaño original</button>
+<button id="btn-size-half" class="btn-secondary" disabled>Tamaño 1/2</button>
+<button id="btn-size-quarter" class="btn-secondary" disabled>Tamaño 1/4</button>
+</div>
+</div>
 </div>
 </div>
 </div>

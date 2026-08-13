@@ -417,6 +417,39 @@ input[type="number"]:focus {
     width: 48px;
 }
 
+.img2img-strength-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    margin-top: 8px;
+}
+
+.img2img-strength-input {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.img2img-strength-input input {
+    width: 100px;
+    height: 40px;
+}
+
+.img2img-size-buttons .size-btn-group button {
+    height: 40px;
+}
+
+.img2img-size-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.size-btn-group {
+    display: flex;
+    gap: 6px;
+}
+
 .prompt-area {
     position: relative;
 }
@@ -1116,6 +1149,24 @@ i[data-lucide] {
     color: var(--on-surface-variant);
     cursor: pointer;
     padding: 2px;
+    display: flex;
+}
+
+.btn-icon.btn-danger {
+    color: #ff6b6b;
+}
+
+.btn-icon.btn-danger:hover {
+    color: #ff9999;
+    background-color: #5a2020;
+}
+
+.btn-clear-image {
+    margin-left: 6px;
+    display: none;
+}
+
+.btn-clear-image.visible {
     display: flex;
 }
 
