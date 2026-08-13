@@ -274,17 +274,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function updateImageOpUI() {
     const hasImage = !!selectedImageForOp
-    const currentOp = document.querySelector('input[name="image-op"]:checked')?.value
 
     btnSizeFull.disabled = !hasImage
     btnSizeHalf.disabled = !hasImage
     btnSizeQuarter.disabled = !hasImage
-
-    if (currentOp === 'img2img') {
-      btnRun.disabled = !hasImage
-    } else {
-      btnRun.disabled = false
-    }
 
     updateUpscaleButton()
   }

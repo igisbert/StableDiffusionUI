@@ -29,6 +29,7 @@ const FIELDS = [
   { id: 'toggle-vae-tiling',      type: 'toggle' },
   { id: 'toggle-verbose',         type: 'toggle' },
   { id: 'input-custom-flags',     type: 'text'   },
+  { id: 'input-strength',         type: 'text'   },
 ]
 
 function captureForm() {
@@ -39,6 +40,7 @@ function captureForm() {
     values[field.id] = field.type === 'toggle' ? el.checked : el.value
   }
   values['model-type'] = document.querySelector('input[name="model-type"]:checked')?.value || 'monolithic'
+  values['image-op'] = document.querySelector('input[name="image-op"]:checked')?.value || ''
   return values
 }
 
@@ -55,6 +57,19 @@ function applyForm(values) {
   if (values['model-type']) {
     const radio = document.querySelector(`input[name="model-type"][value="${values['model-type']}"]`)
     if (radio) radio.checked = true
+  }
+  if (values['image-op']) {
+    const radio = document.querySelector(`input[name="image-op"][value="${values['image-op']}"]`)
+    if (radio) {
+      radio.checked = true
+      radio.dispatchEvent(new Event('change'))
+    }
+    const btnToggle = document.getElementById('btn-toggle-image-input')
+    const content = document.getElementById('image-input-content')
+    if (btnToggle && content) {
+      btnToggle.classList.add('open')
+      content.classList.add('open')
+    }
   }
   document.getElementById('select-model')?.dispatchEvent(new Event('change'))
   document.getElementById('select-lora')?.dispatchEvent(new Event('change'))

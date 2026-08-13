@@ -169,6 +169,12 @@ appendLine('[ERROR] Error al abortar: ' + e)
       return
     }
 
+    const currentImageOp = document.querySelector('input[name="image-op"]:checked')?.value
+    if (currentImageOp === 'img2img' && !window.__selectedImageForOp) {
+      appendLine('[ERROR] Selecciona una imagen de entrada para img2img.')
+      return
+    }
+
     const params = {
       sd_path: sdPath,
       output_path: outputPath,
