@@ -1402,6 +1402,12 @@ i[data-lucide] {
     flex-wrap: wrap;
 }
 
+.inpaint-mask-status {
+    font-size: 12px;
+    color: var(--on-surface-variant);
+    opacity: 0.5;
+}
+
 .inpaint-dialog {
     margin: auto;
     width: min(92vw, 1400px);
