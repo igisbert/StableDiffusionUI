@@ -10,11 +10,13 @@ let ctxMask = null
 let naturalWidth = 0
 let naturalHeight = 0
 let preparedPath = null
-let painted = false
 let drawing = false
 let lastPoint = null
 let eventsBound = false
 let resizeObserver = null
+let brushMode = 'paint'
+let strokes = []
+let currentStroke = null
 
 function fitCanvases() {
   if (!baseCanvas || !naturalWidth) return
@@ -56,11 +58,8 @@ function initMaskCanvas() {
   ctxMask.fillRect(0, 0, naturalWidth, naturalHeight)
 }
 
-function brushRadiusNatural() {
-  const rect = overlayCanvas.getBoundingClientRect()
-  const displayScale = rect.width > 0 ? naturalWidth / rect.width : 1
-  const size = parseInt(document.getElementById('input-brush-size')?.value ?? '24', 10)
-  return Math.max(2, (size / 2) * displayScale)
+function brushSize() {
+  return parseInt(document.getElementById('input-brush-size')?.value ?? '24', 10)
 }
 
 function eventPoint(e) {
@@ -71,23 +70,60 @@ function eventPoint(e) {
   }
 }
 
-function drawStroke(from, to) {
-  const radius = brushRadiusNatural()
+function drawSegment(from, to, size, mode) {
+  const width = Math.max(2, size)
 
-  ctxOverlay.strokeStyle = 'rgba(255, 64, 64, 0.45)'
-  ctxOverlay.lineWidth = radius * 2
-
-  ctxMask.strokeStyle = '#ffffff'
-  ctxMask.lineWidth = radius * 2
-
-  for (const ctx of [ctxOverlay, ctxMask]) {
-    ctx.lineCap = 'round'
-    ctx.lineJoin = 'round'
-    ctx.beginPath()
-    ctx.moveTo(from.x, from.y)
-    ctx.lineTo(to.x, to.y)
-    ctx.stroke()
+  ctxOverlay.save()
+  if (mode === 'erase') {
+    ctxOverlay.globalCompositeOperation = 'destination-out'
   }
+  ctxOverlay.strokeStyle = 'rgba(255, 64, 64, 0.45)'
+  ctxOverlay.lineWidth = width
+  ctxOverlay.lineCap = 'round'
+  ctxOverlay.lineJoin = 'round'
+  ctxOverlay.beginPath()
+  ctxOverlay.moveTo(from.x, from.y)
+  ctxOverlay.lineTo(to.x, to.y)
+  ctxOverlay.stroke()
+  ctxOverlay.restore()
+
+  ctxMask.strokeStyle = mode === 'erase' ? '#000000' : '#ffffff'
+  ctxMask.lineWidth = width
+  ctxMask.lineCap = 'round'
+  ctxMask.lineJoin = 'round'
+  ctxMask.beginPath()
+  ctxMask.moveTo(from.x, from.y)
+  ctxMask.lineTo(to.x, to.y)
+  ctxMask.stroke()
+}
+
+function replayStrokes() {
+  if (!ctxOverlay || !ctxMask) return
+  ctxOverlay.clearRect(0, 0, naturalWidth, naturalHeight)
+  ctxMask.fillStyle = '#000000'
+  ctxMask.fillRect(0, 0, naturalWidth, naturalHeight)
+  for (const stroke of strokes) {
+    const pts = stroke.points
+    if (pts.length === 1) {
+      drawSegment(pts[0], { x: pts[0].x + 0.01, y: pts[0].y + 0.01 }, stroke.size, stroke.mode)
+      continue
+    }
+    for (let i = 1; i < pts.length; i++) {
+      drawSegment(pts[i - 1], pts[i], stroke.size, stroke.mode)
+    }
+  }
+}
+
+function updateToolbarState() {
+  const hasStrokes = strokes.length > 0
+  document.getElementById('btn-undo-mask').disabled = !hasStrokes
+  document.getElementById('btn-clear-mask').disabled = !hasStrokes
+}
+
+export function setBrushMode(mode) {
+  brushMode = mode
+  document.getElementById('btn-mode-paint').classList.toggle('active', mode === 'paint')
+  document.getElementById('btn-mode-erase').classList.toggle('active', mode === 'erase')
 }
 
 export async function loadInpaintImage(path) {
@@ -115,6 +151,7 @@ export async function loadInpaintImage(path) {
       ctxBase.drawImage(img, 0, 0)
       initMaskCanvas()
       fitCanvases()
+      updateToolbarState()
       resolve()
     }
     img.onerror = () => reject(new Error('No se pudo cargar la imagen para inpainting'))
@@ -123,16 +160,19 @@ export async function loadInpaintImage(path) {
 }
 
 export function clearMask() {
-  painted = false
+  strokes = []
+  currentStroke = null
   lastPoint = null
   drawing = false
-  if (ctxOverlay && naturalWidth > 0) {
-    ctxOverlay.clearRect(0, 0, naturalWidth, naturalHeight)
-  }
-  if (ctxMask && maskCanvas) {
-    ctxMask.fillStyle = '#000000'
-    ctxMask.fillRect(0, 0, maskCanvas.width, maskCanvas.height)
-  }
+  replayStrokes()
+  updateToolbarState()
+}
+
+export function undoStroke() {
+  if (strokes.length === 0) return
+  strokes.pop()
+  replayStrokes()
+  updateToolbarState()
 }
 
 export function resetInpaint() {
@@ -149,7 +189,7 @@ export function resetInpaint() {
 }
 
 export function isMaskPainted() {
-  return painted && naturalWidth > 0
+  return strokes.length > 0 && naturalWidth > 0
 }
 
 export function getPreparedImagePath() {
@@ -170,19 +210,26 @@ export function initInpaintEvents() {
     e.preventDefault()
     overlayCanvas.setPointerCapture(e.pointerId)
     drawing = true
-    lastPoint = eventPoint(e)
-    drawStroke(lastPoint, { x: lastPoint.x + 0.01, y: lastPoint.y + 0.01 })
-    painted = true
+    const point = eventPoint(e)
+    currentStroke = { mode: brushMode, size: brushSize(), points: [point] }
+    lastPoint = point
+    drawSegment(point, { x: point.x + 0.01, y: point.y + 0.01 }, currentStroke.size, brushMode)
   })
 
   overlayCanvas.addEventListener('pointermove', (e) => {
     if (!drawing) return
     const point = eventPoint(e)
-    drawStroke(lastPoint, point)
+    currentStroke.points.push(point)
+    drawSegment(lastPoint, point, currentStroke.size, currentStroke.mode)
     lastPoint = point
   })
 
   const stopDrawing = () => {
+    if (currentStroke) {
+      strokes.push(currentStroke)
+      currentStroke = null
+      updateToolbarState()
+    }
     drawing = false
     lastPoint = null
   }
@@ -191,4 +238,12 @@ export function initInpaintEvents() {
   overlayCanvas.addEventListener('pointercancel', stopDrawing)
 
   document.getElementById('btn-clear-mask').addEventListener('click', clearMask)
+  document.getElementById('btn-undo-mask').addEventListener('click', undoStroke)
+
+  document.getElementById('btn-mode-paint').addEventListener('click', () => setBrushMode('paint'))
+  document.getElementById('btn-mode-erase').addEventListener('click', () => setBrushMode('erase'))
+
+  document.getElementById('input-brush-size').addEventListener('input', (e) => {
+    document.getElementById('brush-size-value').textContent = e.target.value
+  })
 }

@@ -448,17 +448,19 @@ EJECUTAR
 </main>
 <dialog id="inpaint-dialog" class="inpaint-dialog">
 <div class="inpaint-toolbar">
-<div class="inpaint-tools">
-<label class="inpaint-brush-label">
-<span class="input-label">Pincel</span>
-<input id="input-brush-size" type="number" min="4" max="200" step="2" value="24"/>
-</label>
-<button id="btn-clear-mask" class="btn-secondary" title="Limpiar máscara"><i data-lucide="eraser"></i> Limpiar</button>
+<div class="inpaint-tool-group">
+<i data-lucide="brush"></i>
+<input id="input-brush-size" type="range" min="2" max="150" step="1" value="24"/>
+<span id="brush-size-value">24</span>
 </div>
-<div class="inpaint-toolbar-actions">
-<button id="btn-apply-mask" class="run-btn"><i data-lucide="check"></i> Listo</button>
-<button id="btn-close-inpaint" class="btn-icon btn-danger" title="Cerrar"><i data-lucide="x"></i></button>
+<div class="inpaint-mode-toggle">
+<button id="btn-mode-paint" class="active" type="button">Pintar</button>
+<button id="btn-mode-erase" type="button">Borrar</button>
 </div>
+<div class="inpaint-toolbar-spacer"></div>
+<button id="btn-undo-mask" class="btn-icon" title="Deshacer" disabled><i data-lucide="undo-2"></i></button>
+<button id="btn-clear-mask" class="btn-secondary" disabled>Limpiar</button>
+<button id="btn-apply-mask" class="run-btn">Listo</button>
 </div>
 <div class="inpaint-canvas-wrap" id="inpaint-canvas-wrap">
 <div class="inpaint-canvas-stack">

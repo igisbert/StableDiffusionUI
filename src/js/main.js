@@ -485,8 +485,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     inpaintDialog.showModal()
   })
 
-  document.getElementById('btn-close-inpaint').addEventListener('click', closeInpaintDialog)
-
   document.getElementById('btn-apply-mask').addEventListener('click', closeInpaintDialog)
 
   inpaintDialog.addEventListener('cancel', (e) => {
