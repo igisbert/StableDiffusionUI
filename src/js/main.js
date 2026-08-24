@@ -470,18 +470,28 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const inpaintDialog = document.getElementById('inpaint-dialog')
 
+  function closeInpaintDialog() {
+    if (inpaintDialog.classList.contains('closing')) return
+    inpaintDialog.classList.add('closing')
+    inpaintDialog.addEventListener('animationend', () => {
+      inpaintDialog.classList.remove('closing')
+      inpaintDialog.close()
+    }, { once: true })
+  }
+
   btnOpenInpaint.addEventListener('click', () => {
     if (!selectedImageForOp) return
     initInpaintEvents()
     inpaintDialog.showModal()
   })
 
-  document.getElementById('btn-close-inpaint').addEventListener('click', () => {
-    inpaintDialog.close()
-  })
+  document.getElementById('btn-close-inpaint').addEventListener('click', closeInpaintDialog)
 
-  document.getElementById('btn-apply-mask').addEventListener('click', () => {
-    inpaintDialog.close()
+  document.getElementById('btn-apply-mask').addEventListener('click', closeInpaintDialog)
+
+  inpaintDialog.addEventListener('cancel', (e) => {
+    e.preventDefault()
+    closeInpaintDialog()
   })
 
   inpaintDialog.addEventListener('close', () => {
