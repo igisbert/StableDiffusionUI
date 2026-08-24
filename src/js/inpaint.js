@@ -120,10 +120,20 @@ function updateToolbarState() {
   document.getElementById('btn-clear-mask').disabled = !hasStrokes
 }
 
+let modeIndicator = null
+
+function positionModeIndicator() {
+  const active = document.querySelector('.inpaint-mode-toggle button.active')
+  if (!active || !modeIndicator) return
+  modeIndicator.style.left = `${active.offsetLeft}px`
+  modeIndicator.style.width = `${active.offsetWidth}px`
+}
+
 export function setBrushMode(mode) {
   brushMode = mode
   document.getElementById('btn-mode-paint').classList.toggle('active', mode === 'paint')
   document.getElementById('btn-mode-erase').classList.toggle('active', mode === 'erase')
+  positionModeIndicator()
 }
 
 export async function loadInpaintImage(path) {
@@ -242,6 +252,15 @@ export function initInpaintEvents() {
 
   document.getElementById('btn-mode-paint').addEventListener('click', () => setBrushMode('paint'))
   document.getElementById('btn-mode-erase').addEventListener('click', () => setBrushMode('erase'))
+
+  const modeToggle = document.querySelector('.inpaint-mode-toggle')
+  modeIndicator = document.createElement('span')
+  modeIndicator.className = 'inpaint-mode-indicator'
+  modeToggle.prepend(modeIndicator)
+  positionModeIndicator()
+  if ('ResizeObserver' in window) {
+    new ResizeObserver(positionModeIndicator).observe(modeToggle)
+  }
 
   document.getElementById('input-brush-size').addEventListener('input', (e) => {
     document.getElementById('brush-size-value').textContent = e.target.value

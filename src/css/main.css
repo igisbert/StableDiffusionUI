@@ -1518,25 +1518,40 @@ i[data-lucide] {
     }
 
     & .inpaint-mode-toggle {
+        position: relative;
         display: flex;
         align-items: center;
         height: 36px;
+        padding: 3px;
         border: 1px solid var(--outline);
         border-radius: 18px;
-        overflow: hidden;
+
+        & .inpaint-mode-indicator {
+            position: absolute;
+            top: 3px;
+            bottom: 3px;
+            left: 3px;
+            width: 0;
+            border-radius: 15px;
+            background-color: var(--primary);
+            transition: left 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94), width 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
 
         & button {
+            position: relative;
+            z-index: 1;
             height: 100%;
             padding: 0 16px;
             background: none;
             border: none;
+            border-radius: 15px;
             color: var(--on-surface-variant);
             font-size: 12px;
             font-family: var(--font-main);
             cursor: pointer;
+            transition: color 0.25s;
 
             &.active {
-                background-color: var(--primary);
                 color: var(--on-primary);
             }
         }
@@ -1549,16 +1564,37 @@ i[data-lucide] {
     & .btn-icon {
         width: 36px;
         height: 36px;
+        border: 1px solid var(--outline);
+        border-radius: 18px;
+        align-items: center;
+        justify-content: center;
+
+        &:hover:not(:disabled) {
+            background-color: var(--surface-high);
+        }
+
+        &:disabled {
+            opacity: 0.4;
+            cursor: default;
+        }
     }
 
     & .btn-secondary {
         height: 36px;
         padding: 0 16px;
+        border-radius: 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
     }
 
     & .run-btn {
         height: 36px;
         padding: 0 18px;
+        border-radius: 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
     }
 }
 
