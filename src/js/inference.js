@@ -174,6 +174,12 @@ appendLine('[ERROR] Error al abortar: ' + e)
       appendLine('[ERROR] Selecciona una imagen de entrada para img2img.')
       return
     }
+    if (currentImageOp === 'inpainting' && !window.__selectedImageForOp) {
+      appendLine('[ERROR] Selecciona una imagen de entrada para inpainting.')
+      return
+    }
+
+    const strengthId = currentImageOp === 'inpainting' ? 'input-inpaint-strength' : 'input-strength'
 
     const params = {
       sd_path: sdPath,
@@ -215,7 +221,7 @@ appendLine('[ERROR] Error al abortar: ' + e)
       force_cuda: checked('toggle-cuda'),
       custom_flags: val('input-custom-flags'),
       input_image: window.__selectedImageForOp || null,
-      strength: num('input-strength', 0.5),
+      strength: num(strengthId, 0.5),
     }
 
     clearConsole()

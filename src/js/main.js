@@ -8,6 +8,7 @@ import { initPromptTemplates } from './prompt-templates.js'
 import { initTooltips } from './tooltips.js'
 import { initNotifications, notify, toggle } from './notifications.js'
 import { appendLine, clearConsole } from './console.js'
+import { loadInpaintImage, resetInpaint, initInpaintEvents, isMaskPainted } from './inpaint.js'
 import { showPreview, getSelectedImage } from './preview.js'
 import {
   loadEnhancerConfig,
@@ -270,6 +271,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   const btnSizeFull = document.getElementById('btn-size-full')
   const btnSizeHalf = document.getElementById('btn-size-half')
   const btnSizeQuarter = document.getElementById('btn-size-quarter')
+  const btnInpaintSizeFull = document.getElementById('btn-inpaint-size-full')
+  const btnInpaintSizeHalf = document.getElementById('btn-inpaint-size-half')
+  const btnInpaintSizeQuarter = document.getElementById('btn-inpaint-size-quarter')
   const btnRun = document.getElementById('btn-run')
 
   function updateImageOpUI() {
@@ -278,6 +282,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     btnSizeFull.disabled = !hasImage
     btnSizeHalf.disabled = !hasImage
     btnSizeQuarter.disabled = !hasImage
+    btnInpaintSizeFull.disabled = !hasImage
+    btnInpaintSizeHalf.disabled = !hasImage
+    btnInpaintSizeQuarter.disabled = !hasImage
+    btnOpenInpaint.disabled = !hasImage
 
     updateUpscaleButton()
   }
@@ -320,6 +328,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   btnSizeHalf.addEventListener('click', () => applyImageSize(0.5))
   btnSizeQuarter.addEventListener('click', () => applyImageSize(0.25))
 
+  btnInpaintSizeFull.addEventListener('click', () => applyImageSize(1))
+  btnInpaintSizeHalf.addEventListener('click', () => applyImageSize(0.5))
+  btnInpaintSizeQuarter.addEventListener('click', () => applyImageSize(0.25))
+
   async function populateImageUpscaleModels() {
     const upscalersPath = await getUpscannersPath()
     if (!upscalersPath) return
@@ -349,6 +361,28 @@ document.addEventListener('DOMContentLoaded', async () => {
   const cancelOpLabel = document.getElementById('cancel-op-label')
   const upscaleOptions = document.getElementById('upscale-options')
   const img2imgOptions = document.getElementById('img2img-options')
+  const inpaintingOptions = document.getElementById('inpainting-options')
+  const btnOpenInpaint = document.getElementById('btn-open-inpaint')
+
+  async function refreshInpaintCanvas() {
+    const op = document.querySelector('input[name="image-op"]:checked')?.value
+    if (op !== 'inpainting' || !selectedImageForOp) return
+    try {
+      await loadInpaintImage(selectedImageForOp)
+      updateInpaintMaskStatus()
+    } catch (e) {
+      console.error('Error cargando imagen para inpainting:', e)
+    }
+  }
+
+  function clearInpaintState() {
+    resetInpaint()
+    document.getElementById('inpaint-mask-status').textContent = 'Sin máscara'
+  }
+
+  function updateInpaintMaskStatus() {
+    document.getElementById('inpaint-mask-status').textContent = isMaskPainted() ? 'Máscara pintada' : 'Sin máscara'
+  }
 
   document.querySelectorAll('input[name="image-op"]').forEach(radio => {
     radio.addEventListener('change', () => {
@@ -361,6 +395,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         options.classList.remove('visible')
         upscaleOptions.style.display = 'none'
         img2imgOptions.style.display = 'none'
+        inpaintingOptions.style.display = 'none'
         return
       }
 
@@ -369,7 +404,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       upscaleOptions.style.display = value === 'upscale' ? 'flex' : 'none'
       img2imgOptions.style.display = value === 'img2img' ? 'flex' : 'none'
+      inpaintingOptions.style.display = value === 'inpainting' ? 'flex' : 'none'
 
+      refreshInpaintCanvas()
       updateImageOpUI()
     })
   })
@@ -388,6 +425,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     imageName.textContent = name
     document.getElementById('btn-clear-image').classList.add('visible')
     updateImageOpUI()
+    refreshInpaintCanvas()
   })
 
   document.getElementById('btn-clear-image').addEventListener('click', () => {
@@ -396,6 +434,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     imageName.textContent = 'Ninguna'
     document.getElementById('btn-clear-image').classList.remove('visible')
     updateImageOpUI()
+    clearInpaintState()
   })
 
   const dropZone = document.getElementById('image-drop-zone')
@@ -426,6 +465,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     imageName.textContent = name
     document.getElementById('btn-clear-image').classList.add('visible')
     updateImageOpUI()
+    refreshInpaintCanvas()
+  })
+
+  const inpaintDialog = document.getElementById('inpaint-dialog')
+
+  btnOpenInpaint.addEventListener('click', () => {
+    if (!selectedImageForOp) return
+    initInpaintEvents()
+    inpaintDialog.showModal()
+  })
+
+  document.getElementById('btn-close-inpaint').addEventListener('click', () => {
+    inpaintDialog.close()
+  })
+
+  document.getElementById('btn-apply-mask').addEventListener('click', () => {
+    inpaintDialog.close()
+  })
+
+  inpaintDialog.addEventListener('close', () => {
+    updateInpaintMaskStatus()
   })
 
   let isUpscaling = false

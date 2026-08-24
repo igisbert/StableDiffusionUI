@@ -218,7 +218,7 @@
 </label>
 <label class="radio-label">
 <input type="radio" name="image-op" value="inpainting"/>
-<span>Inpainting (WIP)</span>
+<span>Inpainting</span>
 </label>
 <label class="radio-label">
 <input type="radio" name="image-op" value="upscale"/>
@@ -257,6 +257,26 @@
 <button id="btn-size-quarter" class="btn-secondary" disabled>Tamaño 1/4</button>
 </div>
 </div>
+</div>
+</div>
+<div id="inpainting-options" class="op-option-group" style="display:none">
+<div class="img2img-strength-row">
+<div class="img2img-strength-input">
+<label class="input-label">Strength <i data-lucide="circle-question-mark" class="help-icon"></i></label>
+<input id="input-inpaint-strength" type="number" value="0.5" min="0" max="1" step="0.05"/>
+</div>
+<div class="img2img-size-buttons">
+<span class="input-label">Rellenar ancho y alto de la imagen</span>
+<div class="size-btn-group">
+<button id="btn-inpaint-size-full" class="btn-secondary" disabled>Tamaño original</button>
+<button id="btn-inpaint-size-half" class="btn-secondary" disabled>Tamaño 1/2</button>
+<button id="btn-inpaint-size-quarter" class="btn-secondary" disabled>Tamaño 1/4</button>
+</div>
+</div>
+</div>
+<div class="inpaint-op-row">
+<button id="btn-open-inpaint" class="btn-secondary" disabled><i data-lucide="brush"></i> Editar máscara</button>
+<span id="inpaint-mask-status" class="input-hint">Sin máscara</span>
 </div>
 </div>
 </div>
@@ -426,5 +446,28 @@ EJECUTAR
 </div>
 </div>
 </main>
+<dialog id="inpaint-dialog" class="inpaint-dialog">
+<div class="inpaint-toolbar">
+<span class="inpaint-title">Editar máscara</span>
+<div class="inpaint-tools">
+<label class="inpaint-brush-label">
+<span class="input-label">Pincel</span>
+<input id="input-brush-size" type="number" min="4" max="200" step="2" value="24"/>
+</label>
+<button id="btn-clear-mask" class="btn-secondary" title="Limpiar máscara"><i data-lucide="eraser"></i> Limpiar</button>
+</div>
+<div class="inpaint-toolbar-actions">
+<button id="btn-apply-mask" class="run-btn"><i data-lucide="check"></i> Listo</button>
+<button id="btn-close-inpaint" class="btn-icon btn-danger" title="Cerrar"><i data-lucide="x"></i></button>
+</div>
+</div>
+<div class="inpaint-canvas-wrap" id="inpaint-canvas-wrap">
+<div class="inpaint-canvas-stack">
+<canvas id="inpaint-canvas-base"></canvas>
+<canvas id="inpaint-canvas-overlay"></canvas>
+</div>
+</div>
+<p class="inpaint-hint">Pinta sobre la zona que quieres regenerar. Lo pintado en rojo se reemplazará.</p>
+</dialog>
 <script type="module" src="js/main.js"></script>
 </body></html>

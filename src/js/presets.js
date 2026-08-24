@@ -30,6 +30,7 @@ const FIELDS = [
   { id: 'toggle-verbose',         type: 'toggle' },
   { id: 'input-custom-flags',     type: 'text'   },
   { id: 'input-strength',         type: 'text'   },
+  { id: 'input-inpaint-strength', type: 'text'   },
 ]
 
 function captureForm() {
