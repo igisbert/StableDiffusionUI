@@ -3,6 +3,7 @@ import { listen, emit } from '@tauri-apps/api/event'
 import { createIcons, icons } from 'lucide'
 import { getSdPath, getOutputPath, getModelsPath, getVaePath, getLlmPath, getLoraPath, getClipLPath, getClipGPath, getT5xxlPath } from './config.js'
 import { clearConsole, appendLine } from './console.js'
+import { exportMask, isMaskPainted, getPreparedImagePath } from './inpaint.js'
 
 let isRunning = false
 
@@ -174,12 +175,19 @@ appendLine('[ERROR] Error al abortar: ' + e)
       appendLine('[ERROR] Selecciona una imagen de entrada para img2img.')
       return
     }
-    if (currentImageOp === 'inpainting' && !window.__selectedImageForOp) {
-      appendLine('[ERROR] Selecciona una imagen de entrada para inpainting.')
-      return
+    if (currentImageOp === 'inpainting') {
+      if (!window.__selectedImageForOp) {
+        appendLine('[ERROR] Selecciona una imagen de entrada para inpainting.')
+        return
+      }
+      if (!isMaskPainted()) {
+        appendLine('[ERROR] Pinta una máscara en el editor de inpainting.')
+        return
+      }
     }
 
     const strengthId = currentImageOp === 'inpainting' ? 'input-inpaint-strength' : 'input-strength'
+    const isInpainting = currentImageOp === 'inpainting'
 
     const params = {
       sd_path: sdPath,
@@ -220,8 +228,9 @@ appendLine('[ERROR] Error al abortar: ' + e)
       verbose: checked('toggle-verbose'),
       force_cuda: checked('toggle-cuda'),
       custom_flags: val('input-custom-flags'),
-      input_image: window.__selectedImageForOp || null,
+      input_image: isInpainting ? (getPreparedImagePath() || window.__selectedImageForOp) : window.__selectedImageForOp || null,
       strength: num(strengthId, 0.5),
+      mask_image: isInpainting ? exportMask() : null,
     }
 
     clearConsole()

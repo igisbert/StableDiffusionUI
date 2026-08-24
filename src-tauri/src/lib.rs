@@ -16,6 +16,7 @@ pub fn run() {
             commands::inference::run_inference,
             commands::inference::abort_inference,
             commands::inference::run_upscale,
+            commands::inference::prepare_inpaint_image,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

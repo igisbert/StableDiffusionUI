@@ -61,6 +61,7 @@ pub struct InferenceParams {
     pub custom_flags: String,
     pub input_image: Option<String>,
     pub strength: Option<f32>,
+    pub mask_image: Option<String>,
 }
 
 fn normalize_orientation(bytes: &[u8]) -> Result<DynamicImage, Box<dyn std::error::Error>> {
@@ -92,6 +93,37 @@ fn normalize_orientation(bytes: &[u8]) -> Result<DynamicImage, Box<dyn std::erro
     Ok(corrected)
 }
 
+fn decode_data_url(data_url: &str) -> Result<Vec<u8>, String> {    let b64 = data_url
+        .split_once(',')
+        .map(|(_, b64)| b64)
+        .ok_or("Data URL de máscara inválida")?;
+    use base64::Engine;
+    base64::engine::general_purpose::STANDARD
+        .decode(b64)
+        .map_err(|e| format!("No se pudo decodificar la máscara: {}", e))
+}
+
+fn cleanup_temp_files(
+    temp_input: &Option<std::path::PathBuf>,
+    temp_mask: &Option<std::path::PathBuf>,
+) {
+    if let Some(temp) = temp_input {
+        let _ = std::fs::remove_file(temp);
+    }
+    if let Some(temp) = temp_mask {
+        let _ = std::fs::remove_file(temp);
+    }
+}
+
+#[tauri::command]
+pub fn prepare_inpaint_image(path: String) -> Result<String, String> {
+    let bytes = std::fs::read(&path).map_err(|e| e.to_string())?;
+    let corrected = normalize_orientation(&bytes).map_err(|e| e.to_string())?;
+    let temp_path = std::env::temp_dir().join("sd_frontend_inpaint_input.png");
+    corrected.save(&temp_path).map_err(|e| e.to_string())?;
+    Ok(temp_path.to_string_lossy().to_string())
+}
+
 #[tauri::command]
 pub async fn run_inference(app: tauri::AppHandle, params: InferenceParams) -> Result<(), String> {
     let timestamp = std::time::SystemTime::now()
@@ -99,8 +131,15 @@ pub async fn run_inference(app: tauri::AppHandle, params: InferenceParams) -> Re
         .unwrap_or_default()
         .as_secs();
 
+    let has_mask = params.mask_image.as_ref().is_some_and(|m| !m.is_empty());
     let has_input_image = params.input_image.is_some();
-    let output_dir = if has_input_image {
+    let output_dir = if has_mask {
+        let inpaint_dir = Path::new(&params.output_path).join("inpainting");
+        if !inpaint_dir.exists() {
+            std::fs::create_dir_all(&inpaint_dir).map_err(|e| e.to_string())?;
+        }
+        inpaint_dir
+    } else if has_input_image {
         let img2img_dir = Path::new(&params.output_path).join("img2img");
         if !img2img_dir.exists() {
             std::fs::create_dir_all(&img2img_dir).map_err(|e| e.to_string())?;
@@ -269,6 +308,18 @@ pub async fn run_inference(app: tauri::AppHandle, params: InferenceParams) -> Re
         cmd.arg("--strength").arg(strength.to_string());
     }
 
+    let temp_mask = if has_mask {
+        let mask_bytes = decode_data_url(params.mask_image.as_ref().unwrap())?;
+        let mask_img = image::load_from_memory(&mask_bytes)
+            .map_err(|e| format!("No se pudo leer la máscara: {}", e))?;
+        let mask_path = output_dir.join(format!("temp_mask_{}.png", timestamp));
+        mask_img.save(&mask_path).map_err(|e| e.to_string())?;
+        cmd.arg("--mask").arg(&mask_path);
+        Some(mask_path)
+    } else {
+        None
+    };
+
     cmd.stdout(Stdio::piped()).stderr(Stdio::piped());
 
     #[cfg(target_os = "windows")]
@@ -333,9 +384,7 @@ pub async fn run_inference(app: tauri::AppHandle, params: InferenceParams) -> Re
     let _ = t_stderr.join();
 
     if !was_running {
-        if let Some(ref temp) = temp_input {
-            let _ = std::fs::remove_file(temp);
-        }
+        cleanup_temp_files(&temp_input, &temp_mask);
         let _ = app.emit("console-line", "[ABORTADO] Inferencia cancelada.");
         let _ = app.emit("inference-aborted", ());
         return Ok(());
@@ -362,23 +411,17 @@ pub async fn run_inference(app: tauri::AppHandle, params: InferenceParams) -> Re
                 files.push(output_file);
             }
 
-            if let Some(ref temp) = temp_input {
-                let _ = std::fs::remove_file(temp);
-            }
+            cleanup_temp_files(&temp_input, &temp_mask);
 
             let _ = app.emit("inference-done", &files);
             Ok(())
         }
         Ok(s) => {
-            if let Some(ref temp) = temp_input {
-                let _ = std::fs::remove_file(temp);
-            }
+            cleanup_temp_files(&temp_input, &temp_mask);
             Err(format!("sd-cli terminó con código {:?}", s.code()))
         }
         Err(e) => {
-            if let Some(ref temp) = temp_input {
-                let _ = std::fs::remove_file(temp);
-            }
+            cleanup_temp_files(&temp_input, &temp_mask);
             Err(e)
         }
     }
