@@ -17,6 +17,8 @@ let resizeObserver = null
 let brushMode = 'paint'
 let strokes = []
 let currentStroke = null
+let preparedFrom = null
+let loadToken = 0
 
 function fitCanvases() {
   if (!baseCanvas || !naturalWidth) return
@@ -120,6 +122,10 @@ function updateToolbarState() {
   document.getElementById('btn-clear-mask').disabled = !hasStrokes
 }
 
+function setLoading(loading) {
+  document.getElementById('inpaint-loading')?.classList.toggle('visible', loading)
+}
+
 let modeIndicator = null
 
 function positionModeIndicator() {
@@ -138,18 +144,35 @@ export function setBrushMode(mode) {
 
 export async function loadInpaintImage(path) {
   initElements()
+
+  if (preparedFrom === path && preparedPath) {
+    return
+  }
+
+  const token = ++loadToken
   clearMask()
   preparedPath = null
+  preparedFrom = null
+  setLoading(true)
 
+  let resolvedPath
   try {
-    preparedPath = await invoke('prepare_inpaint_image', { path })
+    resolvedPath = await invoke('prepare_inpaint_image', { path })
   } catch (e) {
-    preparedPath = path
+    resolvedPath = path
   }
+  if (token !== loadToken) return
+  preparedPath = resolvedPath
+  preparedFrom = path
 
   await new Promise((resolve, reject) => {
     const img = new Image()
     img.onload = () => {
+      if (token !== loadToken) {
+        resolve()
+        return
+      }
+      setLoading(false)
       naturalWidth = img.naturalWidth
       naturalHeight = img.naturalHeight
 
@@ -164,7 +187,14 @@ export async function loadInpaintImage(path) {
       updateToolbarState()
       resolve()
     }
-    img.onerror = () => reject(new Error('No se pudo cargar la imagen para inpainting'))
+    img.onerror = () => {
+      if (token !== loadToken) {
+        resolve()
+        return
+      }
+      setLoading(false)
+      reject(new Error('No se pudo cargar la imagen para inpainting'))
+    }
     img.src = convertFileSrc(preparedPath)
   })
 }
@@ -188,8 +218,10 @@ export function undoStroke() {
 export function resetInpaint() {
   clearMask()
   preparedPath = null
+  preparedFrom = null
   naturalWidth = 0
   naturalHeight = 0
+  setLoading(false)
   if (baseCanvas) {
     baseCanvas.width = 0
     baseCanvas.height = 0
