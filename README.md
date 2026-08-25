@@ -49,6 +49,16 @@ La consola muestra el progreso en tiempo real. Al terminar, la imagen aparece en
 
 Las imágenes generadas se guardan en `output/img2img/`. Se aplica corrección automática de orientación EXIF.
 
+## Inpainting
+
+1. Abrir "Imagen como input" y seleccionar una imagen
+2. Seleccionar el modo "Inpainting" y pulsar "Editar máscara"
+3. Pintar sobre la zona a regenerar con el pincel, o usar rectángulo/elipse rellenos
+4. Cerrar con "Listo" (o Esc) y ajustar el strength.
+5. Escribir el prompt, configurar los parámetros de generación (steps, CFG, seed, etc.) desde el resto de la app y pulsar "EJECUTAR"
+
+La máscara se genera en la resolución original de la imagen y se aplica corrección automática de orientación EXIF antes de pintar, por lo que lo que se ve en el editor coincide con lo que recibe `sd-cli`. Las imágenes generadas se guardan en `output/inpainting/`.
+
 ## Upscale
 
 ### Desde la barra de acciones

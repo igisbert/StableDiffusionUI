@@ -93,7 +93,8 @@ fn normalize_orientation(bytes: &[u8]) -> Result<DynamicImage, Box<dyn std::erro
     Ok(corrected)
 }
 
-fn decode_data_url(data_url: &str) -> Result<Vec<u8>, String> {    let b64 = data_url
+fn decode_data_url(data_url: &str) -> Result<Vec<u8>, String> {
+    let b64 = data_url
         .split_once(',')
         .map(|(_, b64)| b64)
         .ok_or("Data URL de máscara inválida")?;
