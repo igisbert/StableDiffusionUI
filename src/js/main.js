@@ -7,9 +7,9 @@ import { initPresets } from './presets.js'
 import { initPromptTemplates } from './prompt-templates.js'
 import { initTooltips } from './tooltips.js'
 import { initNotifications, notify, toggle } from './notifications.js'
-import { appendLine, clearConsole } from './console.js'
+import { appendLine } from './console.js'
 import { loadInpaintImage, resetInpaint, initInpaintEvents, isMaskPainted } from './inpaint.js'
-import { setBusy, isBusy } from './busy.js'
+import { startProcess, endProcess, captureSeed, getSeeds, isBusy } from './busy.js'
 import { showPreview, getSelectedImage } from './preview.js'
 import {
   loadEnhancerConfig,
@@ -19,8 +19,6 @@ import {
   fetchModels,
   enhancePrompt
 } from './prompt-enhancer.js'
-
-let capturedSeeds = []
 
 async function updateEnhancerUI() {
   const configured = await isEnhancerConfigured()
@@ -75,9 +73,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   document.getElementById('btn-copy-seed').addEventListener('click', async () => {
     try {
-      const text = capturedSeeds.length === 1
-        ? capturedSeeds[0]
-        : capturedSeeds.join(', ')
+      const seeds = getSeeds()
+      const text = seeds.length === 1
+        ? seeds[0]
+        : seeds.join(', ')
       if (!text) return
       await navigator.clipboard.writeText(text)
       const btn = document.getElementById('btn-copy-seed')
@@ -234,9 +233,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('popover-upscale').classList.remove('open')
 
-    setBusy(true)
+    startProcess()
     btnRun.disabled = true
-    document.getElementById('btn-upscale').disabled = true
     try {
       await invoke('run_upscale', {
         sdPath: sdPath,
@@ -248,9 +246,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (e) {
       console.error('Upscale error:', e)
     } finally {
-      setBusy(false)
+      endProcess()
       btnRun.disabled = false
-      document.getElementById('btn-upscale').disabled = false
     }
   })
 
@@ -509,19 +506,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function setUpscaling(running) {
     isUpscaling = running
-    setBusy(running)
+    if (running) {
+      startProcess()
+    } else {
+      endProcess()
+    }
     const btnRunUpscale = document.getElementById('btn-run-upscale')
     const btnAbortUpscale = document.getElementById('btn-abort-upscale')
-    const btnUpscaleBar = document.getElementById('btn-upscale')
     if (running) {
       btnRun.disabled = true
       btnRunUpscale.disabled = true
-      btnUpscaleBar.disabled = true
       btnAbortUpscale.hidden = false
     } else {
       btnAbortUpscale.hidden = true
       btnRun.disabled = false
-      btnUpscaleBar.disabled = false
       updateImageOpUI()
     }
   }
@@ -559,29 +557,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   await listen('console-line', (event) => {
     const line = event.payload
     const match = line.match(/generating image: \d+\/\d+ - seed (\d+)/)
-    if (match) capturedSeeds.push(match[1])
+    if (match) captureSeed(match[1])
     appendLine(line)
-  })
-
-  await listen('inference-started', () => {
-    capturedSeeds = []
-    document.getElementById('btn-upscale').disabled = true
   })
 
   await listen('inference-done', async (event) => {
     showPreview(event.payload)
-    document.getElementById('btn-upscale').disabled = false
     updateImageOpUI()
     notify('Generación completada', 'Tu imagen está lista.')
   })
 
   await listen('upscale-done', (event) => {
     showPreview(event.payload)
-    document.getElementById('btn-upscale').disabled = false
-    document.getElementById('btn-copy-console').disabled = false
-    if (capturedSeeds.length > 0) {
-      document.getElementById('btn-copy-seed').disabled = false
-    }
     notify('Upscale completado', 'Tu imagen escalada está lista.')
   })
 })

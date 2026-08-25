@@ -1,36 +1,34 @@
 import { invoke } from '@tauri-apps/api/core'
-import { listen, emit } from '@tauri-apps/api/event'
+import { listen } from '@tauri-apps/api/event'
 import { createIcons, icons } from 'lucide'
 import { getSdPath, getOutputPath, getModelsPath, getVaePath, getLlmPath, getLoraPath, getClipLPath, getClipGPath, getT5xxlPath } from './config.js'
-import { clearConsole, appendLine } from './console.js'
+import { appendLine } from './console.js'
 import { exportMask, isMaskPainted, getPreparedImagePath } from './inpaint.js'
-import { setBusy, isBusy } from './busy.js'
+import { startProcess, endProcess, isBusy } from './busy.js'
 
 let isRunning = false
 
 function setRunning(running) {
   isRunning = running
-  setBusy(running)
+  if (running) {
+    startProcess()
+  } else {
+    endProcess()
+  }
   document.querySelector('.controls-col')?.classList.toggle('busy', running)
   const btnRun = document.getElementById('btn-run')
   const btnAbort = document.getElementById('btn-abort')
-  const btnCopySeed = document.getElementById('btn-copy-seed')
-  const btnCopyConsole = document.getElementById('btn-copy-console')
   const btnRunUpscale = document.getElementById('btn-run-upscale')
   const btnAbortUpscale = document.getElementById('btn-abort-upscale')
 
   if (running) {
     btnRun.disabled = true
     btnAbort.hidden = false
-    btnCopySeed.disabled = true
-    btnCopyConsole.disabled = true
     if (btnRunUpscale) btnRunUpscale.disabled = true
     if (btnAbortUpscale) btnAbortUpscale.hidden = true
   } else {
     btnRun.disabled = false
     btnAbort.hidden = true
-    btnCopySeed.disabled = false
-    btnCopyConsole.disabled = false
     if (btnRunUpscale) btnRunUpscale.disabled = false
   }
 }
@@ -242,9 +240,7 @@ appendLine('[ERROR] Error al abortar: ' + e)
       mask_image: isInpainting ? exportMask() : null,
     }
 
-    clearConsole()
     setRunning(true)
-    emit('inference-started')
 
     try {
       await invoke('run_inference', { params: params })
