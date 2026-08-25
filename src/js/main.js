@@ -197,8 +197,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
       const model = document.getElementById('select-model')?.value || ''
-      const modelName = model.replace(/\.[^.]+$/, '')
-      const enhanced = await enhancePrompt(prompt, modelName)
+      const imageOp = document.querySelector('input[name="image-op"]:checked')?.value
+      const task = imageOp === 'img2img' ? 'i2i' : imageOp === 'inpainting' ? 'inpaint' : 't2i'
+      const enhanced = await enhancePrompt(prompt, { modelFileName: model, task })
       inputPrompt.value = enhanced
     } catch (e) {
       appendLine('[ERROR] Error al mejorar prompt: ' + e)
