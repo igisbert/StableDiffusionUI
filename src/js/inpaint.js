@@ -85,7 +85,12 @@ function ensureTmpCanvas() {
 
 
 function brushSize() {
-  return parseInt(document.getElementById('input-brush-size')?.value ?? '24', 10)
+  const percent = parseFloat(document.getElementById('input-brush-size')?.value ?? '5')
+  return Math.max(2, Math.round((percent / 100) * Math.min(naturalWidth, naturalHeight)))
+}
+
+function updateBrushReadout() {
+  document.getElementById('brush-size-value').textContent = brushSize()
 }
 
 function eventPoint(e) {
@@ -292,6 +297,7 @@ export async function loadInpaintImage(path) {
       ctxBase.drawImage(img, 0, 0)
       initMaskCanvas()
       fitCanvases()
+      updateBrushReadout()
       updateToolbarState()
       resolve()
     }
@@ -428,7 +434,5 @@ export function initInpaintEvents() {
     setBrushMode(btn.id === 'btn-mode-paint' ? 'paint' : 'erase')
   })
 
-  document.getElementById('input-brush-size').addEventListener('input', (e) => {
-    document.getElementById('brush-size-value').textContent = e.target.value
-  })
+  document.getElementById('input-brush-size').addEventListener('input', updateBrushReadout)
 }
