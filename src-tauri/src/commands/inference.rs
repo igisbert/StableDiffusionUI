@@ -19,6 +19,27 @@ const CREATE_NO_WINDOW: u32 = 0x08000000;
 static CHILD: Mutex<Option<std::process::Child>> = Mutex::new(None);
 static RUNNING: AtomicBool = AtomicBool::new(false);
 
+#[cfg(target_os = "windows")]
+static CHILD_JOB: Mutex<Option<win32job::Job>> = Mutex::new(None);
+
+#[cfg(target_os = "windows")]
+fn assign_child_to_job(child: &std::process::Child) -> Result<(), String> {
+    use std::os::windows::io::AsRawHandle;
+    let job = win32job::Job::create().map_err(|e| e.to_string())?;
+    let mut info = job.query_extended_limit_info().map_err(|e| e.to_string())?;
+    info.limit_kill_on_job_close();
+    job.set_extended_limit_info(&info).map_err(|e| e.to_string())?;
+    job.assign_process(child.as_raw_handle() as isize)
+        .map_err(|e| e.to_string())?;
+    *CHILD_JOB.lock().unwrap() = Some(job);
+    Ok(())
+}
+
+#[cfg(target_os = "windows")]
+fn release_child_job() {
+    *CHILD_JOB.lock().unwrap() = None;
+}
+
 #[derive(Deserialize)]
 pub struct InferenceParams {
     pub sd_path: String,
@@ -355,6 +376,12 @@ pub async fn run_inference(app: tauri::AppHandle, params: InferenceParams) -> Re
         .spawn()
         .map_err(|e| format!("No se pudo lanzar sd-cli: {}", e))?;
 
+    #[cfg(target_os = "windows")]
+    if let Err(e) = assign_child_to_job(&child) {
+        let _ = child.kill();
+        return Err(e);
+    }
+
     let stdout = child.stdout.take();
     let stderr = child.stderr.take();
 
@@ -405,6 +432,8 @@ pub async fn run_inference(app: tauri::AppHandle, params: InferenceParams) -> Re
 
     let was_running = RUNNING.swap(false, Ordering::SeqCst);
     *CHILD.lock().unwrap() = None;
+    #[cfg(target_os = "windows")]
+    release_child_job();
 
     let _ = t_stdout.join();
     let _ = t_stderr.join();
@@ -507,6 +536,12 @@ pub async fn run_upscale(
         .spawn()
         .map_err(|e| e.to_string())?;
 
+    #[cfg(target_os = "windows")]
+    if let Err(e) = assign_child_to_job(&child) {
+        let _ = child.kill();
+        return Err(e);
+    }
+
     let stdout = child.stdout.take();
     let stderr = child.stderr.take();
 
@@ -557,6 +592,8 @@ pub async fn run_upscale(
 
     let was_running = RUNNING.swap(false, Ordering::SeqCst);
     *CHILD.lock().unwrap() = None;
+    #[cfg(target_os = "windows")]
+    release_child_job();
 
     let _ = t_stdout.join();
     let _ = t_stderr.join();

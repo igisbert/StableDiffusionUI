@@ -124,8 +124,6 @@ export async function enhancePrompt(
   if (!model) throw new Error("Modelo no encontrado");
 
   const systemPrompt = buildSystemPrompt({ modelFileName, task });
-  console.log("[enhancer] task:", task, "| model:", modelFileName);
-  console.log("[enhancer] system prompt:\n", systemPrompt);
 
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${model.id}:generateContent?key=${apiKey}`,
