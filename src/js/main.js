@@ -9,6 +9,7 @@ import { initTooltips } from './tooltips.js'
 import { initNotifications, notify, toggle } from './notifications.js'
 import { appendLine, clearConsole } from './console.js'
 import { loadInpaintImage, resetInpaint, initInpaintEvents, isMaskPainted } from './inpaint.js'
+import { setBusy, isBusy } from './busy.js'
 import { showPreview, getSelectedImage } from './preview.js'
 import {
   loadEnhancerConfig,
@@ -218,6 +219,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   })
 
   document.getElementById('btn-run-upscale-popover').addEventListener('click', async () => {
+    if (isBusy()) return
     const selectedRadio = document.querySelector('input[name="upscale-model"]:checked')
     if (!selectedRadio) return
 
@@ -232,6 +234,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('popover-upscale').classList.remove('open')
 
+    setBusy(true)
+    btnRun.disabled = true
+    document.getElementById('btn-upscale').disabled = true
     try {
       await invoke('run_upscale', {
         sdPath: sdPath,
@@ -242,6 +247,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       })
     } catch (e) {
       console.error('Upscale error:', e)
+    } finally {
+      setBusy(false)
+      btnRun.disabled = false
+      document.getElementById('btn-upscale').disabled = false
     }
   })
 
@@ -500,14 +509,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function setUpscaling(running) {
     isUpscaling = running
+    setBusy(running)
     const btnRunUpscale = document.getElementById('btn-run-upscale')
     const btnAbortUpscale = document.getElementById('btn-abort-upscale')
+    const btnUpscaleBar = document.getElementById('btn-upscale')
     if (running) {
       btnRun.disabled = true
       btnRunUpscale.disabled = true
+      btnUpscaleBar.disabled = true
       btnAbortUpscale.hidden = false
     } else {
       btnAbortUpscale.hidden = true
+      btnRun.disabled = false
+      btnUpscaleBar.disabled = false
       updateImageOpUI()
     }
   }
@@ -517,6 +531,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   })
 
   btnRunUpscale.addEventListener('click', async () => {
+    if (isBusy()) return
     if (!selectedImageForOp) return
     const sdPath = await getSdPath()
     const outputPath = await getOutputPath()
@@ -563,8 +578,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   await listen('upscale-done', (event) => {
     showPreview(event.payload)
     document.getElementById('btn-upscale').disabled = false
-    document.getElementById('btn-copy-seed').disabled = false
     document.getElementById('btn-copy-console').disabled = false
+    if (capturedSeeds.length > 0) {
+      document.getElementById('btn-copy-seed').disabled = false
+    }
     notify('Upscale completado', 'Tu imagen escalada está lista.')
   })
 })

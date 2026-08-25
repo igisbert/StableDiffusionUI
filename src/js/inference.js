@@ -4,11 +4,14 @@ import { createIcons, icons } from 'lucide'
 import { getSdPath, getOutputPath, getModelsPath, getVaePath, getLlmPath, getLoraPath, getClipLPath, getClipGPath, getT5xxlPath } from './config.js'
 import { clearConsole, appendLine } from './console.js'
 import { exportMask, isMaskPainted, getPreparedImagePath } from './inpaint.js'
+import { setBusy, isBusy } from './busy.js'
 
 let isRunning = false
 
 function setRunning(running) {
   isRunning = running
+  setBusy(running)
+  document.querySelector('.controls-col')?.classList.toggle('busy', running)
   const btnRun = document.getElementById('btn-run')
   const btnAbort = document.getElementById('btn-abort')
   const btnCopySeed = document.getElementById('btn-copy-seed')
@@ -28,6 +31,7 @@ function setRunning(running) {
     btnAbort.hidden = true
     btnCopySeed.disabled = false
     btnCopyConsole.disabled = false
+    if (btnRunUpscale) btnRunUpscale.disabled = false
   }
 }
 
@@ -125,6 +129,11 @@ export async function initInference() {
       } catch (e) {
 appendLine('[ERROR] Error al abortar: ' + e)
       }
+      return
+    }
+
+    if (isBusy()) {
+      appendLine('[ERROR] Ya hay un proceso en marcha (upscale o inferencia).')
       return
     }
 
