@@ -1,12 +1,17 @@
 import { invoke, convertFileSrc } from '@tauri-apps/api/core'
 
+const OVERLAY_ALPHA = 0.5
+
 let baseCanvas = null
 let overlayCanvas = null
 let maskCanvas = null
 let ctxBase = null
 let ctxOverlay = null
 let ctxMask = null
-
+let strokeCanvas = null
+let ctxStroke = null
+let tmpCanvas = null
+let ctxTmp = null
 let naturalWidth = 0
 let naturalHeight = 0
 let preparedPath = null
@@ -15,6 +20,7 @@ let lastPoint = null
 let eventsBound = false
 let resizeObserver = null
 let brushMode = 'paint'
+let tool = 'brush'
 let strokes = []
 let currentStroke = null
 let preparedFrom = null
@@ -56,9 +62,27 @@ function initMaskCanvas() {
   }
   maskCanvas.width = naturalWidth
   maskCanvas.height = naturalHeight
-  ctxMask.fillStyle = '#000000'
-  ctxMask.fillRect(0, 0, naturalWidth, naturalHeight)
+  ctxMask.clearRect(0, 0, naturalWidth, naturalHeight)
 }
+
+function ensureStrokeCanvas() {
+  if (!strokeCanvas) {
+    strokeCanvas = document.createElement('canvas')
+    ctxStroke = strokeCanvas.getContext('2d')
+  }
+  strokeCanvas.width = naturalWidth
+  strokeCanvas.height = naturalHeight
+}
+
+function ensureTmpCanvas() {
+  if (!tmpCanvas) {
+    tmpCanvas = document.createElement('canvas')
+    ctxTmp = tmpCanvas.getContext('2d')
+  }
+  tmpCanvas.width = naturalWidth
+  tmpCanvas.height = naturalHeight
+}
+
 
 function brushSize() {
   return parseInt(document.getElementById('input-brush-size')?.value ?? '24', 10)
@@ -72,48 +96,113 @@ function eventPoint(e) {
   }
 }
 
-function drawSegment(from, to, size, mode) {
-  const width = Math.max(2, size)
-
-  ctxOverlay.save()
+function drawMaskSegment(from, to, size, mode) {
+  ctxMask.save()
   if (mode === 'erase') {
-    ctxOverlay.globalCompositeOperation = 'destination-out'
+    ctxMask.globalCompositeOperation = 'destination-out'
   }
-  ctxOverlay.strokeStyle = 'rgba(255, 64, 64, 0.45)'
-  ctxOverlay.lineWidth = width
-  ctxOverlay.lineCap = 'round'
-  ctxOverlay.lineJoin = 'round'
-  ctxOverlay.beginPath()
-  ctxOverlay.moveTo(from.x, from.y)
-  ctxOverlay.lineTo(to.x, to.y)
-  ctxOverlay.stroke()
-  ctxOverlay.restore()
-
-  ctxMask.strokeStyle = mode === 'erase' ? '#000000' : '#ffffff'
-  ctxMask.lineWidth = width
+  ctxMask.strokeStyle = '#ffffff'
+  ctxMask.lineWidth = Math.max(2, size)
   ctxMask.lineCap = 'round'
   ctxMask.lineJoin = 'round'
   ctxMask.beginPath()
   ctxMask.moveTo(from.x, from.y)
   ctxMask.lineTo(to.x, to.y)
   ctxMask.stroke()
+  ctxMask.restore()
+}
+
+function drawStrokeSegment(from, to, size) {
+  ctxStroke.save()
+  ctxStroke.strokeStyle = '#ffffff'
+  ctxStroke.lineWidth = Math.max(2, size)
+  ctxStroke.lineCap = 'round'
+  ctxStroke.lineJoin = 'round'
+  ctxStroke.beginPath()
+  ctxStroke.moveTo(from.x, from.y)
+  ctxStroke.lineTo(to.x, to.y)
+  ctxStroke.stroke()
+  ctxStroke.restore()
+}
+
+function pathShape(ctx, type, from, to) {
+  const x = Math.min(from.x, to.x)
+  const y = Math.min(from.y, to.y)
+  const w = Math.abs(to.x - from.x)
+  const h = Math.abs(to.y - from.y)
+  ctx.beginPath()
+  if (type === 'rect') {
+    ctx.rect(x, y, w, h)
+  } else {
+    ctx.ellipse(x + w / 2, y + h / 2, w / 2, h / 2, 0, 0, Math.PI * 2)
+  }
+}
+
+function drawStrokeShape(stroke) {
+  ctxStroke.save()
+  ctxStroke.fillStyle = '#ffffff'
+  pathShape(ctxStroke, stroke.type, stroke.from, stroke.to)
+  ctxStroke.fill()
+  ctxStroke.restore()
+}
+
+function drawMaskShape(stroke) {
+  ctxMask.save()
+  if (stroke.mode === 'erase') {
+    ctxMask.globalCompositeOperation = 'destination-out'
+  }
+  ctxMask.fillStyle = '#ffffff'
+  pathShape(ctxMask, stroke.type, stroke.from, stroke.to)
+  ctxMask.fill()
+  ctxMask.restore()
+}
+
+function compositeOverlay(mode) {
+  ensureTmpCanvas()
+
+  ctxTmp.clearRect(0, 0, naturalWidth, naturalHeight)
+  ctxTmp.drawImage(maskCanvas, 0, 0)
+  if (mode === 'erase') {
+    ctxTmp.globalCompositeOperation = 'destination-out'
+    ctxTmp.drawImage(strokeCanvas, 0, 0)
+    ctxTmp.globalCompositeOperation = 'source-over'
+  } else {
+    ctxTmp.drawImage(strokeCanvas, 0, 0)
+  }
+
+  ctxOverlay.save()
+  ctxOverlay.globalCompositeOperation = 'source-over'
+  ctxOverlay.globalAlpha = 1
+  ctxOverlay.clearRect(0, 0, naturalWidth, naturalHeight)
+  ctxOverlay.globalAlpha = OVERLAY_ALPHA
+  ctxOverlay.drawImage(tmpCanvas, 0, 0)
+  ctxOverlay.globalAlpha = 1
+  ctxOverlay.globalCompositeOperation = 'source-in'
+  ctxOverlay.fillStyle = '#ff4040'
+  ctxOverlay.fillRect(0, 0, naturalWidth, naturalHeight)
+  ctxOverlay.restore()
 }
 
 function replayStrokes() {
   if (!ctxOverlay || !ctxMask) return
   ctxOverlay.clearRect(0, 0, naturalWidth, naturalHeight)
-  ctxMask.fillStyle = '#000000'
-  ctxMask.fillRect(0, 0, naturalWidth, naturalHeight)
+  ctxMask.clearRect(0, 0, naturalWidth, naturalHeight)
   for (const stroke of strokes) {
-    const pts = stroke.points
-    if (pts.length === 1) {
-      drawSegment(pts[0], { x: pts[0].x + 0.01, y: pts[0].y + 0.01 }, stroke.size, stroke.mode)
-      continue
-    }
-    for (let i = 1; i < pts.length; i++) {
-      drawSegment(pts[i - 1], pts[i], stroke.size, stroke.mode)
+    if (stroke.type === 'rect' || stroke.type === 'ellipse') {
+      drawMaskShape(stroke)
+    } else {
+      const pts = stroke.points
+      if (pts.length === 1) {
+        drawMaskSegment(pts[0], { x: pts[0].x + 0.01, y: pts[0].y + 0.01 }, stroke.size, stroke.mode)
+        continue
+      }
+      for (let i = 1; i < pts.length; i++) {
+        drawMaskSegment(pts[i - 1], pts[i], stroke.size, stroke.mode)
+      }
     }
   }
+  ensureStrokeCanvas()
+  compositeOverlay('paint')
 }
 
 function updateToolbarState() {
@@ -126,20 +215,39 @@ function setLoading(loading) {
   document.getElementById('inpaint-loading')?.classList.toggle('visible', loading)
 }
 
-let modeIndicator = null
-
-function positionModeIndicator() {
-  const active = document.querySelector('.inpaint-mode-toggle button.active')
-  if (!active || !modeIndicator) return
-  modeIndicator.style.left = `${active.offsetLeft}px`
-  modeIndicator.style.width = `${active.offsetWidth}px`
+function setupSegmented(container, onSelect) {
+  const indicator = document.createElement('span')
+  indicator.className = 'inpaint-mode-indicator'
+  container.prepend(indicator)
+  const position = () => {
+    const active = container.querySelector('button.active')
+    if (!active) return
+    indicator.style.left = `${active.offsetLeft}px`
+    indicator.style.width = `${active.offsetWidth}px`
+  }
+  container.querySelectorAll('button').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      container.querySelectorAll('button').forEach((b) => b.classList.toggle('active', b === btn))
+      position()
+      onSelect(btn)
+    })
+  })
+  position()
+  if ('ResizeObserver' in window) {
+    new ResizeObserver(position).observe(container)
+  }
+  return position
 }
 
 export function setBrushMode(mode) {
   brushMode = mode
-  document.getElementById('btn-mode-paint').classList.toggle('active', mode === 'paint')
-  document.getElementById('btn-mode-erase').classList.toggle('active', mode === 'erase')
-  positionModeIndicator()
+}
+
+export function setTool(selectedTool) {
+  tool = selectedTool
+  ;['brush', 'rect', 'ellipse'].forEach((name) => {
+    document.getElementById(`btn-tool-${name}`).classList.toggle('active', name === tool)
+  })
 }
 
 export async function loadInpaintImage(path) {
@@ -239,7 +347,15 @@ export function getPreparedImagePath() {
 }
 
 export function exportMask() {
-  return maskCanvas ? maskCanvas.toDataURL('image/png') : null
+  if (!maskCanvas) return null
+  const out = document.createElement('canvas')
+  out.width = maskCanvas.width
+  out.height = maskCanvas.height
+  const ctx = out.getContext('2d')
+  ctx.fillStyle = '#000000'
+  ctx.fillRect(0, 0, out.width, out.height)
+  ctx.drawImage(maskCanvas, 0, 0)
+  return out.toDataURL('image/png')
 }
 
 export function initInpaintEvents() {
@@ -251,24 +367,46 @@ export function initInpaintEvents() {
   overlayCanvas.addEventListener('pointerdown', (e) => {
     e.preventDefault()
     overlayCanvas.setPointerCapture(e.pointerId)
-    drawing = true
     const point = eventPoint(e)
-    currentStroke = { mode: brushMode, size: brushSize(), points: [point] }
-    lastPoint = point
-    drawSegment(point, { x: point.x + 0.01, y: point.y + 0.01 }, currentStroke.size, brushMode)
+
+    drawing = true
+    ensureStrokeCanvas()
+    if (tool === 'brush') {
+      currentStroke = { type: 'brush', mode: brushMode, size: brushSize(), points: [point] }
+      lastPoint = point
+      drawMaskSegment(point, { x: point.x + 0.01, y: point.y + 0.01 }, currentStroke.size, brushMode)
+      drawStrokeSegment(point, { x: point.x + 0.01, y: point.y + 0.01 }, currentStroke.size)
+    } else {
+      currentStroke = { type: tool, mode: brushMode, from: point, to: point }
+      drawStrokeShape(currentStroke)
+    }
+    compositeOverlay(brushMode)
   })
 
   overlayCanvas.addEventListener('pointermove', (e) => {
-    if (!drawing) return
+    if (!drawing || !currentStroke) return
     const point = eventPoint(e)
-    currentStroke.points.push(point)
-    drawSegment(lastPoint, point, currentStroke.size, currentStroke.mode)
-    lastPoint = point
+    if (currentStroke.type === 'brush') {
+      currentStroke.points.push(point)
+      drawMaskSegment(lastPoint, point, currentStroke.size, currentStroke.mode)
+      drawStrokeSegment(lastPoint, point, currentStroke.size)
+      lastPoint = point
+    } else {
+      currentStroke.to = point
+      ensureStrokeCanvas()
+      drawStrokeShape(currentStroke)
+    }
+    compositeOverlay(currentStroke.mode)
   })
 
   const stopDrawing = () => {
     if (currentStroke) {
       strokes.push(currentStroke)
+      if (currentStroke.type !== 'brush') {
+        drawMaskShape(currentStroke)
+      }
+      ensureStrokeCanvas()
+      compositeOverlay(currentStroke.mode)
       currentStroke = null
       updateToolbarState()
     }
@@ -282,17 +420,13 @@ export function initInpaintEvents() {
   document.getElementById('btn-clear-mask').addEventListener('click', clearMask)
   document.getElementById('btn-undo-mask').addEventListener('click', undoStroke)
 
-  document.getElementById('btn-mode-paint').addEventListener('click', () => setBrushMode('paint'))
-  document.getElementById('btn-mode-erase').addEventListener('click', () => setBrushMode('erase'))
+  document.querySelectorAll('#inpaint-tool-select button').forEach((btn) => {
+    btn.addEventListener('click', () => setTool(btn.id.replace('btn-tool-', '')))
+  })
 
-  const modeToggle = document.querySelector('.inpaint-mode-toggle')
-  modeIndicator = document.createElement('span')
-  modeIndicator.className = 'inpaint-mode-indicator'
-  modeToggle.prepend(modeIndicator)
-  positionModeIndicator()
-  if ('ResizeObserver' in window) {
-    new ResizeObserver(positionModeIndicator).observe(modeToggle)
-  }
+  setupSegmented(document.getElementById('inpaint-mode-toggle'), (btn) => {
+    setBrushMode(btn.id === 'btn-mode-paint' ? 'paint' : 'erase')
+  })
 
   document.getElementById('input-brush-size').addEventListener('input', (e) => {
     document.getElementById('brush-size-value').textContent = e.target.value

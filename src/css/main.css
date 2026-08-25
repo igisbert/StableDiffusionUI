@@ -1488,6 +1488,17 @@ i[data-lucide] {
     }
 }
 
+.inpaint-mode-indicator {
+    position: absolute;
+    top: 3px;
+    bottom: 3px;
+    left: 3px;
+    width: 0;
+    border-radius: 3px;
+    background-color: var(--primary);
+    transition: left 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94), width 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
 .inpaint-toolbar {
     display: flex;
     align-items: center;
@@ -1522,6 +1533,40 @@ i[data-lucide] {
         }
     }
 
+    & .inpaint-tool-select {
+        display: flex;
+        align-items: center;
+        height: 36px;
+        padding: 3px;
+        border: 1px solid var(--outline);
+        border-radius: 4px;
+
+        & button {
+            position: relative;
+            z-index: 1;
+            height: 100%;
+            width: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: none;
+            border: none;
+            border-radius: 3px;
+            color: var(--on-surface-variant);
+            cursor: pointer;
+            transition: color 0.25s;
+
+            & svg {
+                width: 16px;
+                height: 16px;
+            }
+
+            &.active {
+                color: var(--primary);
+            }
+        }
+    }
+
     & .inpaint-mode-toggle {
         position: relative;
         display: flex;
@@ -1530,17 +1575,6 @@ i[data-lucide] {
         padding: 3px;
         border: 1px solid var(--outline);
         border-radius: 4px;
-
-        & .inpaint-mode-indicator {
-            position: absolute;
-            top: 3px;
-            bottom: 3px;
-            left: 3px;
-            width: 0;
-            border-radius: 3px;
-            background-color: var(--primary);
-            transition: left 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94), width 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
 
         & button {
             position: relative;

@@ -453,7 +453,12 @@ EJECUTAR
 <input id="input-brush-size" type="range" min="2" max="150" step="1" value="24"/>
 <span id="brush-size-value">24</span>
 </div>
-<div class="inpaint-mode-toggle">
+<div class="inpaint-tool-select" id="inpaint-tool-select">
+<button id="btn-tool-brush" class="active" type="button" title="Pincel"><i data-lucide="brush"></i></button>
+<button id="btn-tool-rect" type="button" title="Rectángulo"><i data-lucide="square"></i></button>
+<button id="btn-tool-ellipse" type="button" title="Elipse"><i data-lucide="circle"></i></button>
+</div>
+<div class="inpaint-mode-toggle" id="inpaint-mode-toggle">
 <button id="btn-mode-paint" class="active" type="button">Pintar</button>
 <button id="btn-mode-erase" type="button">Borrar</button>
 </div>
