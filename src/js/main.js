@@ -198,7 +198,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const model = document.getElementById('select-model')?.value || ''
       const imageOp = document.querySelector('input[name="image-op"]:checked')?.value
-      const task = imageOp === 'img2img' ? 'i2i' : imageOp === 'inpainting' ? 'inpaint' : 't2i'
+      const task = imageOp === 'img2img' ? 'i2i' : imageOp === 'inpainting' ? 'inpaint' : imageOp === 'image-edit' ? 'i2i' : 't2i'
       const enhanced = await enhancePrompt(prompt, { modelFileName: model, task })
       inputPrompt.value = enhanced
     } catch (e) {
@@ -304,22 +304,34 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   const btnSizeFull = document.getElementById('btn-size-full')
+  const btnSizeThreeQuarter = document.getElementById('btn-size-three-quarter')
   const btnSizeHalf = document.getElementById('btn-size-half')
   const btnSizeQuarter = document.getElementById('btn-size-quarter')
   const btnInpaintSizeFull = document.getElementById('btn-inpaint-size-full')
+  const btnInpaintSizeThreeQuarter = document.getElementById('btn-inpaint-size-three-quarter')
   const btnInpaintSizeHalf = document.getElementById('btn-inpaint-size-half')
   const btnInpaintSizeQuarter = document.getElementById('btn-inpaint-size-quarter')
+  const btnEditSizeFull = document.getElementById('btn-edit-size-full')
+  const btnEditSizeThreeQuarter = document.getElementById('btn-edit-size-three-quarter')
+  const btnEditSizeHalf = document.getElementById('btn-edit-size-half')
+  const btnEditSizeQuarter = document.getElementById('btn-edit-size-quarter')
   const btnRun = document.getElementById('btn-run')
 
   function updateImageOpUI() {
     const hasImage = !!selectedImageForOp
 
     btnSizeFull.disabled = !hasImage
+    btnSizeThreeQuarter.disabled = !hasImage
     btnSizeHalf.disabled = !hasImage
     btnSizeQuarter.disabled = !hasImage
     btnInpaintSizeFull.disabled = !hasImage
+    btnInpaintSizeThreeQuarter.disabled = !hasImage
     btnInpaintSizeHalf.disabled = !hasImage
     btnInpaintSizeQuarter.disabled = !hasImage
+    btnEditSizeFull.disabled = !hasImage
+    btnEditSizeThreeQuarter.disabled = !hasImage
+    btnEditSizeHalf.disabled = !hasImage
+    btnEditSizeQuarter.disabled = !hasImage
     btnOpenInpaint.disabled = !hasImage
 
     updateUpscaleButton()
@@ -360,12 +372,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   btnSizeFull.addEventListener('click', () => applyImageSize(1))
+  btnSizeThreeQuarter.addEventListener('click', () => applyImageSize(0.75))
   btnSizeHalf.addEventListener('click', () => applyImageSize(0.5))
   btnSizeQuarter.addEventListener('click', () => applyImageSize(0.25))
 
   btnInpaintSizeFull.addEventListener('click', () => applyImageSize(1))
+  btnInpaintSizeThreeQuarter.addEventListener('click', () => applyImageSize(0.75))
   btnInpaintSizeHalf.addEventListener('click', () => applyImageSize(0.5))
   btnInpaintSizeQuarter.addEventListener('click', () => applyImageSize(0.25))
+
+  btnEditSizeFull.addEventListener('click', () => applyImageSize(1))
+  btnEditSizeThreeQuarter.addEventListener('click', () => applyImageSize(0.75))
+  btnEditSizeHalf.addEventListener('click', () => applyImageSize(0.5))
+  btnEditSizeQuarter.addEventListener('click', () => applyImageSize(0.25))
 
   async function populateImageUpscaleModels() {
     const upscalersPath = await getUpscannersPath()
@@ -397,6 +416,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const upscaleOptions = document.getElementById('upscale-options')
   const img2imgOptions = document.getElementById('img2img-options')
   const inpaintingOptions = document.getElementById('inpainting-options')
+  const editOptions = document.getElementById('image-edit-options')
   const btnOpenInpaint = document.getElementById('btn-open-inpaint')
 
   async function refreshInpaintCanvas() {
@@ -431,6 +451,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         upscaleOptions.style.display = 'none'
         img2imgOptions.style.display = 'none'
         inpaintingOptions.style.display = 'none'
+        editOptions.style.display = 'none'
         return
       }
 
@@ -440,6 +461,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       upscaleOptions.style.display = value === 'upscale' ? 'flex' : 'none'
       img2imgOptions.style.display = value === 'img2img' ? 'flex' : 'none'
       inpaintingOptions.style.display = value === 'inpainting' ? 'flex' : 'none'
+      editOptions.style.display = value === 'image-edit' ? 'flex' : 'none'
 
       refreshInpaintCanvas()
       updateImageOpUI()

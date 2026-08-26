@@ -237,6 +237,10 @@
 <span>Inpainting</span>
 </label>
 <label class="radio-label">
+<input type="radio" name="image-op" value="image-edit"/>
+<span>Image Edit</span>
+</label>
+<label class="radio-label">
 <input type="radio" name="image-op" value="upscale"/>
 <span>Upscale</span>
 </label>
@@ -268,9 +272,10 @@
 <div class="img2img-size-buttons">
 <span class="input-label">Rellenar ancho y alto de la imagen</span>
 <div class="size-btn-group">
-<button id="btn-size-full" class="btn-secondary" disabled>Tamaño original</button>
-<button id="btn-size-half" class="btn-secondary" disabled>Tamaño 1/2</button>
-<button id="btn-size-quarter" class="btn-secondary" disabled>Tamaño 1/4</button>
+<button id="btn-size-full" class="btn-secondary" disabled>100%</button>
+<button id="btn-size-three-quarter" class="btn-secondary" disabled>75%</button>
+<button id="btn-size-half" class="btn-secondary" disabled>50%</button>
+<button id="btn-size-quarter" class="btn-secondary" disabled>25%</button>
 </div>
 </div>
 </div>
@@ -288,12 +293,28 @@
 <div class="img2img-size-buttons">
 <span class="input-label">Rellenar ancho y alto de la imagen</span>
 <div class="size-btn-group">
-<button id="btn-inpaint-size-full" class="btn-secondary" disabled>Tamaño original</button>
-<button id="btn-inpaint-size-half" class="btn-secondary" disabled>Tamaño 1/2</button>
-<button id="btn-inpaint-size-quarter" class="btn-secondary" disabled>Tamaño 1/4</button>
+<button id="btn-inpaint-size-full" class="btn-secondary" disabled>100%</button>
+<button id="btn-inpaint-size-three-quarter" class="btn-secondary" disabled>75%</button>
+<button id="btn-inpaint-size-half" class="btn-secondary" disabled>50%</button>
+<button id="btn-inpaint-size-quarter" class="btn-secondary" disabled>25%</button>
 </div>
 </div>
 </div>
+</div>
+<div id="image-edit-options" class="op-option-group" style="display:none">
+<div class="img2img-size-buttons">
+<span class="input-label">Rellenar ancho y alto de la imagen</span>
+<div class="size-btn-group">
+<button id="btn-edit-size-full" class="btn-secondary" disabled>100%</button>
+<button id="btn-edit-size-three-quarter" class="btn-secondary" disabled>75%</button>
+<button id="btn-edit-size-half" class="btn-secondary" disabled>50%</button>
+<button id="btn-edit-size-quarter" class="btn-secondary" disabled>25%</button>
+</div>
+</div>
+<p class="input-hint" style="opacity:0.8; line-height:1.4; font-size:12px; display:flex; align-items:center; gap:6px; margin-top:0.5rem;">
+<i data-lucide="lightbulb" style="width:14px; height:14px;"></i>
+Consejo: escribe primero qué <strong>conservar</strong> y luego qué <strong>cambiar/añadir</strong>.
+</p>
 </div>
 </div>
 </div>

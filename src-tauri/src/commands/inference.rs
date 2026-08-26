@@ -82,6 +82,7 @@ pub struct InferenceParams {
     pub verbose: bool,
     pub force_cuda: bool,
     pub custom_flags: String,
+    pub edit_image: Option<String>,
     pub input_image: Option<String>,
     pub strength: Option<f32>,
     pub mask_image: Option<String>,
@@ -128,9 +129,13 @@ fn decode_data_url(data_url: &str) -> Result<Vec<u8>, String> {
 }
 
 fn cleanup_temp_files(
+    temp_edit: &Option<std::path::PathBuf>,
     temp_input: &Option<std::path::PathBuf>,
     temp_mask: &Option<std::path::PathBuf>,
 ) {
+    if let Some(temp) = temp_edit {
+        let _ = std::fs::remove_file(temp);
+    }
     if let Some(temp) = temp_input {
         let _ = std::fs::remove_file(temp);
     }
@@ -181,13 +186,27 @@ pub async fn run_inference(app: tauri::AppHandle, params: InferenceParams) -> Re
         .as_secs();
 
     let has_mask = params.mask_image.as_ref().is_some_and(|m| !m.is_empty());
-    let has_input_image = params.input_image.is_some();
+    let has_edit_image = params.edit_image.as_ref().is_some_and(|m| !m.is_empty());
+    let has_input_image = params.input_image.as_ref().is_some_and(|m| !m.is_empty());
+
+    if has_edit_image && has_input_image {
+        return Err("No se puede usar -r (edit) y -i (img2img) a la vez.".to_string());
+    }
+    if has_edit_image && has_mask {
+        return Err("No se puede usar -r (edit) con --mask.".to_string());
+    }
     let output_dir = if has_mask {
         let inpaint_dir = Path::new(&params.output_path).join("inpainting");
         if !inpaint_dir.exists() {
             std::fs::create_dir_all(&inpaint_dir).map_err(|e| e.to_string())?;
         }
         inpaint_dir
+    } else if has_edit_image {
+        let edit_dir = Path::new(&params.output_path).join("edit");
+        if !edit_dir.exists() {
+            std::fs::create_dir_all(&edit_dir).map_err(|e| e.to_string())?;
+        }
+        edit_dir
     } else if has_input_image {
         let img2img_dir = Path::new(&params.output_path).join("img2img");
         if !img2img_dir.exists() {
@@ -350,26 +369,62 @@ pub async fn run_inference(app: tauri::AppHandle, params: InferenceParams) -> Re
         }
     }
 
-    let temp_input = if let Some(ref input_image) = params.input_image {
-        let bytes = std::fs::read(input_image).map_err(|e| e.to_string())?;
+    let temp_edit = if let Some(ref edit_image) = params.edit_image {
+        let bytes = std::fs::read(edit_image).map_err(|e| e.to_string())?;
         let corrected = normalize_orientation(&bytes).map_err(|e| e.to_string())?;
-        let temp_path = output_dir.join(format!("temp_input_{}.png", timestamp));
+        let temp_path = output_dir.join(format!("temp_edit_{}.png", timestamp));
         corrected.save(&temp_path).map_err(|e| e.to_string())?;
+        cmd.arg("-r").arg(&temp_path);
+        Some(temp_path)
+    } else {
+        None
+    };
+
+    let temp_input = if let Some(ref input_image) = params.input_image {
+        let bytes = std::fs::read(input_image).map_err(|e| {
+            cleanup_temp_files(&temp_edit, &None, &None);
+            e.to_string()
+        })?;
+        let corrected = normalize_orientation(&bytes).map_err(|e| {
+            cleanup_temp_files(&temp_edit, &None, &None);
+            e.to_string()
+        })?;
+        let temp_path = output_dir.join(format!("temp_input_{}.png", timestamp));
+        if let Err(e) = corrected.save(&temp_path) {
+            cleanup_temp_files(&temp_edit, &None, &None);
+            return Err(e.to_string());
+        }
         cmd.arg("-i").arg(&temp_path);
         Some(temp_path)
     } else {
         None
     };
-    if let Some(strength) = params.strength {
-        cmd.arg("--strength").arg(strength.to_string());
+    if has_input_image {
+        if let Some(strength) = params.strength {
+            cmd.arg("--strength").arg(strength.to_string());
+        }
     }
 
     let temp_mask = if has_mask {
-        let mask_bytes = decode_data_url(params.mask_image.as_ref().unwrap())?;
-        let mask_img = image::load_from_memory(&mask_bytes)
-            .map_err(|e| format!("No se pudo leer la máscara: {}", e))?;
+        let mask_bytes = match decode_data_url(params.mask_image.as_ref().unwrap()) {
+            Ok(b) => b,
+            Err(e) => {
+                cleanup_temp_files(&temp_edit, &temp_input, &None);
+                return Err(e);
+            }
+        };
+        let mask_img = match image::load_from_memory(&mask_bytes) {
+            Ok(img) => img,
+            Err(e) => {
+                cleanup_temp_files(&temp_edit, &temp_input, &None);
+                return Err(format!("No se pudo leer la máscara: {}", e));
+            }
+        };
         let mask_path = output_dir.join(format!("temp_mask_{}.png", timestamp));
-        mask_img.save(&mask_path).map_err(|e| e.to_string())?;
+        if let Err(e) = mask_img.save(&mask_path) {
+            cleanup_temp_files(&temp_edit, &temp_input, &None);
+            return Err(e.to_string());
+        }
         cmd.arg("--mask").arg(&mask_path);
         Some(mask_path)
     } else {
@@ -381,13 +436,18 @@ pub async fn run_inference(app: tauri::AppHandle, params: InferenceParams) -> Re
     #[cfg(target_os = "windows")]
     cmd.creation_flags(CREATE_NO_WINDOW);
 
-    let mut child = cmd
-        .spawn()
-        .map_err(|e| format!("No se pudo lanzar sd-cli: {}", e))?;
+    let mut child = match cmd.spawn() {
+        Ok(c) => c,
+        Err(e) => {
+            cleanup_temp_files(&temp_edit, &temp_input, &temp_mask);
+            return Err(format!("No se pudo lanzar sd-cli: {}", e));
+        }
+    };
 
     #[cfg(target_os = "windows")]
     if let Err(e) = assign_child_to_job(&child) {
         let _ = child.kill();
+        cleanup_temp_files(&temp_edit, &temp_input, &temp_mask);
         return Err(e);
     }
 
@@ -448,7 +508,7 @@ pub async fn run_inference(app: tauri::AppHandle, params: InferenceParams) -> Re
     let _ = t_stderr.join();
 
     if !was_running {
-        cleanup_temp_files(&temp_input, &temp_mask);
+        cleanup_temp_files(&temp_edit, &temp_input, &temp_mask);
         let _ = app.emit("console-line", "[ABORTADO] Inferencia cancelada.");
         let _ = app.emit("inference-aborted", ());
         return Ok(());
@@ -475,17 +535,17 @@ pub async fn run_inference(app: tauri::AppHandle, params: InferenceParams) -> Re
                 files.push(output_file);
             }
 
-            cleanup_temp_files(&temp_input, &temp_mask);
+            cleanup_temp_files(&temp_edit, &temp_input, &temp_mask);
 
             let _ = app.emit("inference-done", &files);
             Ok(())
         }
         Ok(s) => {
-            cleanup_temp_files(&temp_input, &temp_mask);
+            cleanup_temp_files(&temp_edit, &temp_input, &temp_mask);
             Err(format!("sd-cli terminó con código {:?}", s.code()))
         }
         Err(e) => {
-            cleanup_temp_files(&temp_input, &temp_mask);
+            cleanup_temp_files(&temp_edit, &temp_input, &temp_mask);
             Err(e)
         }
     }

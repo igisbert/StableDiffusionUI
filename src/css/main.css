@@ -482,6 +482,16 @@ input[type="number"]:focus {
     gap: 6px;
 }
 
+.size-btn-group button {
+    width: 56px;
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding-inline: 0;
+}
+
 .prompt-area {
     position: relative;
 }

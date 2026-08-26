@@ -57,9 +57,11 @@ async function collectParams() {
   const modelType = document.querySelector('input[name="model-type"]:checked')?.value || 'monolithic'
   const currentImageOp = document.querySelector('input[name="image-op"]:checked')?.value
   const isInpainting = currentImageOp === 'inpainting'
+  const isEdit = currentImageOp === 'image-edit'
   const strengthId = isInpainting ? 'input-inpaint-strength' : 'input-strength'
 
-  const inputImage = isInpainting
+  const editImage = isEdit ? (getPreparedImagePath() || window.__selectedImageForOp || null) : null
+  const inputImage = isEdit ? null : isInpainting
     ? (getPreparedImagePath() || window.__selectedImageForOp || null)
     : (window.__selectedImageForOp || null)
   const maskImage = isInpainting && isMaskPainted() ? exportMask() : null
@@ -105,6 +107,7 @@ async function collectParams() {
     verbose: checked('toggle-verbose'),
     force_cuda: checked('toggle-cuda'),
     custom_flags: val('input-custom-flags'),
+    edit_image: editImage,
     input_image: inputImage,
     strength: inputImage ? num(strengthId, 0.5) : null,
     mask_image: maskImage,
@@ -149,7 +152,9 @@ function paramsToCliString(params) {
   if (params.verbose) cmd += ' -v'
   if (params.output_path) cmd += ' -o "' + escapeArg(params.output_path) + '"'
 
-  if (params.input_image) {
+  if (params.edit_image) {
+    cmd += ' -r "' + escapeArg(params.edit_image) + '"'
+  } else if (params.input_image) {
     cmd += ' -i "' + escapeArg(params.input_image) + '"'
     if (params.strength != null) cmd += ' --strength ' + params.strength
   }
@@ -252,6 +257,10 @@ export async function initInference() {
         appendLine('[ERROR] Pinta una máscara en el editor de inpainting.')
         return
       }
+    }
+    if (currentImageOp === 'image-edit' && !params.edit_image) {
+      appendLine('[ERROR] Selecciona una imagen de entrada para Image Edit.')
+      return
     }
 
     setRunning(true)
