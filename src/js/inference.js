@@ -1,7 +1,7 @@
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
 import { createIcons, icons } from 'lucide'
-import { getSdPath, getOutputPath, getModelsPath, getVaePath, getLlmPath, getLoraPath, getClipLPath, getClipGPath, getT5xxlPath } from './config.js'
+import { getSdPath, getOutputPath, getModelsPath, getVaePath, getLlmPath, getLoraPath, getLlmVisionPath, getClipLPath, getClipGPath, getT5xxlPath } from './config.js'
 import { appendLine } from './console.js'
 import { exportMask, isMaskPainted, getPreparedImagePath } from './inpaint.js'
 import { startProcess, endProcess, isBusy } from './busy.js'
@@ -44,6 +44,7 @@ async function collectParams() {
   const vaePath = await getVaePath()
   const llmPath = await getLlmPath()
   const loraPath = await getLoraPath()
+  const llmVisionPath = await getLlmVisionPath()
   const clipLPath = await getClipLPath()
   const clipGPath = await getClipGPath()
   const t5xxlPath = await getT5xxlPath()
@@ -70,6 +71,7 @@ async function collectParams() {
     vae_path: vaePath,
     llm_path: llmPath,
     lora_path: loraPath,
+    llm_vision_path: llmVisionPath,
     clip_l_path: clipLPath,
     clip_g_path: clipGPath,
     t5xxl_path: t5xxlPath,
@@ -78,6 +80,7 @@ async function collectParams() {
     llm: val('select-llm'),
     vae: val('select-vae'),
     lora: val('select-lora'),
+    llm_vision: val('select-llm-vision'),
     clip_l: val('select-clip-l'),
     clip_g: val('select-clip-g'),
     t5xxl: val('select-t5xxl'),
@@ -117,6 +120,7 @@ function paramsToCliString(params) {
   if (params.llm) cmd += ' --llm "' + escapeArg(params.llm_path + '\\' + params.llm) + '"'
   if (params.vae) cmd += ' --vae "' + escapeArg(params.vae_path + '\\' + params.vae) + '"'
   if (params.lora) cmd += ' --lora-model-dir "' + escapeArg(params.lora_path) + '"'
+  if (params.llm_vision) cmd += ' --llm_vision "' + escapeArg(params.llm_vision_path + '\\' + params.llm_vision) + '"'
   if (params.clip_l) cmd += ' --clip_l "' + escapeArg(params.clip_l_path + '\\' + params.clip_l) + '"'
   if (params.clip_g) cmd += ' --clip_g "' + escapeArg(params.clip_g_path + '\\' + params.clip_g) + '"'
   if (params.t5xxl) cmd += ' --t5xxl "' + escapeArg(params.t5xxl_path + '\\' + params.t5xxl) + '"'

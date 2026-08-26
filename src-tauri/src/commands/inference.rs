@@ -48,6 +48,7 @@ pub struct InferenceParams {
     pub vae_path: String,
     pub llm_path: String,
     pub lora_path: String,
+    pub llm_vision_path: String,
     pub clip_l_path: String,
     pub clip_g_path: String,
     pub t5xxl_path: String,
@@ -57,6 +58,7 @@ pub struct InferenceParams {
     pub vae: String,
     pub lora: String,
     pub lora_weight: f32,
+    pub llm_vision: String,
     pub clip_l: String,
     pub clip_g: String,
     pub t5xxl: String,
@@ -241,6 +243,13 @@ pub async fn run_inference(app: tauri::AppHandle, params: InferenceParams) -> Re
         let lora_dir = Path::new(&params.lora_path);
         if lora_dir.exists() {
             cmd.arg("--lora-model-dir").arg(lora_dir);
+        }
+    }
+
+    if !params.llm_vision.is_empty() {
+        let p = Path::new(&params.llm_vision_path).join(&params.llm_vision);
+        if p.exists() {
+            cmd.arg("--llm_vision").arg(p);
         }
     }
 

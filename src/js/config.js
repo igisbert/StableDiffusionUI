@@ -45,6 +45,7 @@ const PATH_KEYS = [
   { key: 'vae_path',    action: 'pick-vae',    display: 'path-vae-text' },
   { key: 'llm_path',    action: 'pick-llm',    display: 'path-llm-text' },
   { key: 'lora_path',   action: 'pick-lora',   display: 'path-lora-text' },
+  { key: 'llm_vision_path', action: 'pick-llm-vision', display: 'path-llm-vision-text' },
   { key: 'clip_l_path', action: 'pick-clip-l', display: 'path-clip-l-text' },
   { key: 'clip_g_path', action: 'pick-clip-g', display: 'path-clip-g-text' },
   { key: 't5xxl_path',  action: 'pick-t5xxl',  display: 'path-t5xxl-text' },
@@ -74,6 +75,9 @@ export async function initConfig() {
   const loraPath = await store.get('lora_path')
   if (loraPath) await scanLoras(loraPath)
 
+  const llmVisionPath = await store.get('llm_vision_path')
+  if (llmVisionPath) await scanLlmVision(llmVisionPath)
+
   const clipLPath = await store.get('clip_l_path')
   if (clipLPath) await scanClipL(clipLPath)
 
@@ -90,7 +94,7 @@ export async function initConfig() {
     document.querySelector(`[data-action="${action}"]`)?.addEventListener('click', async () => {
       const path = await invoke('pick_folder')
       if (!path) return
-      if (key === 'output_path' || key === 'models_path' || key === 'vae_path' || key === 'llm_path' || key === 'lora_path' || key === 'clip_l_path' || key === 'clip_g_path' || key === 't5xxl_path' || key === 'upscalers_path') {
+      if (key === 'output_path' || key === 'models_path' || key === 'vae_path' || key === 'llm_path' || key === 'lora_path' || key === 'llm_vision_path' || key === 'clip_l_path' || key === 'clip_g_path' || key === 't5xxl_path' || key === 'upscalers_path') {
         await invoke('ensure_output_dir', { path })
       }
       await store.set(key, path)
@@ -100,6 +104,7 @@ export async function initConfig() {
       if (key === 'vae_path') await scanVae(path)
       if (key === 'llm_path') await scanEncoders(path)
       if (key === 'lora_path') await scanLoras(path)
+      if (key === 'llm_vision_path') await scanLlmVision(path)
       if (key === 'clip_l_path') await scanClipL(path)
       if (key === 'clip_g_path') await scanClipG(path)
       if (key === 't5xxl_path') await scanT5xxl(path)
@@ -126,6 +131,11 @@ async function scanEncoders(llmPath) {
 async function scanLoras(loraPath) {
   const result = await invoke('scan_models', { basePath: loraPath })
   populateSelect('select-lora', result.models, true)
+}
+
+async function scanLlmVision(llmVisionPath) {
+  const result = await invoke('scan_models', { basePath: llmVisionPath })
+  populateSelect('select-llm-vision', result.models, true)
 }
 
 async function scanClipL(clipLPath) {
@@ -169,6 +179,7 @@ export async function refreshAllSelects() {
   const vaePath = await store.get('vae_path')
   const llmPath = await store.get('llm_path')
   const loraPath = await store.get('lora_path')
+  const llmVisionPath = await store.get('llm_vision_path')
   const clipLPath = await store.get('clip_l_path')
   const clipGPath = await store.get('clip_g_path')
   const t5xxlPath = await store.get('t5xxl_path')
@@ -177,6 +188,7 @@ export async function refreshAllSelects() {
   if (vaePath) await scanVae(vaePath)
   if (llmPath) await scanEncoders(llmPath)
   if (loraPath) await scanLoras(loraPath)
+  if (llmVisionPath) await scanLlmVision(llmVisionPath)
   if (clipLPath) await scanClipL(clipLPath)
   if (clipGPath) await scanClipG(clipGPath)
   if (t5xxlPath) await scanT5xxl(t5xxlPath)
@@ -207,6 +219,7 @@ export async function getModelsPath() { return (await store.get('models_path')) 
 export async function getVaePath() { return (await store.get('vae_path')) || '' }
 export async function getLlmPath() { return (await store.get('llm_path')) || '' }
 export async function getLoraPath() { return (await store.get('lora_path')) || '' }
+export async function getLlmVisionPath() { return (await store.get('llm_vision_path')) || '' }
 export async function getClipLPath() { return (await store.get('clip_l_path')) || '' }
 export async function getClipGPath() { return (await store.get('clip_g_path')) || '' }
 export async function getT5xxlPath() { return (await store.get('t5xxl_path')) || '' }

@@ -7,6 +7,7 @@ const FIELDS = [
   { id: 'select-llm',             type: 'select' },
   { id: 'select-vae',             type: 'select' },
   { id: 'select-lora',            type: 'select' },
+  { id: 'select-llm-vision',      type: 'select' },
   { id: 'select-clip-l',          type: 'select' },
   { id: 'select-clip-g',          type: 'select' },
   { id: 'select-t5xxl',           type: 'select' },
