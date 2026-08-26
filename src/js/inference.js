@@ -33,7 +33,11 @@ function setRunning(running) {
   }
 }
 
-async function buildCommand() {
+function escapeArg(str) {
+  return String(str).replace(/"/g, '\\"')
+}
+
+async function collectParams() {
   const sdPath = await getSdPath()
   const outputPath = await getOutputPath()
   const modelsPath = await getModelsPath()
@@ -50,53 +54,118 @@ async function buildCommand() {
   const int = (id, fallback = 0) => { const v = parseInt(val(id)); return isNaN(v) ? fallback : v }
 
   const modelType = document.querySelector('input[name="model-type"]:checked')?.value || 'monolithic'
-  const flag = modelType === 'diffusion' ? '--diffusion-model' : '-m'
+  const currentImageOp = document.querySelector('input[name="image-op"]:checked')?.value
+  const isInpainting = currentImageOp === 'inpainting'
+  const strengthId = isInpainting ? 'input-inpaint-strength' : 'input-strength'
+
+  const inputImage = isInpainting
+    ? (getPreparedImagePath() || window.__selectedImageForOp || null)
+    : (window.__selectedImageForOp || null)
+  const maskImage = isInpainting && isMaskPainted() ? exportMask() : null
+
+  return {
+    sd_path: sdPath,
+    output_path: outputPath,
+    models_path: modelsPath || sdPath,
+    vae_path: vaePath,
+    llm_path: llmPath,
+    lora_path: loraPath,
+    clip_l_path: clipLPath,
+    clip_g_path: clipGPath,
+    t5xxl_path: t5xxlPath,
+    model: val('select-model'),
+    model_type: modelType,
+    llm: val('select-llm'),
+    vae: val('select-vae'),
+    lora: val('select-lora'),
+    clip_l: val('select-clip-l'),
+    clip_g: val('select-clip-g'),
+    t5xxl: val('select-t5xxl'),
+    prompt: val('input-prompt'),
+    lora_weight: num('input-lora-weight', 1),
+    negative_prompt: val('input-negative'),
+    width: int('input-width', 512),
+    height: int('input-height', 512),
+    steps: val('input-steps') !== '' ? int('input-steps', 15) : null,
+    cfg_scale: val('input-cfg') !== '' ? num('input-cfg', 1) : null,
+    guidance: val('input-guidance') !== '' ? num('input-guidance', 1) : null,
+    seed: int('input-seed', -1),
+    batch_count: int('input-batch-count', 1),
+    max_vram: num('input-max-vram', -1),
+    sampler: val('select-sampler'),
+    scheduler: val('select-scheduler'),
+    vae_on_cpu: checked('toggle-vae-cpu'),
+    clip_on_cpu: checked('toggle-clip-cpu'),
+    offload_to_cpu: checked('toggle-offload-cpu'),
+    diffusion_fa: checked('toggle-diffusion-fa'),
+    vae_tiling: checked('toggle-vae-tiling'),
+    verbose: checked('toggle-verbose'),
+    force_cuda: checked('toggle-cuda'),
+    custom_flags: val('input-custom-flags'),
+    input_image: inputImage,
+    strength: inputImage ? num(strengthId, 0.5) : null,
+    mask_image: maskImage,
+  }
+}
+
+function paramsToCliString(params) {
+  const flag = params.model_type === 'diffusion' ? '--diffusion-model' : '-m'
 
   let cmd = 'sd-cli.exe'
-  if (checked('toggle-cuda')) cmd += ' --backend cuda0 --params-backend cpu'
-  if (val('select-model')) cmd += ' ' + flag + ' "' + modelsPath + '\\' + val('select-model') + '"'
-  if (val('select-llm')) cmd += ' --llm "' + llmPath + '\\' + val('select-llm') + '"'
-  if (val('select-vae')) cmd += ' --vae "' + vaePath + '\\' + val('select-vae') + '"'
-  if (val('select-lora')) cmd += ' --lora-model-dir "' + loraPath + '"'
-  if (val('select-clip-l')) cmd += ' --clip_l "' + clipLPath + '\\' + val('select-clip-l') + '"'
-  if (val('select-clip-g')) cmd += ' --clip_g "' + clipGPath + '\\' + val('select-clip-g') + '"'
-  if (val('select-t5xxl')) cmd += ' --t5xxl "' + t5xxlPath + '\\' + val('select-t5xxl') + '"'
+  if (params.force_cuda) cmd += ' --backend cuda0 --params-backend cpu'
+  if (params.model) cmd += ' ' + flag + ' "' + escapeArg(params.models_path + '\\' + params.model) + '"'
+  if (params.llm) cmd += ' --llm "' + escapeArg(params.llm_path + '\\' + params.llm) + '"'
+  if (params.vae) cmd += ' --vae "' + escapeArg(params.vae_path + '\\' + params.vae) + '"'
+  if (params.lora) cmd += ' --lora-model-dir "' + escapeArg(params.lora_path) + '"'
+  if (params.clip_l) cmd += ' --clip_l "' + escapeArg(params.clip_l_path + '\\' + params.clip_l) + '"'
+  if (params.clip_g) cmd += ' --clip_g "' + escapeArg(params.clip_g_path + '\\' + params.clip_g) + '"'
+  if (params.t5xxl) cmd += ' --t5xxl "' + escapeArg(params.t5xxl_path + '\\' + params.t5xxl) + '"'
 
-  let prompt = val('input-prompt')
-  if (val('select-lora')) {
-    const loraName = val('select-lora').replace(/\.[^.]+$/, '')
-    const weight = num('input-lora-weight', 1)
-    prompt += ' <lora:' + loraName + ':' + weight + '>'
+  let prompt = params.prompt
+  if (params.lora) {
+    const loraName = params.lora.replace(/\.[^.]+$/, '')
+    prompt += ' <lora:' + loraName + ':' + params.lora_weight + '>'
   }
-  cmd += ' -p "' + prompt + '"'
-  if (val('input-negative')) cmd += ' -n "' + val('input-negative') + '"'
-  cmd += ' -W ' + int('input-width', 512) + ' -H ' + int('input-height', 512)
-  if (val('input-steps') !== '') cmd += ' --steps ' + int('input-steps', 15)
-  if (val('input-cfg') !== '') cmd += ' --cfg-scale ' + num('input-cfg', 1)
-  if (val('input-guidance') !== '') cmd += ' --guidance ' + num('input-guidance', 1)
-  cmd += ' -s ' + int('input-seed', -1)
-  cmd += ' -b ' + int('input-batch-count', 1)
-  cmd += ' --sampling-method ' + val('select-sampler')
-  if (val('select-scheduler')) cmd += ' --scheduler ' + val('select-scheduler')
-  const maxVram = num('input-max-vram', -1)
-  if (maxVram !== 0) cmd += ' --max-vram ' + maxVram
-  if (checked('toggle-vae-cpu')) cmd += ' --vae-on-cpu'
-  if (checked('toggle-clip-cpu')) cmd += ' --clip-on-cpu'
-  if (checked('toggle-offload-cpu')) cmd += ' --offload-to-cpu'
-  if (checked('toggle-diffusion-fa')) cmd += ' --diffusion-fa'
-  if (checked('toggle-vae-tiling')) cmd += ' --vae-tiling'
-  if (checked('toggle-verbose')) cmd += ' -v'
-  if (outputPath) cmd += ' -o "' + outputPath + '"'
+  cmd += ' -p "' + escapeArg(prompt) + '"'
+  if (params.negative_prompt) cmd += ' -n "' + escapeArg(params.negative_prompt) + '"'
+  cmd += ' -W ' + params.width + ' -H ' + params.height
+  if (params.steps != null) cmd += ' --steps ' + params.steps
+  if (params.cfg_scale != null) cmd += ' --cfg-scale ' + params.cfg_scale
+  if (params.guidance != null) cmd += ' --guidance ' + params.guidance
+  cmd += ' -s ' + params.seed
+  cmd += ' -b ' + params.batch_count
+  cmd += ' --sampling-method ' + params.sampler
+  if (params.scheduler) cmd += ' --scheduler ' + params.scheduler
+  if (params.max_vram !== 0) cmd += ' --max-vram ' + params.max_vram
+  if (params.vae_on_cpu) cmd += ' --vae-on-cpu'
+  if (params.clip_on_cpu) cmd += ' --clip-on-cpu'
+  if (params.offload_to_cpu) cmd += ' --offload-to-cpu'
+  if (params.diffusion_fa) cmd += ' --diffusion-fa'
+  if (params.vae_tiling) cmd += ' --vae-tiling'
+  if (params.verbose) cmd += ' -v'
+  if (params.output_path) cmd += ' -o "' + escapeArg(params.output_path) + '"'
 
-  const customFlags = val('input-custom-flags')
-  if (customFlags) {
-    for (const line of customFlags.split('\n')) {
+  if (params.input_image) {
+    cmd += ' -i "' + escapeArg(params.input_image) + '"'
+    if (params.strength != null) cmd += ' --strength ' + params.strength
+  }
+  if (params.mask_image) {
+    cmd += ' --mask "mask.png"'
+  }
+
+  if (params.custom_flags) {
+    for (const line of params.custom_flags.split('\n')) {
       const trimmed = line.trim()
       if (trimmed) cmd += ' ' + trimmed
     }
   }
 
   return cmd
+}
+
+async function buildCommand() {
+  const params = await collectParams()
+  return paramsToCliString(params)
 }
 
 export async function initInference() {
@@ -125,7 +194,7 @@ export async function initInference() {
       try {
         await invoke('abort_inference')
       } catch (e) {
-appendLine('[ERROR] Error al abortar: ' + e)
+ appendLine('[ERROR] Error al abortar: ' + e)
       }
       return
     }
@@ -135,109 +204,50 @@ appendLine('[ERROR] Error al abortar: ' + e)
       return
     }
 
-    const sdPath = await getSdPath()
-    const outputPath = await getOutputPath()
+    const params = await collectParams()
 
-    if (!sdPath || !outputPath) {
+    if (!params.sd_path || !params.output_path) {
       appendLine('[ERROR] Configura las rutas de SD-cpp y Output antes de ejecutar.')
       return
     }
 
-    const prompt = document.getElementById('input-prompt')?.value?.trim() ?? ''
-    if (!prompt) {
+    if (!params.prompt.trim()) {
       appendLine('[ERROR] El prompt es obligatorio.')
       return
     }
 
-    const model = document.getElementById('select-model')?.value ?? ''
-    if (!model) {
+    if (!params.model) {
       appendLine('[ERROR] Selecciona un modelo antes de ejecutar.')
       return
     }
 
-    const val = function (id) { return document.getElementById(id)?.value ?? '' }
-    const checked = function (id) { return document.getElementById(id)?.checked ?? false }
-    const num = function (id, fallback) { const v = parseFloat(val(id)); return isNaN(v) ? (fallback || 0) : v }
-    const int = function (id, fallback) { const v = parseInt(val(id)); return isNaN(v) ? (fallback || 0) : v }
-
-    const width = int('input-width', 512)
-    const height = int('input-height', 512)
-    const batchCount = int('input-batch-count', 1)
-
-    if (width < 8) {
+    if (params.width < 8) {
       appendLine('[ERROR] El ancho debe ser al menos 8 píxeles.')
       return
     }
-    if (height < 8) {
+    if (params.height < 8) {
       appendLine('[ERROR] El alto debe ser al menos 8 píxeles.')
       return
     }
-    if (batchCount < 1 || batchCount > 8) {
+    if (params.batch_count < 1 || params.batch_count > 8) {
       appendLine('[ERROR] El lote debe ser entre 1 y 8.')
       return
     }
 
     const currentImageOp = document.querySelector('input[name="image-op"]:checked')?.value
-    if (currentImageOp === 'img2img' && !window.__selectedImageForOp) {
+    if (currentImageOp === 'img2img' && !params.input_image) {
       appendLine('[ERROR] Selecciona una imagen de entrada para img2img.')
       return
     }
     if (currentImageOp === 'inpainting') {
-      if (!window.__selectedImageForOp) {
+      if (!params.input_image) {
         appendLine('[ERROR] Selecciona una imagen de entrada para inpainting.')
         return
       }
-      if (!isMaskPainted()) {
+      if (!params.mask_image) {
         appendLine('[ERROR] Pinta una máscara en el editor de inpainting.')
         return
       }
-    }
-
-    const strengthId = currentImageOp === 'inpainting' ? 'input-inpaint-strength' : 'input-strength'
-    const isInpainting = currentImageOp === 'inpainting'
-
-    const params = {
-      sd_path: sdPath,
-      output_path: outputPath,
-      models_path: (await getModelsPath()) || sdPath,
-      vae_path: await getVaePath(),
-      llm_path: await getLlmPath(),
-      lora_path: await getLoraPath(),
-      clip_l_path: await getClipLPath(),
-      clip_g_path: await getClipGPath(),
-      t5xxl_path: await getT5xxlPath(),
-      model: val('select-model'),
-      model_type: (document.querySelector('input[name="model-type"]:checked')?.value) || 'monolithic',
-      llm: val('select-llm'),
-      vae: val('select-vae'),
-      lora: val('select-lora'),
-      clip_l: val('select-clip-l'),
-      clip_g: val('select-clip-g'),
-      t5xxl: val('select-t5xxl'),
-      prompt: val('input-prompt'),
-      lora_weight: num('input-lora-weight', 1),
-      negative_prompt: val('input-negative'),
-      width: int('input-width', 512),
-      height: int('input-height', 512),
-      steps: val('input-steps') !== '' ? int('input-steps', 15) : null,
-      cfg_scale: val('input-cfg') !== '' ? num('input-cfg', 1) : null,
-      guidance: val('input-guidance') !== '' ? num('input-guidance', 1) : null,
-      seed: int('input-seed', -1),
-      batch_count: int('input-batch-count', 1),
-      max_vram: num('input-max-vram', -1),
-      sampler: val('select-sampler'),
-      scheduler: val('select-scheduler'),
-      vae_on_cpu: checked('toggle-vae-cpu'),
-      clip_on_cpu: checked('toggle-clip-cpu'),
-      offload_to_cpu: checked('toggle-offload-cpu'),
-      diffusion_fa: checked('toggle-diffusion-fa'),
-      vae_tiling: checked('toggle-vae-tiling'),
-      verbose: checked('toggle-verbose'),
-      force_cuda: checked('toggle-cuda'),
-      custom_flags: val('input-custom-flags'),
-      input_image: isInpainting ? (getPreparedImagePath() || window.__selectedImageForOp) : window.__selectedImageForOp || null,
-      strength: num(strengthId, 0.5),
-      mask_image: isInpainting ? exportMask() : null,
     }
 
     setRunning(true)
