@@ -212,6 +212,16 @@ export async function getClipGPath() { return (await store.get('clip_g_path')) |
 export async function getT5xxlPath() { return (await store.get('t5xxl_path')) || '' }
 export async function getUpscannersPath() { return (await store.get('upscalers_path')) || '' }
 
+export async function getPathsPanelOpen() {
+  const configured = await getSdPath() && await getOutputPath() && await getModelsPath()
+  if (!configured) return true
+  return (await store.get('paths_panel_open')) ?? false
+}
+export async function setPathsPanelOpen(open) {
+  await store.set('paths_panel_open', open)
+  await store.save()
+}
+
 function updatePathDisplay(id, path) {
   const el = document.getElementById(id)
   if (el) el.textContent = path

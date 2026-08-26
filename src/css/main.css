@@ -41,6 +41,7 @@ aside {
     padding: 32px 16px;
     flex-shrink: 0;
     overflow-y: auto;
+    scrollbar-gutter: stable;
 }
 
 .sidebar-header {
@@ -66,8 +67,25 @@ nav {
 
 .sidebar-footer {
     margin-top: auto;
-    padding-top: 32px;
+    padding-top: 16px;
     border-top: 1px solid rgba(59, 73, 75, 0.3);
+}
+
+.paths-collapse {
+    height: 0;
+    overflow: hidden;
+    transition: height 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.paths-collapse-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 8px;
+
+    & .config-group {
+        margin-bottom: 0;
+    }
 }
 
 .config-group {
@@ -340,6 +358,8 @@ input[type="number"]:focus {
 
 .btn-toggle-section .chevron {
     margin-left: auto;
+    width: 16px;
+    height: 16px;
     transition: transform 0.2s;
 }
 

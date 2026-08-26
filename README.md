@@ -22,7 +22,7 @@ Genera el instalador en `src-tauri/target/release/bundle/`.
 
 ## Configuración inicial
 
-Al abrir la aplicación, configurar las rutas en el sidebar:
+Al abrir la aplicación, configurar las rutas en el sidebar (sección "Configuración de rutas", se despliega con el chevron y se abre sola si falta alguna ruta esencial):
 
 - **SD-cpp**: Carpeta donde está `sd-cli.exe`
 - **Output**: Carpeta de salida de imágenes
@@ -38,6 +38,8 @@ Al abrir la aplicación, configurar las rutas en el sidebar:
 4. Pulsar "EJECUTAR"
 
 La consola muestra el progreso en tiempo real. Al terminar, la imagen aparece en el área de preview.
+
+Cerrar la aplicación cancela cualquier inferencia o upscale en marcha (el proceso de `sd-cli` se detiene con la app).
 
 ## Img2Img
 
@@ -81,10 +83,12 @@ Guardan todos los parámetros de generación (modelo, dimensiones, steps, CFG, s
 
 La aplicación puede mejorar prompts usando la API de Google Gemini/Gemma.
 
-1. Pulsar el icono de configuración de Gemini en el header
+1. Pulsar "Configuración Gemini" en el header
 2. Introducir una API Key de Google AI Studio (gratuita en https://aistudio.google.com/apikey)
-3. Seleccionar modelo: Gemma 4, Gemini 3.1 Flash Lite o Gemini 3.5 Flash
+3. Seleccionar modelo de la lista (descargada de GitHub, con fallback local)
 4. Escribir un prompt básico y pulsar el icono de sparkles junto al textarea
+
+El enhancer es consciente del contexto: adapta el resultado al tipo de generación activo (texto a imagen, img2img o inpainting, donde solo describe la zona enmascarada), usa lenguaje natural o tags según la familia del modelo (SD van con tags, el resto en prosa) y devuelve siempre el prompt en inglés, escribas lo que escribas.
 
 La llamada se hace desde el servidor de Tauri. La lista de modelos se descarga de GitHub y se usa una copia local como fallback.
 

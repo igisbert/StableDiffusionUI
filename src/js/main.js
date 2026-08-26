@@ -1,7 +1,7 @@
 import { listen } from '@tauri-apps/api/event'
 import { invoke, convertFileSrc } from '@tauri-apps/api/core'
 import { createIcons, icons } from 'lucide'
-import { initConfig, refreshAllSelects, getOutputPath, getSdPath, getUpscannersPath } from './config.js'
+import { initConfig, refreshAllSelects, getOutputPath, getSdPath, getUpscannersPath, getPathsPanelOpen, setPathsPanelOpen } from './config.js'
 import { initInference } from './inference.js'
 import { initPresets } from './presets.js'
 import { initPromptTemplates } from './prompt-templates.js'
@@ -257,6 +257,34 @@ document.addEventListener('DOMContentLoaded', async () => {
     const btn = document.getElementById('btn-upscale')
     if (!pop.contains(e.target) && !btn.contains(e.target)) {
       pop.classList.remove('open')
+    }
+  })
+
+  // Sidebar paths collapse
+  const btnTogglePaths = document.getElementById('btn-toggle-paths')
+  const pathsCollapse = document.getElementById('paths-collapse')
+
+  async function applyPathsPanelOpen(open) {
+    btnTogglePaths.classList.toggle('open', open)
+    pathsCollapse.style.height = open ? 'auto' : '0px'
+  }
+
+  applyPathsPanelOpen(await getPathsPanelOpen())
+
+  btnTogglePaths.addEventListener('click', () => {
+    const open = btnTogglePaths.classList.toggle('open')
+    setPathsPanelOpen(open)
+    if (open) {
+      pathsCollapse.style.height = `${pathsCollapse.scrollHeight}px`
+      pathsCollapse.addEventListener('transitionend', () => {
+        if (btnTogglePaths.classList.contains('open')) {
+          pathsCollapse.style.height = 'auto'
+        }
+      }, { once: true })
+    } else {
+      pathsCollapse.style.height = `${pathsCollapse.scrollHeight}px`
+      void pathsCollapse.offsetHeight
+      pathsCollapse.style.height = '0px'
     }
   })
 
