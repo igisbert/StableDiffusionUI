@@ -97,13 +97,16 @@ async function collectParams() {
     seed: int('input-seed', -1),
     batch_count: int('input-batch-count', 1),
     max_vram: num('input-max-vram', -1),
+    threads: int('input-threads', -1),
     sampler: val('select-sampler'),
     scheduler: val('select-scheduler'),
     vae_on_cpu: checked('toggle-vae-cpu'),
     clip_on_cpu: checked('toggle-clip-cpu'),
     offload_to_cpu: checked('toggle-offload-cpu'),
-    diffusion_fa: checked('toggle-diffusion-fa'),
+    fa: checked('toggle-fa'),
+    diffusion_fa: checked('toggle-fa') ? false : checked('toggle-diffusion-fa'),
     vae_tiling: checked('toggle-vae-tiling'),
+    mmap: checked('toggle-mmap'),
     verbose: checked('toggle-verbose'),
     force_cuda: checked('toggle-cuda'),
     custom_flags: val('input-custom-flags'),
@@ -144,11 +147,14 @@ function paramsToCliString(params) {
   cmd += ' --sampling-method ' + params.sampler
   if (params.scheduler) cmd += ' --scheduler ' + params.scheduler
   if (params.max_vram !== 0) cmd += ' --max-vram ' + params.max_vram
+  if (params.threads !== -1) cmd += ' -t ' + params.threads
   if (params.vae_on_cpu) cmd += ' --vae-on-cpu'
   if (params.clip_on_cpu) cmd += ' --clip-on-cpu'
   if (params.offload_to_cpu) cmd += ' --offload-to-cpu'
-  if (params.diffusion_fa) cmd += ' --diffusion-fa'
+  if (params.fa) cmd += ' --fa'
+  else if (params.diffusion_fa) cmd += ' --diffusion-fa'
   if (params.vae_tiling) cmd += ' --vae-tiling'
+  if (params.mmap) cmd += ' --mmap'
   if (params.verbose) cmd += ' -v'
   if (params.output_path) cmd += ' -o "' + escapeArg(params.output_path) + '"'
 
@@ -181,6 +187,18 @@ export async function initInference() {
   document.getElementById('select-lora').addEventListener('change', function() {
     document.getElementById('input-lora-weight').disabled = !this.value
   })
+
+  const toggleFa = document.getElementById('toggle-fa')
+  const toggleDiffFa = document.getElementById('toggle-diffusion-fa')
+  function syncFa() {
+    if (toggleFa.checked) {
+      toggleDiffFa.disabled = true
+    } else {
+      toggleDiffFa.disabled = false
+    }
+  }
+  toggleFa.addEventListener('change', syncFa)
+  syncFa()
 
   document.getElementById('btn-copy').addEventListener('click', async function () {
     try {

@@ -19,6 +19,7 @@ const FIELDS = [
   { id: 'input-seed',             type: 'text'   },
   { id: 'input-batch-count',      type: 'text'   },
   { id: 'input-max-vram',         type: 'text'   },
+  { id: 'input-threads',          type: 'text'   },
   { id: 'input-lora-weight',      type: 'text'   },
   { id: 'select-sampler',         type: 'select' },
   { id: 'select-scheduler',       type: 'select' },
@@ -26,8 +27,10 @@ const FIELDS = [
   { id: 'toggle-vae-cpu',         type: 'toggle' },
   { id: 'toggle-clip-cpu',        type: 'toggle' },
   { id: 'toggle-offload-cpu',     type: 'toggle' },
+  { id: 'toggle-fa',              type: 'toggle' },
   { id: 'toggle-diffusion-fa',    type: 'toggle' },
   { id: 'toggle-vae-tiling',      type: 'toggle' },
+  { id: 'toggle-mmap',            type: 'toggle' },
   { id: 'toggle-verbose',         type: 'toggle' },
   { id: 'input-custom-flags',     type: 'text'   },
   { id: 'input-strength',         type: 'text'   },
@@ -75,6 +78,9 @@ function applyForm(values) {
   }
   document.getElementById('select-model')?.dispatchEvent(new Event('change'))
   document.getElementById('select-lora')?.dispatchEvent(new Event('change'))
+  const faEl = document.getElementById('toggle-fa')
+  const diffFaEl = document.getElementById('toggle-diffusion-fa')
+  if (faEl && diffFaEl) diffFaEl.disabled = faEl.checked
 }
 
 async function loadPresetList() {

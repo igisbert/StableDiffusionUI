@@ -72,13 +72,16 @@ pub struct InferenceParams {
     pub seed: i64,
     pub batch_count: u32,
     pub max_vram: f32,
+    pub threads: i32,
     pub sampler: String,
     pub scheduler: String,
     pub vae_on_cpu: bool,
     pub clip_on_cpu: bool,
     pub offload_to_cpu: bool,
+    pub fa: bool,
     pub diffusion_fa: bool,
     pub vae_tiling: bool,
+    pub mmap: bool,
     pub verbose: bool,
     pub force_cuda: bool,
     pub custom_flags: String,
@@ -339,6 +342,10 @@ pub async fn run_inference(app: tauri::AppHandle, params: InferenceParams) -> Re
         cmd.arg("--max-vram").arg(params.max_vram.to_string());
     }
 
+    if params.threads != -1 {
+        cmd.arg("-t").arg(params.threads.to_string());
+    }
+
     if params.vae_on_cpu {
         cmd.arg("--vae-on-cpu");
     }
@@ -348,11 +355,16 @@ pub async fn run_inference(app: tauri::AppHandle, params: InferenceParams) -> Re
     if params.offload_to_cpu {
         cmd.arg("--offload-to-cpu");
     }
-    if params.diffusion_fa {
+    if params.fa {
+        cmd.arg("--fa");
+    } else if params.diffusion_fa {
         cmd.arg("--diffusion-fa");
     }
     if params.vae_tiling {
         cmd.arg("--vae-tiling");
+    }
+    if params.mmap {
+        cmd.arg("--mmap");
     }
     if params.verbose {
         cmd.arg("-v");
