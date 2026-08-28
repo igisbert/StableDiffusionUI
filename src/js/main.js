@@ -198,7 +198,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const model = document.getElementById('select-model')?.value || ''
       const imageOp = document.querySelector('input[name="image-op"]:checked')?.value
-      const task = imageOp === 'img2img' ? 'i2i' : imageOp === 'inpainting' ? 'inpaint' : imageOp === 'image-edit' ? 'i2i' : 't2i'
+      let task
+      if (imageOp === 'img2img') task = 'i2i'
+      else if (imageOp === 'inpainting') task = 'inpaint'
+      else if (imageOp === 'image-edit') task = 'edit'
+      else task = 't2i'
       const enhanced = await enhancePrompt(prompt, { modelFileName: model, task })
       inputPrompt.value = enhanced
     } catch (e) {

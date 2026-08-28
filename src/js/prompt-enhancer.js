@@ -28,6 +28,13 @@ const TASK_INSTRUCTIONS = {
 IMPORTANT: Describe ONLY what should appear inside the masked region.
 Do NOT describe the rest of the scene, the background or the whole image.
 Bad: "a woman in a street with buildings and sky". Good: "a red umbrella glowing under neon rain".`,
+  edit: `TASK: The prompt will edit an existing image via natural language instructions (image-edit, -r).
+
+If the user ALREADY specifies what to preserve/change, RESPECT it strictly — keep their intent verbatim and only enrich with concrete visual details (material, shade, lighting). Do NOT invent or reinterpret.
+
+If the user prompt is VAGUE (e.g., "red jacket"), first PRESERVE generically: prepend "Preserve face-identity, background, lighting, composition and style of the original image, " then add the requested change.
+
+Return ONLY the final prompt in English.`,
 };
 
 function detectPromptStyle(modelFileName) {
