@@ -24,8 +24,16 @@ vi.mock('../inpaint.js', () => ({
   getPreparedImagePath: vi.fn(() => null),
 }))
 
+vi.mock('../state/image-state.js', () => ({
+  getSelectedImageState: vi.fn(() => null),
+  setSelectedImageState: vi.fn(),
+  onSelectedImageChange: vi.fn(() => () => {}),
+  __resetImageState: vi.fn(),
+}))
+
 import { collectParams } from '../inference.js'
 import * as inpaint from '../inpaint.js'
+import { getSelectedImageState } from '../state/image-state.js'
 
 function baseParams(overrides = {}) {
   return {
@@ -263,7 +271,7 @@ describe('collectParams', () => {
       <input id="toggle-clip-cpu" type="checkbox" />
       <input id="toggle-offload-cpu" type="checkbox" />
     `
-    window.__selectedImageForOp = null
+    vi.mocked(getSelectedImageState).mockReturnValue(null)
     vi.mocked(inpaint.getPreparedImagePath).mockReturnValue(null)
     vi.mocked(inpaint.isMaskPainted).mockReturnValue(false)
     vi.mocked(inpaint.exportMask).mockReturnValue(null)
@@ -279,7 +287,7 @@ describe('collectParams', () => {
 
   it('img2img uses selected image and strength', async () => {
     document.querySelector('input[value="img2img"]').checked = true
-    window.__selectedImageForOp = 'C:\\foto.png'
+    vi.mocked(getSelectedImageState).mockReturnValue('C:\\foto.png')
     const p = await collectParams()
     expect(p.input_image).toBe('C:\\foto.png')
     expect(p.strength).toBe(0.75)
@@ -288,7 +296,7 @@ describe('collectParams', () => {
 
   it('inpainting uses prepared path and mask', async () => {
     document.querySelector('input[value="inpainting"]').checked = true
-    window.__selectedImageForOp = 'C:\\orig.png'
+    vi.mocked(getSelectedImageState).mockReturnValue('C:\\orig.png')
     vi.mocked(inpaint.getPreparedImagePath).mockReturnValue('C:\\prepared.png')
     vi.mocked(inpaint.isMaskPainted).mockReturnValue(true)
     vi.mocked(inpaint.exportMask).mockReturnValue('data:image/png;base64,xxx')
@@ -300,7 +308,7 @@ describe('collectParams', () => {
 
   it('image-edit uses edit_image and no input', async () => {
     document.querySelector('input[value="image-edit"]').checked = true
-    window.__selectedImageForOp = 'C:\\edit.png'
+    vi.mocked(getSelectedImageState).mockReturnValue('C:\\edit.png')
     const p = await collectParams()
     expect(p.edit_image).toBe('C:\\edit.png')
     expect(p.input_image).toBeNull()

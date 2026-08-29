@@ -57,6 +57,27 @@ const PATH_KEYS = [
   { key: 'upscalers_path', action: 'pick-upscalers', display: 'path-upscalers-text' },
 ]
 
+const MODEL_SCANS = [
+  { storeKey: 'models_path', target: 'select-model', withNone: true },
+  { storeKey: 'vae_path', target: 'select-vae', withNone: true },
+  { storeKey: 'llm_path', target: 'select-llm', withNone: true },
+  { storeKey: 'lora_path', target: 'select-lora', withNone: true },
+  { storeKey: 'llm_vision_path', target: 'select-llm-vision', withNone: true },
+  { storeKey: 'clip_l_path', target: 'select-clip-l', withNone: true },
+  { storeKey: 'clip_g_path', target: 'select-clip-g', withNone: true },
+  { storeKey: 't5xxl_path', target: 'select-t5xxl', withNone: true },
+  { storeKey: 'upscalers_path', target: 'radio-upscale-models', isRadio: true },
+]
+
+async function scanGeneric(entry, basePath) {
+  const result = await invoke('scan_models', { basePath })
+  if (entry.isRadio) {
+    populateRadios(entry.target, result.models)
+  } else {
+    populateSelect(entry.target, result.models, entry.withNone)
+  }
+}
+
 export async function initConfig() {
   store = await Store.load('config.json')
 
@@ -68,32 +89,10 @@ export async function initConfig() {
     if (path) updatePathDisplay(display, path)
   }
 
-  const modelsPath = await store.get('models_path')
-  if (modelsPath) await scanModels(modelsPath)
-
-  const vaePath = await store.get('vae_path')
-  if (vaePath) await scanVae(vaePath)
-
-  const llmPath = await store.get('llm_path')
-  if (llmPath) await scanEncoders(llmPath)
-
-  const loraPath = await store.get('lora_path')
-  if (loraPath) await scanLoras(loraPath)
-
-  const llmVisionPath = await store.get('llm_vision_path')
-  if (llmVisionPath) await scanLlmVision(llmVisionPath)
-
-  const clipLPath = await store.get('clip_l_path')
-  if (clipLPath) await scanClipL(clipLPath)
-
-  const clipGPath = await store.get('clip_g_path')
-  if (clipGPath) await scanClipG(clipGPath)
-
-  const t5xxlPath = await store.get('t5xxl_path')
-  if (t5xxlPath) await scanT5xxl(t5xxlPath)
-
-  const upscalersPath = await store.get('upscalers_path')
-  if (upscalersPath) await scanUpscanners(upscalersPath)
+  for (const entry of MODEL_SCANS) {
+    const path = await store.get(entry.storeKey)
+    if (path) await scanGeneric(entry, path)
+  }
 
   for (const { key, action, display } of PATH_KEYS) {
     document.querySelector(`[data-action="${action}"]`)?.addEventListener('click', async () => {
@@ -105,62 +104,10 @@ export async function initConfig() {
       await store.set(key, path)
       await store.save()
       updatePathDisplay(display, path)
-      if (key === 'models_path') await scanModels(path)
-      if (key === 'vae_path') await scanVae(path)
-      if (key === 'llm_path') await scanEncoders(path)
-      if (key === 'lora_path') await scanLoras(path)
-      if (key === 'llm_vision_path') await scanLlmVision(path)
-      if (key === 'clip_l_path') await scanClipL(path)
-      if (key === 'clip_g_path') await scanClipG(path)
-      if (key === 't5xxl_path') await scanT5xxl(path)
-      if (key === 'upscalers_path') await scanUpscanners(path)
+      const scanEntry = MODEL_SCANS.find(e => e.storeKey === key)
+      if (scanEntry) await scanGeneric(scanEntry, path)
     })
   }
-}
-
-async function scanModels(modelsPath) {
-  const result = await invoke('scan_models', { basePath: modelsPath })
-  populateSelect('select-model', result.models, true)
-}
-
-async function scanVae(vaePath) {
-  const result = await invoke('scan_models', { basePath: vaePath })
-  populateSelect('select-vae', result.models, true)
-}
-
-async function scanEncoders(llmPath) {
-  const result = await invoke('scan_models', { basePath: llmPath })
-  populateSelect('select-llm', result.models, true)
-}
-
-async function scanLoras(loraPath) {
-  const result = await invoke('scan_models', { basePath: loraPath })
-  populateSelect('select-lora', result.models, true)
-}
-
-async function scanLlmVision(llmVisionPath) {
-  const result = await invoke('scan_models', { basePath: llmVisionPath })
-  populateSelect('select-llm-vision', result.models, true)
-}
-
-async function scanClipL(clipLPath) {
-  const result = await invoke('scan_models', { basePath: clipLPath })
-  populateSelect('select-clip-l', result.models, true)
-}
-
-async function scanClipG(clipGPath) {
-  const result = await invoke('scan_models', { basePath: clipGPath })
-  populateSelect('select-clip-g', result.models, true)
-}
-
-async function scanT5xxl(t5xxlPath) {
-  const result = await invoke('scan_models', { basePath: t5xxlPath })
-  populateSelect('select-t5xxl', result.models, true)
-}
-
-async function scanUpscanners(upscalersPath) {
-  const result = await invoke('scan_models', { basePath: upscalersPath })
-  populateRadios('radio-upscale-models', result.models)
 }
 
 function populateRadios(containerId, items) {
@@ -181,24 +128,10 @@ function populateRadios(containerId, items) {
 
 export async function refreshAllSelects() {
   const s = await getStore()
-  const modelsPath = await s.get('models_path')
-  const vaePath = await s.get('vae_path')
-  const llmPath = await s.get('llm_path')
-  const loraPath = await s.get('lora_path')
-  const llmVisionPath = await s.get('llm_vision_path')
-  const clipLPath = await s.get('clip_l_path')
-  const clipGPath = await s.get('clip_g_path')
-  const t5xxlPath = await s.get('t5xxl_path')
-  const upscalersPath = await s.get('upscalers_path')
-  if (modelsPath) await scanModels(modelsPath)
-  if (vaePath) await scanVae(vaePath)
-  if (llmPath) await scanEncoders(llmPath)
-  if (loraPath) await scanLoras(loraPath)
-  if (llmVisionPath) await scanLlmVision(llmVisionPath)
-  if (clipLPath) await scanClipL(clipLPath)
-  if (clipGPath) await scanClipG(clipGPath)
-  if (t5xxlPath) await scanT5xxl(t5xxlPath)
-  if (upscalersPath) await scanUpscanners(upscalersPath)
+  for (const entry of MODEL_SCANS) {
+    const path = await s.get(entry.storeKey)
+    if (path) await scanGeneric(entry, path)
+  }
 }
 
 function populateSelect(id, items, withNone = false) {

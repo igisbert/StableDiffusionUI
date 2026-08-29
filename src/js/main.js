@@ -12,21 +12,12 @@ import { initInpaintEvents, isMaskPainted } from "./inpaint.js";
 import { captureSeed, getSeeds } from "./busy.js";
 import { showPreview } from "./preview.js";
 import { getSelectedImageState } from "./state/image-state.js";
-import { initImageInput, updateImageOpUI } from "./features/image-input.js";
-import { initImageOp } from "./features/image-op.js";
-import { initGeminiDialog } from "./dialogs/gemini-dialog.js";
+import { initImageInput } from "./features/image-input.js";
+import { initImageOp, updateImageOpUI } from "./features/image-op.js";
+import { initGeminiDialog, updateEnhancerUI } from "./dialogs/gemini-dialog.js";
 import { initUpscale } from "./features/upscale.js";
 import { initPathsPanel } from "./ui/paths-panel.js";
 import { flashCopy } from "./ui/clipboard.js";
-import { isEnhancerConfigured } from "./prompt-enhancer.js";
-
-async function updateEnhancerUI() {
-  const configured = await isEnhancerConfigured();
-  const btnEnhance = document.getElementById("btn-enhance");
-  const btnGemini = document.getElementById("btn-gemini-settings");
-  btnEnhance.style.display = configured ? "flex" : "none";
-  btnGemini.style.display = "flex";
-}
 
 document.addEventListener("DOMContentLoaded", async () => {
   createIcons({ icons });

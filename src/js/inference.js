@@ -1,11 +1,11 @@
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
-import { createIcons, icons } from 'lucide'
 import { getSdPath, getOutputPath, getModelsPath, getVaePath, getLlmPath, getLoraPath, getLlmVisionPath, getClipLPath, getClipGPath, getT5xxlPath } from './config.js'
 import { appendLine } from './console.js'
 import { exportMask, isMaskPainted, getPreparedImagePath } from './inpaint.js'
 import { startProcess, endProcess, isBusy } from './busy.js'
 import { getSelectedImageState } from './state/image-state.js'
+import { flashCopy } from './ui/clipboard.js'
 
 let isRunning = false
 
@@ -204,14 +204,10 @@ export async function initInference() {
   document.getElementById('btn-copy').addEventListener('click', async function () {
     try {
       const cmd = await buildCommand()
-      await navigator.clipboard.writeText(cmd)
-      const btn = document.getElementById('btn-copy')
-      btn.innerHTML = '<i data-lucide="check"></i>'
-      createIcons({ icons })
-      setTimeout(function () {
-        btn.innerHTML = '<i data-lucide="copy"></i>'
-        createIcons({ icons })
-      }, 1500)
+      await flashCopy(document.getElementById('btn-copy'), cmd, {
+        okLabel: '<i data-lucide="check"></i>',
+        idleLabel: '<i data-lucide="copy"></i>',
+      })
     } catch (e) {
       appendLine('[ERROR] No se pudo copiar al portapapeles: ' + e)
     }

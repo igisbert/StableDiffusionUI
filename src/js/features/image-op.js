@@ -1,6 +1,46 @@
 import { loadInpaintImage, resetInpaint, isMaskPainted } from '../inpaint.js'
 import { getSelectedImageState } from '../state/image-state.js'
-import { updateImageOpUI } from './image-input.js'
+
+export async function refreshInpaintCanvas() {
+  const op = document.querySelector('input[name="image-op"]:checked')?.value
+  const img = getSelectedImageState()
+  if (op !== 'inpainting' || !img) return
+  try {
+    await loadInpaintImage(img)
+    updateInpaintMaskStatus()
+  } catch (e) {
+    console.error('Error cargando imagen para inpainting:', e)
+  }
+}
+
+export function clearInpaintState() {
+  resetInpaint()
+  const el = document.getElementById('inpaint-mask-status')
+  if (el) el.textContent = 'Sin máscara'
+}
+
+function updateInpaintMaskStatus() {
+  const el = document.getElementById('inpaint-mask-status')
+  if (el) el.textContent = isMaskPainted() ? 'Máscara pintada' : 'Sin máscara'
+}
+
+export function updateImageOpUI() {
+  const hasImage = !!getSelectedImageState()
+  document.querySelectorAll('.size-btn').forEach(btn => {
+    btn.disabled = !hasImage
+  })
+  const btnOpenInpaint = document.getElementById('btn-open-inpaint')
+  if (btnOpenInpaint) btnOpenInpaint.disabled = !hasImage
+  updateUpscaleButton()
+}
+
+function updateUpscaleButton() {
+  const hasImage = !!getSelectedImageState()
+  const btnRunUpscale = document.getElementById('btn-run-upscale')
+  if (!btnRunUpscale) return
+  const hasModel = !!document.querySelector('input[name="image-upscale-model"]:checked')
+  btnRunUpscale.disabled = !(hasImage && hasModel)
+}
 
 export function initImageOp() {
   const cancelOpLabel = document.getElementById('cancel-op-label')
@@ -14,29 +54,6 @@ export function initImageOp() {
     img2img: img2imgOptions,
     inpainting: inpaintingOptions,
     'image-edit': editOptions,
-  }
-
-  async function refreshInpaintCanvas() {
-    const op = document.querySelector('input[name="image-op"]:checked')?.value
-    const img = getSelectedImageState()
-    if (op !== 'inpainting' || !img) return
-    try {
-      await loadInpaintImage(img)
-      updateInpaintMaskStatus()
-    } catch (e) {
-      console.error('Error cargando imagen para inpainting:', e)
-    }
-  }
-
-  function clearInpaintState() {
-    resetInpaint()
-    const el = document.getElementById('inpaint-mask-status')
-    if (el) el.textContent = 'Sin máscara'
-  }
-
-  function updateInpaintMaskStatus() {
-    const el = document.getElementById('inpaint-mask-status')
-    if (el) el.textContent = isMaskPainted() ? 'Máscara pintada' : 'Sin máscara'
   }
 
   document.querySelectorAll('input[name="image-op"]').forEach(radio => {
@@ -64,6 +81,5 @@ export function initImageOp() {
     })
   })
 
-  // expose for image-input to call on image change
   return { refreshInpaintCanvas, clearInpaintState, updateInpaintMaskStatus }
 }

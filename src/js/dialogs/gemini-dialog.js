@@ -89,11 +89,7 @@ export async function initGeminiDialog() {
     try {
       const model = document.getElementById('select-model')?.value || ''
       const imageOp = document.querySelector('input[name="image-op"]:checked')?.value
-      let task
-      if (imageOp === 'img2img') task = 'i2i'
-      else if (imageOp === 'inpainting') task = 'inpaint'
-      else if (imageOp === 'image-edit') task = 'edit'
-      else task = 't2i'
+      const task = opToTask(imageOp)
       const enhanced = await enhancePrompt(prompt, { modelFileName: model, task })
       inputPrompt.value = enhanced
     } catch (e) {
@@ -106,7 +102,14 @@ export async function initGeminiDialog() {
   })
 }
 
-async function updateEnhancerUI() {
+export function opToTask(imageOp) {
+  if (imageOp === 'img2img') return 'i2i'
+  if (imageOp === 'inpainting') return 'inpaint'
+  if (imageOp === 'image-edit') return 'edit'
+  return 't2i'
+}
+
+export async function updateEnhancerUI() {
   const btnEnhance = document.getElementById('btn-enhance')
   const btnGemini = document.getElementById('btn-gemini-settings')
   const configured = await isEnhancerConfigured()
