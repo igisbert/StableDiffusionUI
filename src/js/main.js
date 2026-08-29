@@ -1,629 +1,185 @@
-import { listen } from '@tauri-apps/api/event'
-import { invoke, convertFileSrc } from '@tauri-apps/api/core'
-import { createIcons, icons } from 'lucide'
-import { initConfig, refreshAllSelects, getOutputPath, getSdPath, getUpscannersPath, getPathsPanelOpen, setPathsPanelOpen } from './config.js'
-import { initInference } from './inference.js'
-import { initPresets } from './presets.js'
-import { initPromptTemplates } from './prompt-templates.js'
-import { initTooltips } from './tooltips.js'
-import { initNotifications, notify, toggle } from './notifications.js'
-import { appendLine } from './console.js'
-import { loadInpaintImage, resetInpaint, initInpaintEvents, isMaskPainted } from './inpaint.js'
-import { startProcess, endProcess, captureSeed, getSeeds, isBusy } from './busy.js'
-import { showPreview, getSelectedImage } from './preview.js'
-import {
-  loadEnhancerConfig,
-  isEnhancerConfigured,
-  setApiKey,
-  setSelectedModel,
-  fetchModels,
-  enhancePrompt
-} from './prompt-enhancer.js'
+import { listen } from "@tauri-apps/api/event";
+import { invoke } from "@tauri-apps/api/core";
+import { createIcons, icons } from "lucide";
+import { initConfig, refreshAllSelects, getOutputPath } from "./config.js";
+import { initInference } from "./inference.js";
+import { initPresets } from "./presets.js";
+import { initPromptTemplates } from "./prompt-templates.js";
+import { initTooltips } from "./tooltips.js";
+import { initNotifications, notify, toggle } from "./notifications.js";
+import { appendLine } from "./console.js";
+import { initInpaintEvents, isMaskPainted } from "./inpaint.js";
+import { captureSeed, getSeeds } from "./busy.js";
+import { showPreview } from "./preview.js";
+import { getSelectedImageState } from "./state/image-state.js";
+import { initImageInput, updateImageOpUI } from "./features/image-input.js";
+import { initImageOp } from "./features/image-op.js";
+import { initGeminiDialog } from "./dialogs/gemini-dialog.js";
+import { initUpscale } from "./features/upscale.js";
+import { initPathsPanel } from "./ui/paths-panel.js";
+import { flashCopy } from "./ui/clipboard.js";
+import { isEnhancerConfigured } from "./prompt-enhancer.js";
 
 async function updateEnhancerUI() {
-  const configured = await isEnhancerConfigured()
-  const btnEnhance = document.getElementById('btn-enhance')
-  const btnGemini = document.getElementById('btn-gemini-settings')
-  btnEnhance.style.display = configured ? 'flex' : 'none'
-  btnGemini.style.display = 'flex'
+  const configured = await isEnhancerConfigured();
+  const btnEnhance = document.getElementById("btn-enhance");
+  const btnGemini = document.getElementById("btn-gemini-settings");
+  btnEnhance.style.display = configured ? "flex" : "none";
+  btnGemini.style.display = "flex";
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
-  createIcons({ icons })
+document.addEventListener("DOMContentLoaded", async () => {
+  createIcons({ icons });
 
-  await initConfig()
-  await initPresets()
-  await initPromptTemplates()
-  await initInference()
-  initTooltips()
-  await updateEnhancerUI()
+  await initConfig();
+  await initPresets();
+  await initPromptTemplates();
+  await initInference();
+  initTooltips();
+  await updateEnhancerUI();
 
-  const btnNotif = document.getElementById('btn-notifications')
-  let notifEnabled = true
+  const btnNotif = document.getElementById("btn-notifications");
+  let notifEnabled = true;
 
   try {
-    notifEnabled = await initNotifications()
+    notifEnabled = await initNotifications();
   } catch (e) {
-    console.error('Notifications init failed:', e)
+    console.error("Notifications init failed:", e);
   }
 
   function updateNotifBtnState(enabled) {
     btnNotif.innerHTML = enabled
       ? '<i data-lucide="bell"></i>'
-      : '<i data-lucide="bell-off"></i>'
-    btnNotif.classList.toggle('active', enabled)
-    createIcons({ icons })
+      : '<i data-lucide="bell-off"></i>';
+    btnNotif.classList.toggle("active", enabled);
+    createIcons({ icons });
   }
 
-  updateNotifBtnState(notifEnabled)
+  updateNotifBtnState(notifEnabled);
 
-  btnNotif.addEventListener('click', async () => {
+  btnNotif.addEventListener("click", async () => {
     try {
-      notifEnabled = await toggle()
+      notifEnabled = await toggle();
     } catch (e) {
-      notifEnabled = !notifEnabled
+      notifEnabled = !notifEnabled;
     }
-    updateNotifBtnState(notifEnabled)
-  })
+    updateNotifBtnState(notifEnabled);
+  });
 
-  document.getElementById('btn-refresh').addEventListener('click', async () => {
-    await refreshAllSelects()
-    createIcons({ icons })
-  })
+  document.getElementById("btn-refresh").addEventListener("click", async () => {
+    await refreshAllSelects();
+    createIcons({ icons });
+  });
 
-  document.getElementById('btn-copy-seed').addEventListener('click', async () => {
-    try {
-      const seeds = getSeeds()
-      const text = seeds.length === 1
-        ? seeds[0]
-        : seeds.join(', ')
-      if (!text) return
-      await navigator.clipboard.writeText(text)
-      const btn = document.getElementById('btn-copy-seed')
-      btn.innerHTML = '<i data-lucide="check"></i> Copiar semilla'
-      createIcons({ icons })
-      setTimeout(() => {
-        btn.innerHTML = '<i data-lucide="copy"></i> Copiar semilla'
-        createIcons({ icons })
-      }, 1500)
-    } catch (e) {
-      appendLine('[ERROR] No se pudo copiar al portapapeles: ' + e)
-    }
-  })
-
-  document.getElementById('btn-copy-console').addEventListener('click', async () => {
-    try {
-      const consoleOutput = document.getElementById('console-output')?.textContent ?? ''
-      if (!consoleOutput) return
-      await navigator.clipboard.writeText(consoleOutput)
-      const btn = document.getElementById('btn-copy-console')
-      btn.innerHTML = '<i data-lucide="check"></i> Copiar salida de la consola'
-      createIcons({ icons })
-      setTimeout(() => {
-        btn.innerHTML = '<i data-lucide="copy"></i> Copiar salida de la consola'
-        createIcons({ icons })
-      }, 1500)
-    } catch (e) {
-      appendLine('[ERROR] No se pudo copiar al portapapeles: ' + e)
-    }
-  })
-
-  document.getElementById('btn-open-output').addEventListener('click', async () => {
-    const output = await getOutputPath()
-    if (output) await invoke('open_folder', { path: output })
-  })
-
-  // Gemini Dialog
-  const dialogGemini = document.getElementById('dialog-gemini')
-  const btnGemini = document.getElementById('btn-gemini-settings')
-  const btnCloseGemini = document.getElementById('btn-close-gemini')
-  const inputApiKey = document.getElementById('input-api-key')
-  const btnSaveApiKey = document.getElementById('btn-save-api-key')
-  const btnDeleteApiKey = document.getElementById('btn-delete-api-key')
-  const selectGeminiModel = document.getElementById('select-gemini-model')
-  const modelSelectRow = document.getElementById('model-select-row')
-
-  btnGemini.addEventListener('click', async () => {
-    const { apiKey, selectedModel } = await loadEnhancerConfig()
-    inputApiKey.value = apiKey || ''
-    btnDeleteApiKey.style.display = apiKey ? 'block' : 'none'
-    if (apiKey) {
-      const models = await fetchModels()
-      selectGeminiModel.innerHTML = ''
-      for (const [key, val] of Object.entries(models)) {
-        const opt = document.createElement('option')
-        opt.value = key
-        opt.textContent = val.name
-        selectGeminiModel.appendChild(opt)
+  document
+    .getElementById("btn-copy-seed")
+    .addEventListener("click", async () => {
+      try {
+        const seeds = getSeeds();
+        const text = seeds.length === 1 ? seeds[0] : seeds.join(", ");
+        if (!text) return;
+        await flashCopy(document.getElementById("btn-copy-seed"), text, {
+          okLabel: '<i data-lucide="check"></i> Copiar semilla',
+          idleLabel: '<i data-lucide="copy"></i> Copiar semilla',
+        });
+      } catch (e) {
+        appendLine("[ERROR] No se pudo copiar al portapapeles: " + e);
       }
-      if (selectedModel) selectGeminiModel.value = selectedModel
-      modelSelectRow.style.display = 'flex'
-      btnSaveApiKey.textContent = 'Guardar'
-    } else {
-      modelSelectRow.style.display = 'none'
-      btnSaveApiKey.textContent = 'Continuar'
-    }
-    dialogGemini.showModal()
-  })
+    });
 
-  btnCloseGemini.addEventListener('click', () => dialogGemini.close())
-
-  btnSaveApiKey.addEventListener('click', async () => {
-    const key = inputApiKey.value.trim()
-    if (!key) return
-
-    const alreadyHasKey = !!(await loadEnhancerConfig()).apiKey
-
-    if (!alreadyHasKey) {
-      await setApiKey(key)
-      const models = await fetchModels()
-      selectGeminiModel.innerHTML = ''
-      for (const [k, v] of Object.entries(models)) {
-        const opt = document.createElement('option')
-        opt.value = k
-        opt.textContent = v.name
-        selectGeminiModel.appendChild(opt)
+  document
+    .getElementById("btn-copy-console")
+    .addEventListener("click", async () => {
+      try {
+        const text =
+          document.getElementById("console-output")?.textContent ?? "";
+        if (!text) return;
+        await flashCopy(document.getElementById("btn-copy-console"), text, {
+          okLabel: '<i data-lucide="check"></i> Copiar salida de la consola',
+          idleLabel: '<i data-lucide="copy"></i> Copiar salida de la consola',
+        });
+      } catch (e) {
+        appendLine("[ERROR] No se pudo copiar al portapapeles: " + e);
       }
-      modelSelectRow.style.display = 'flex'
-      btnDeleteApiKey.style.display = 'block'
-      btnSaveApiKey.textContent = 'Guardar'
-    } else {
-      await setSelectedModel(selectGeminiModel.value || null)
-      dialogGemini.close()
-    }
-  })
+    });
 
-  btnDeleteApiKey.addEventListener('click', async () => {
-    await setApiKey(null)
-    await setSelectedModel(null)
-    inputApiKey.value = ''
-    modelSelectRow.style.display = 'none'
-    btnDeleteApiKey.style.display = 'none'
-    await updateEnhancerUI()
-    createIcons({ icons })
-  })
+  document
+    .getElementById("btn-open-output")
+    .addEventListener("click", async () => {
+      const output = await getOutputPath();
+      if (output) await invoke("open_folder", { path: output });
+    });
 
-  // Enhance button
-  const btnEnhance = document.getElementById('btn-enhance')
-  const inputPrompt = document.getElementById('input-prompt')
+  await initGeminiDialog();
 
-  btnEnhance.addEventListener('click', async () => {
-    const prompt = inputPrompt.value.trim()
-    if (!prompt) return
+  initUpscale();
 
-    btnEnhance.disabled = true
-    btnEnhance.innerHTML = '<i data-lucide="loader"></i>'
-    createIcons({ icons })
+  await initPathsPanel();
 
-    try {
-      const model = document.getElementById('select-model')?.value || ''
-      const imageOp = document.querySelector('input[name="image-op"]:checked')?.value
-      let task
-      if (imageOp === 'img2img') task = 'i2i'
-      else if (imageOp === 'inpainting') task = 'inpaint'
-      else if (imageOp === 'image-edit') task = 'edit'
-      else task = 't2i'
-      const enhanced = await enhancePrompt(prompt, { modelFileName: model, task })
-      inputPrompt.value = enhanced
-    } catch (e) {
-      appendLine('[ERROR] Error al mejorar prompt: ' + e)
-    } finally {
-      btnEnhance.disabled = false
-      btnEnhance.innerHTML = '<i data-lucide="sparkles"></i>'
-      createIcons({ icons })
-    }
-  })
+  const btnRun = document.getElementById("btn-run");
+  const btnRunUpscale = document.getElementById("btn-run-upscale");
 
-  document.getElementById('btn-upscale').addEventListener('click', () => {
-    document.getElementById('popover-upscale').classList.toggle('open')
-  })
+  initImageInput();
 
-  document.getElementById('btn-close-upscale').addEventListener('click', () => {
-    document.getElementById('popover-upscale').classList.remove('open')
-  })
+  initImageOp();
 
-  document.getElementById('btn-run-upscale-popover').addEventListener('click', async () => {
-    if (isBusy()) return
-    const selectedRadio = document.querySelector('input[name="upscale-model"]:checked')
-    if (!selectedRadio) return
-
-    const inputImage = getSelectedImage()
-    if (!inputImage) return
-
-    const sdPath = await getSdPath()
-    const outputPath = await getOutputPath()
-    const upscalersPath = await getUpscannersPath()
-
-    if (!sdPath || !outputPath || !upscalersPath) return
-
-    document.getElementById('popover-upscale').classList.remove('open')
-
-    startProcess()
-    btnRun.disabled = true
-    try {
-      await invoke('run_upscale', {
-        sdPath: sdPath,
-        outputPath: outputPath,
-        upscalersPath: upscalersPath,
-        model: selectedRadio.value,
-        inputImage: inputImage
-      })
-    } catch (e) {
-      console.error('Upscale error:', e)
-    } finally {
-      endProcess()
-      btnRun.disabled = false
-    }
-  })
-
-  document.addEventListener('click', (e) => {
-    const pop = document.getElementById('popover-upscale')
-    const btn = document.getElementById('btn-upscale')
-    if (!pop.contains(e.target) && !btn.contains(e.target)) {
-      pop.classList.remove('open')
-    }
-  })
-
-  // Sidebar paths collapse
-  const btnTogglePaths = document.getElementById('btn-toggle-paths')
-  const pathsCollapse = document.getElementById('paths-collapse')
-
-  async function applyPathsPanelOpen(open) {
-    btnTogglePaths.classList.toggle('open', open)
-    pathsCollapse.style.height = open ? 'auto' : '0px'
-  }
-
-  applyPathsPanelOpen(await getPathsPanelOpen())
-
-  btnTogglePaths.addEventListener('click', () => {
-    const open = btnTogglePaths.classList.toggle('open')
-    setPathsPanelOpen(open)
-    if (open) {
-      pathsCollapse.style.height = `${pathsCollapse.scrollHeight}px`
-      pathsCollapse.addEventListener('transitionend', () => {
-        if (btnTogglePaths.classList.contains('open')) {
-          pathsCollapse.style.height = 'auto'
-        }
-      }, { once: true })
-    } else {
-      pathsCollapse.style.height = `${pathsCollapse.scrollHeight}px`
-      void pathsCollapse.offsetHeight
-      pathsCollapse.style.height = '0px'
-    }
-  })
-
-  // Image input section
-  const btnToggleImageInput = document.getElementById('btn-toggle-image-input')
-  const imageInputContent = document.getElementById('image-input-content')
-  const btnSelectImage = document.getElementById('btn-select-image')
-  const imageName = document.getElementById('image-input-name')
-  const btnRunUpscale = document.getElementById('btn-run-upscale')
-  let selectedImageForOp = null
-  window.__selectedImageForOp = null
-
-  function updateUpscaleButton() {
-    const hasImage = !!selectedImageForOp
-    const hasModel = !!document.querySelector('input[name="image-upscale-model"]:checked')
-    btnRunUpscale.disabled = !(hasImage && hasModel)
-  }
-
-  const btnSizeFull = document.getElementById('btn-size-full')
-  const btnSizeThreeQuarter = document.getElementById('btn-size-three-quarter')
-  const btnSizeHalf = document.getElementById('btn-size-half')
-  const btnSizeQuarter = document.getElementById('btn-size-quarter')
-  const btnInpaintSizeFull = document.getElementById('btn-inpaint-size-full')
-  const btnInpaintSizeThreeQuarter = document.getElementById('btn-inpaint-size-three-quarter')
-  const btnInpaintSizeHalf = document.getElementById('btn-inpaint-size-half')
-  const btnInpaintSizeQuarter = document.getElementById('btn-inpaint-size-quarter')
-  const btnEditSizeFull = document.getElementById('btn-edit-size-full')
-  const btnEditSizeThreeQuarter = document.getElementById('btn-edit-size-three-quarter')
-  const btnEditSizeHalf = document.getElementById('btn-edit-size-half')
-  const btnEditSizeQuarter = document.getElementById('btn-edit-size-quarter')
-  const btnRun = document.getElementById('btn-run')
-
-  function updateImageOpUI() {
-    const hasImage = !!selectedImageForOp
-
-    btnSizeFull.disabled = !hasImage
-    btnSizeThreeQuarter.disabled = !hasImage
-    btnSizeHalf.disabled = !hasImage
-    btnSizeQuarter.disabled = !hasImage
-    btnInpaintSizeFull.disabled = !hasImage
-    btnInpaintSizeThreeQuarter.disabled = !hasImage
-    btnInpaintSizeHalf.disabled = !hasImage
-    btnInpaintSizeQuarter.disabled = !hasImage
-    btnEditSizeFull.disabled = !hasImage
-    btnEditSizeThreeQuarter.disabled = !hasImage
-    btnEditSizeHalf.disabled = !hasImage
-    btnEditSizeQuarter.disabled = !hasImage
-    btnOpenInpaint.disabled = !hasImage
-
-    updateUpscaleButton()
-  }
-
-  function getImageDimensions(url, { timeoutMs = 10000, revoke = false } = {}) {
-    return new Promise((resolve, reject) => {
-      const img = new Image()
-      const timer = setTimeout(() => {
-        cleanup()
-        reject(new Error('Timeout leyendo dimensiones de imagen'))
-      }, timeoutMs)
-
-      function cleanup() {
-        clearTimeout(timer)
-        if (revoke) URL.revokeObjectURL(url)
-      }
-
-      img.onload = () => {
-        cleanup()
-        resolve({ width: img.naturalWidth, height: img.naturalHeight })
-      }
-      img.onerror = () => {
-        cleanup()
-        reject(new Error('No se pudo cargar la imagen'))
-      }
-      img.src = url
-    })
-  }
-
-  function applyImageSize(factor) {
-    if (!selectedImageForOp) return
-    const imageUrl = convertFileSrc(selectedImageForOp)
-    getImageDimensions(imageUrl).then(({ width, height }) => {
-      document.getElementById('input-width').value = Math.round(width * factor)
-      document.getElementById('input-height').value = Math.round(height * factor)
-    }).catch(e => console.error('Error leyendo dimensiones:', e))
-  }
-
-  btnSizeFull.addEventListener('click', () => applyImageSize(1))
-  btnSizeThreeQuarter.addEventListener('click', () => applyImageSize(0.75))
-  btnSizeHalf.addEventListener('click', () => applyImageSize(0.5))
-  btnSizeQuarter.addEventListener('click', () => applyImageSize(0.25))
-
-  btnInpaintSizeFull.addEventListener('click', () => applyImageSize(1))
-  btnInpaintSizeThreeQuarter.addEventListener('click', () => applyImageSize(0.75))
-  btnInpaintSizeHalf.addEventListener('click', () => applyImageSize(0.5))
-  btnInpaintSizeQuarter.addEventListener('click', () => applyImageSize(0.25))
-
-  btnEditSizeFull.addEventListener('click', () => applyImageSize(1))
-  btnEditSizeThreeQuarter.addEventListener('click', () => applyImageSize(0.75))
-  btnEditSizeHalf.addEventListener('click', () => applyImageSize(0.5))
-  btnEditSizeQuarter.addEventListener('click', () => applyImageSize(0.25))
-
-  async function populateImageUpscaleModels() {
-    const upscalersPath = await getUpscannersPath()
-    if (!upscalersPath) return
-    try {
-      const result = await invoke('scan_models', { basePath: upscalersPath })
-      const container = document.getElementById('radio-image-upscale-models')
-      if (!container) return
-      container.innerHTML = ''
-      for (const item of result.models) {
-        const label = document.createElement('label')
-        const input = document.createElement('input')
-        input.type = 'radio'
-        input.name = 'image-upscale-model'
-        input.value = item
-        input.addEventListener('change', updateImageOpUI)
-        label.appendChild(input)
-        label.appendChild(document.createTextNode(item))
-        container.appendChild(label)
-      }
-    } catch (e) {
-      console.error('Error scanning upscalers:', e)
-    }
-  }
-
-  populateImageUpscaleModels()
-
-  const cancelOpLabel = document.getElementById('cancel-op-label')
-  const upscaleOptions = document.getElementById('upscale-options')
-  const img2imgOptions = document.getElementById('img2img-options')
-  const inpaintingOptions = document.getElementById('inpainting-options')
-  const editOptions = document.getElementById('image-edit-options')
-  const btnOpenInpaint = document.getElementById('btn-open-inpaint')
-
-  async function refreshInpaintCanvas() {
-    const op = document.querySelector('input[name="image-op"]:checked')?.value
-    if (op !== 'inpainting' || !selectedImageForOp) return
-    try {
-      await loadInpaintImage(selectedImageForOp)
-      updateInpaintMaskStatus()
-    } catch (e) {
-      console.error('Error cargando imagen para inpainting:', e)
-    }
-  }
-
-  function clearInpaintState() {
-    resetInpaint()
-    document.getElementById('inpaint-mask-status').textContent = 'Sin máscara'
-  }
+  const btnOpenInpaint = document.getElementById("btn-open-inpaint");
 
   function updateInpaintMaskStatus() {
-    document.getElementById('inpaint-mask-status').textContent = isMaskPainted() ? 'Máscara pintada' : 'Sin máscara'
+    const el = document.getElementById("inpaint-mask-status");
+    if (el)
+      el.textContent = isMaskPainted() ? "Máscara pintada" : "Sin máscara";
   }
 
-  document.querySelectorAll('input[name="image-op"]').forEach(radio => {
-    radio.addEventListener('change', () => {
-      const options = document.getElementById('image-op-options')
-      const value = radio.value
-
-      if (value === 'cancel') {
-        radio.checked = false
-        cancelOpLabel.style.display = 'none'
-        options.classList.remove('visible')
-        upscaleOptions.style.display = 'none'
-        img2imgOptions.style.display = 'none'
-        inpaintingOptions.style.display = 'none'
-        editOptions.style.display = 'none'
-        return
-      }
-
-      cancelOpLabel.style.display = 'inline-flex'
-      options.classList.add('visible')
-
-      upscaleOptions.style.display = value === 'upscale' ? 'flex' : 'none'
-      img2imgOptions.style.display = value === 'img2img' ? 'flex' : 'none'
-      inpaintingOptions.style.display = value === 'inpainting' ? 'flex' : 'none'
-      editOptions.style.display = value === 'image-edit' ? 'flex' : 'none'
-
-      refreshInpaintCanvas()
-      updateImageOpUI()
-    })
-  })
-
-  btnToggleImageInput.addEventListener('click', () => {
-    btnToggleImageInput.classList.toggle('open')
-    imageInputContent.classList.toggle('open')
-  })
-
-  btnSelectImage.addEventListener('click', async () => {
-    const path = await invoke('pick_file')
-    if (!path) return
-    selectedImageForOp = path
-    window.__selectedImageForOp = path
-    const name = path.split(/[/\\]/).pop()
-    imageName.textContent = name
-    document.getElementById('btn-clear-image').classList.add('visible')
-    updateImageOpUI()
-    refreshInpaintCanvas()
-  })
-
-  document.getElementById('btn-clear-image').addEventListener('click', () => {
-    selectedImageForOp = null
-    window.__selectedImageForOp = null
-    imageName.textContent = 'Ninguna'
-    document.getElementById('btn-clear-image').classList.remove('visible')
-    updateImageOpUI()
-    clearInpaintState()
-  })
-
-  const dropZone = document.getElementById('image-drop-zone')
-  const validImageExts = ['.png', '.jpg', '.jpeg', '.webp', '.bmp']
-
-  listen('tauri://drag-over', (event) => {
-    const pos = event.payload?.position
-    if (!pos) return
-    const rect = dropZone.getBoundingClientRect()
-    const over = pos.x >= rect.left && pos.x <= rect.right && pos.y >= rect.top && pos.y <= rect.bottom
-    dropZone.classList.toggle('dragover', over)
-  })
-
-  listen('tauri://drag-leave', () => {
-    dropZone.classList.remove('dragover')
-  })
-
-  listen('tauri://drag-drop', (event) => {
-    dropZone.classList.remove('dragover')
-    const paths = event.payload?.paths
-    if (!paths || paths.length === 0) return
-    const filePath = paths[0]
-    const ext = '.' + filePath.split('.').pop().toLowerCase()
-    if (!validImageExts.includes(ext)) return
-    selectedImageForOp = filePath
-    window.__selectedImageForOp = filePath
-    const name = filePath.split(/[/\\]/).pop()
-    imageName.textContent = name
-    document.getElementById('btn-clear-image').classList.add('visible')
-    updateImageOpUI()
-    refreshInpaintCanvas()
-  })
-
-  const inpaintDialog = document.getElementById('inpaint-dialog')
+  const inpaintDialog = document.getElementById("inpaint-dialog");
 
   function closeInpaintDialog() {
-    if (inpaintDialog.classList.contains('closing')) return
-    inpaintDialog.classList.add('closing')
-    inpaintDialog.addEventListener('animationend', () => {
-      inpaintDialog.classList.remove('closing')
-      inpaintDialog.close()
-    }, { once: true })
+    if (inpaintDialog.classList.contains("closing")) return;
+    inpaintDialog.classList.add("closing");
+    inpaintDialog.addEventListener(
+      "animationend",
+      () => {
+        inpaintDialog.classList.remove("closing");
+        inpaintDialog.close();
+      },
+      { once: true },
+    );
   }
 
-  btnOpenInpaint.addEventListener('click', () => {
-    if (!selectedImageForOp) return
-    initInpaintEvents()
-    inpaintDialog.showModal()
-  })
+  btnOpenInpaint.addEventListener("click", () => {
+    if (!getSelectedImageState()) return;
+    initInpaintEvents();
+    inpaintDialog.showModal();
+  });
 
-  document.getElementById('btn-apply-mask').addEventListener('click', closeInpaintDialog)
+  document
+    .getElementById("btn-apply-mask")
+    .addEventListener("click", closeInpaintDialog);
 
-  inpaintDialog.addEventListener('cancel', (e) => {
-    e.preventDefault()
-    closeInpaintDialog()
-  })
+  inpaintDialog.addEventListener("cancel", (e) => {
+    e.preventDefault();
+    closeInpaintDialog();
+  });
 
-  inpaintDialog.addEventListener('close', () => {
-    updateInpaintMaskStatus()
-  })
+  inpaintDialog.addEventListener("close", () => {
+    updateInpaintMaskStatus();
+  });
 
-  let isUpscaling = false
+  await listen("console-line", (event) => {
+    const line = event.payload;
+    const match = line.match(/generating image: \d+\/\d+ - seed (\d+)/);
+    if (match) captureSeed(match[1]);
+    appendLine(line);
+  });
 
-  function setUpscaling(running) {
-    isUpscaling = running
-    if (running) {
-      startProcess()
-    } else {
-      endProcess()
-    }
-    const btnRunUpscale = document.getElementById('btn-run-upscale')
-    const btnAbortUpscale = document.getElementById('btn-abort-upscale')
-    if (running) {
-      btnRun.disabled = true
-      btnRunUpscale.disabled = true
-      btnAbortUpscale.hidden = false
-    } else {
-      btnAbortUpscale.hidden = true
-      btnRun.disabled = false
-      updateImageOpUI()
-    }
-  }
+  await listen("inference-done", async (event) => {
+    showPreview(event.payload);
+    updateImageOpUI();
+    notify("Generación completada", "Tu imagen está lista.");
+  });
 
-  document.getElementById('btn-abort-upscale').addEventListener('click', async () => {
-    try { await invoke('abort_inference') } catch (e) {}
-  })
-
-  btnRunUpscale.addEventListener('click', async () => {
-    if (isBusy()) return
-    if (!selectedImageForOp) return
-    const sdPath = await getSdPath()
-    const outputPath = await getOutputPath()
-    const upscalersPath = await getUpscannersPath()
-    if (!sdPath || !outputPath || !upscalersPath) return
-    const selectedModel = document.querySelector('input[name="image-upscale-model"]:checked')
-    if (!selectedModel) return
-
-    setUpscaling(true)
-    try {
-      await invoke('run_upscale', {
-        sdPath: sdPath,
-        outputPath: outputPath,
-        upscalersPath: upscalersPath,
-        model: selectedModel.value,
-        inputImage: selectedImageForOp
-      })
-    } catch (e) {
-      console.error('Upscale error:', e)
-    } finally {
-      setUpscaling(false)
-    }
-  })
-
-  await listen('console-line', (event) => {
-    const line = event.payload
-    const match = line.match(/generating image: \d+\/\d+ - seed (\d+)/)
-    if (match) captureSeed(match[1])
-    appendLine(line)
-  })
-
-  await listen('inference-done', async (event) => {
-    showPreview(event.payload)
-    updateImageOpUI()
-    notify('Generación completada', 'Tu imagen está lista.')
-  })
-
-  await listen('upscale-done', (event) => {
-    showPreview(event.payload)
-    notify('Upscale completado', 'Tu imagen escalada está lista.')
-  })
-})
+  await listen("upscale-done", (event) => {
+    showPreview(event.payload);
+    notify("Upscale completado", "Tu imagen escalada está lista.");
+  });
+});

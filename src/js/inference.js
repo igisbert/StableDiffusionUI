@@ -5,6 +5,7 @@ import { getSdPath, getOutputPath, getModelsPath, getVaePath, getLlmPath, getLor
 import { appendLine } from './console.js'
 import { exportMask, isMaskPainted, getPreparedImagePath } from './inpaint.js'
 import { startProcess, endProcess, isBusy } from './busy.js'
+import { getSelectedImageState } from './state/image-state.js'
 
 let isRunning = false
 
@@ -60,10 +61,10 @@ export async function collectParams() {
   const isEdit = currentImageOp === 'image-edit'
   const strengthId = isInpainting ? 'input-inpaint-strength' : 'input-strength'
 
-  const editImage = isEdit ? (getPreparedImagePath() || window.__selectedImageForOp || null) : null
+  const editImage = isEdit ? (getPreparedImagePath() || getSelectedImageState() || null) : null
   const inputImage = isEdit ? null : isInpainting
-    ? (getPreparedImagePath() || window.__selectedImageForOp || null)
-    : (window.__selectedImageForOp || null)
+    ? (getPreparedImagePath() || getSelectedImageState() || null)
+    : (getSelectedImageState() || null)
   const maskImage = isInpainting && isMaskPainted() ? exportMask() : null
 
   return {
