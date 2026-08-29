@@ -147,6 +147,28 @@ fn cleanup_temp_files(
     }
 }
 
+fn resolve_output_dir(base: &Path, has_mask: bool, has_edit: bool, has_input: bool) -> std::path::PathBuf {
+    if has_mask {
+        base.join("inpainting")
+    } else if has_edit {
+        base.join("edit")
+    } else if has_input {
+        base.join("img2img")
+    } else {
+        base.to_path_buf()
+    }
+}
+
+fn validate_image_params(has_edit: bool, has_input: bool, has_mask: bool) -> Result<(), String> {
+    if has_edit && has_input {
+        return Err("No se puede usar -r (edit) y -i (img2img) a la vez.".to_string());
+    }
+    if has_edit && has_mask {
+        return Err("No se puede usar -r (edit) con --mask.".to_string());
+    }
+    Ok(())
+}
+
 #[tauri::command]
 pub async fn prepare_inpaint_image(path: String) -> Result<String, String> {
     tokio::task::spawn_blocking(move || {
@@ -192,33 +214,12 @@ pub async fn run_inference(app: tauri::AppHandle, params: InferenceParams) -> Re
     let has_edit_image = params.edit_image.as_ref().is_some_and(|m| !m.is_empty());
     let has_input_image = params.input_image.as_ref().is_some_and(|m| !m.is_empty());
 
-    if has_edit_image && has_input_image {
-        return Err("No se puede usar -r (edit) y -i (img2img) a la vez.".to_string());
+    validate_image_params(has_edit_image, has_input_image, has_mask)?;
+
+    let output_dir = resolve_output_dir(Path::new(&params.output_path), has_mask, has_edit_image, has_input_image);
+    if output_dir != Path::new(&params.output_path) && !output_dir.exists() {
+        std::fs::create_dir_all(&output_dir).map_err(|e| e.to_string())?;
     }
-    if has_edit_image && has_mask {
-        return Err("No se puede usar -r (edit) con --mask.".to_string());
-    }
-    let output_dir = if has_mask {
-        let inpaint_dir = Path::new(&params.output_path).join("inpainting");
-        if !inpaint_dir.exists() {
-            std::fs::create_dir_all(&inpaint_dir).map_err(|e| e.to_string())?;
-        }
-        inpaint_dir
-    } else if has_edit_image {
-        let edit_dir = Path::new(&params.output_path).join("edit");
-        if !edit_dir.exists() {
-            std::fs::create_dir_all(&edit_dir).map_err(|e| e.to_string())?;
-        }
-        edit_dir
-    } else if has_input_image {
-        let img2img_dir = Path::new(&params.output_path).join("img2img");
-        if !img2img_dir.exists() {
-            std::fs::create_dir_all(&img2img_dir).map_err(|e| e.to_string())?;
-        }
-        img2img_dir
-    } else {
-        Path::new(&params.output_path).to_path_buf()
-    };
 
     let output_file = output_dir
         .join(format!("gen_{}.png", timestamp))
@@ -691,5 +692,84 @@ pub async fn run_upscale(
         }
         Ok(s) => Err(format!("sd-cli terminó con código {:?}", s.code())),
         Err(e) => Err(e),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::Path;
+
+    #[test]
+    fn resolve_output_dir_exact() {
+        let base = Path::new("/tmp/out");
+        assert_eq!(resolve_output_dir(base, true, false, false), base.join("inpainting"));
+        assert_eq!(resolve_output_dir(base, false, true, false), base.join("edit"));
+        assert_eq!(resolve_output_dir(base, false, false, true), base.join("img2img"));
+        assert_eq!(resolve_output_dir(base, false, false, false), base);
+    }
+
+    #[test]
+    fn resolve_output_dir_priority() {
+        let base = Path::new("/tmp/out");
+        // mask wins over everything
+        assert_eq!(resolve_output_dir(base, true, false, true), base.join("inpainting"));
+        assert_eq!(resolve_output_dir(base, true, true, false), base.join("inpainting"));
+        assert_eq!(resolve_output_dir(base, true, true, true), base.join("inpainting"));
+        // edit wins over input
+        assert_eq!(resolve_output_dir(base, false, true, true), base.join("edit"));
+    }
+
+    #[test]
+    fn validate_exclusive_ok() {
+        assert!(validate_image_params(false, false, false).is_ok());
+        assert!(validate_image_params(true, false, false).is_ok());
+        assert!(validate_image_params(false, true, false).is_ok());
+        assert!(validate_image_params(false, false, true).is_ok());
+        assert!(validate_image_params(false, true, true).is_ok());
+    }
+
+    #[test]
+    fn validate_edit_input_fails_exact() {
+        let err = validate_image_params(true, true, false).unwrap_err();
+        assert_eq!(err, "No se puede usar -r (edit) y -i (img2img) a la vez.");
+    }
+
+    #[test]
+    fn validate_edit_mask_fails_exact() {
+        let err = validate_image_params(true, false, true).unwrap_err();
+        assert_eq!(err, "No se puede usar -r (edit) con --mask.");
+    }
+
+    #[test]
+    fn validate_all_combinations() {
+        let cases = [
+            ((false, false, false), true),
+            ((true, false, false), true),
+            ((false, true, false), true),
+            ((false, false, true), true),
+            ((false, true, true), true),
+            ((true, true, false), false),
+            ((true, false, true), false),
+            ((true, true, true), false),
+        ];
+        for ((e, i, m), ok) in cases {
+            assert_eq!(validate_image_params(e, i, m).is_ok(), ok, "e={e} i={i} m={m}");
+        }
+    }
+
+    #[test]
+    fn decode_data_url_ok() {
+        let png_b64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=";
+        let bytes = decode_data_url(png_b64).unwrap();
+        assert_eq!(bytes.len(), 68);
+        assert_eq!(&bytes[0..8], &[0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
+    }
+
+    #[test]
+    fn decode_data_url_invalid() {
+        assert_eq!(decode_data_url("not-a-data-url").unwrap_err(), "Data URL de máscara inválida");
+        assert!(decode_data_url("data:image/png;base64,@@@").unwrap_err().contains("No se pudo decodificar"));
+        assert_eq!(decode_data_url("data:text/plain;base64,SGVsbG8=").unwrap(), b"Hello");
     }
 }

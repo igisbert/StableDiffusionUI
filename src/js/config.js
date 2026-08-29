@@ -3,6 +3,11 @@ import { invoke } from '@tauri-apps/api/core'
 
 let store
 
+async function getStore() {
+  if (!store) store = await Store.load('config.json')
+  return store
+}
+
 const SAMPLERS = [
   { value: 'euler',           label: 'Euler' },
   { value: 'euler_cfg_pp',    label: 'Euler CFG++' },
@@ -175,15 +180,16 @@ function populateRadios(containerId, items) {
 }
 
 export async function refreshAllSelects() {
-  const modelsPath = await store.get('models_path')
-  const vaePath = await store.get('vae_path')
-  const llmPath = await store.get('llm_path')
-  const loraPath = await store.get('lora_path')
-  const llmVisionPath = await store.get('llm_vision_path')
-  const clipLPath = await store.get('clip_l_path')
-  const clipGPath = await store.get('clip_g_path')
-  const t5xxlPath = await store.get('t5xxl_path')
-  const upscalersPath = await store.get('upscalers_path')
+  const s = await getStore()
+  const modelsPath = await s.get('models_path')
+  const vaePath = await s.get('vae_path')
+  const llmPath = await s.get('llm_path')
+  const loraPath = await s.get('lora_path')
+  const llmVisionPath = await s.get('llm_vision_path')
+  const clipLPath = await s.get('clip_l_path')
+  const clipGPath = await s.get('clip_g_path')
+  const t5xxlPath = await s.get('t5xxl_path')
+  const upscalersPath = await s.get('upscalers_path')
   if (modelsPath) await scanModels(modelsPath)
   if (vaePath) await scanVae(vaePath)
   if (llmPath) await scanEncoders(llmPath)
@@ -213,26 +219,27 @@ function populateSelect(id, items, withNone = false) {
   }
 }
 
-export async function getSdPath() { return (await store.get('sd_path')) || '' }
-export async function getOutputPath() { return (await store.get('output_path')) || '' }
-export async function getModelsPath() { return (await store.get('models_path')) || '' }
-export async function getVaePath() { return (await store.get('vae_path')) || '' }
-export async function getLlmPath() { return (await store.get('llm_path')) || '' }
-export async function getLoraPath() { return (await store.get('lora_path')) || '' }
-export async function getLlmVisionPath() { return (await store.get('llm_vision_path')) || '' }
-export async function getClipLPath() { return (await store.get('clip_l_path')) || '' }
-export async function getClipGPath() { return (await store.get('clip_g_path')) || '' }
-export async function getT5xxlPath() { return (await store.get('t5xxl_path')) || '' }
-export async function getUpscannersPath() { return (await store.get('upscalers_path')) || '' }
+export async function getSdPath() { return (await (await getStore()).get('sd_path')) || '' }
+export async function getOutputPath() { return (await (await getStore()).get('output_path')) || '' }
+export async function getModelsPath() { return (await (await getStore()).get('models_path')) || '' }
+export async function getVaePath() { return (await (await getStore()).get('vae_path')) || '' }
+export async function getLlmPath() { return (await (await getStore()).get('llm_path')) || '' }
+export async function getLoraPath() { return (await (await getStore()).get('lora_path')) || '' }
+export async function getLlmVisionPath() { return (await (await getStore()).get('llm_vision_path')) || '' }
+export async function getClipLPath() { return (await (await getStore()).get('clip_l_path')) || '' }
+export async function getClipGPath() { return (await (await getStore()).get('clip_g_path')) || '' }
+export async function getT5xxlPath() { return (await (await getStore()).get('t5xxl_path')) || '' }
+export async function getUpscannersPath() { return (await (await getStore()).get('upscalers_path')) || '' }
 
 export async function getPathsPanelOpen() {
   const configured = await getSdPath() && await getOutputPath() && await getModelsPath()
   if (!configured) return true
-  return (await store.get('paths_panel_open')) ?? false
+  return (await (await getStore()).get('paths_panel_open')) ?? false
 }
 export async function setPathsPanelOpen(open) {
-  await store.set('paths_panel_open', open)
-  await store.save()
+  const s = await getStore()
+  await s.set('paths_panel_open', open)
+  await s.save()
 }
 
 function updatePathDisplay(id, path) {

@@ -10,4 +10,8 @@ export default defineConfig({
     port: 1420,
     strictPort: true,
   },
+  test: {
+    environment: 'happy-dom',
+    include: ['js/__tests__/**/*.test.js'],
+  },
 })

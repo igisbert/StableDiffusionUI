@@ -1,0 +1,1 @@
+REVISIÓN MANUAL: drag&drop, dialogo Inpaint (mascara), popover Upscale, panel rutas, preview

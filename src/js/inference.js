@@ -33,11 +33,11 @@ function setRunning(running) {
   }
 }
 
-function escapeArg(str) {
+export function escapeArg(str) {
   return String(str).replace(/"/g, '\\"')
 }
 
-async function collectParams() {
+export async function collectParams() {
   const sdPath = await getSdPath()
   const outputPath = await getOutputPath()
   const modelsPath = await getModelsPath()
@@ -117,7 +117,7 @@ async function collectParams() {
   }
 }
 
-function paramsToCliString(params) {
+export function paramsToCliString(params) {
   const flag = params.model_type === 'diffusion' ? '--diffusion-model' : '-m'
 
   let cmd = 'sd-cli.exe'
@@ -164,7 +164,7 @@ function paramsToCliString(params) {
     cmd += ' -i "' + escapeArg(params.input_image) + '"'
     if (params.strength != null) cmd += ' --strength ' + params.strength
   }
-  if (params.mask_image) {
+  if (params.mask_image && params.input_image) {
     cmd += ' --mask "mask.png"'
   }
 
