@@ -269,19 +269,25 @@ export async function loadInpaintImage(path) {
   setLoading(true)
 
   let resolvedPath
+  let prepareFailed = false
   try {
     resolvedPath = await invoke('prepare_inpaint_image', { path })
   } catch (e) {
     resolvedPath = path
+    prepareFailed = true
   }
-  if (token !== loadToken) return
+  if (token !== loadToken) {
+    setLoading(false)
+    return
+  }
   preparedPath = resolvedPath
-  preparedFrom = path
+  preparedFrom = prepareFailed ? null : path
 
   await new Promise((resolve, reject) => {
     const img = new Image()
     img.onload = () => {
       if (token !== loadToken) {
+        setLoading(false)
         resolve()
         return
       }
@@ -303,6 +309,7 @@ export async function loadInpaintImage(path) {
     }
     img.onerror = () => {
       if (token !== loadToken) {
+        setLoading(false)
         resolve()
         return
       }

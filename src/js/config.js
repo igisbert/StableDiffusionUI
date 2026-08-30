@@ -70,11 +70,15 @@ const MODEL_SCANS = [
 ]
 
 async function scanGeneric(entry, basePath) {
-  const result = await invoke('scan_models', { basePath })
-  if (entry.isRadio) {
-    populateRadios(entry.target, result.models)
-  } else {
-    populateSelect(entry.target, result.models, entry.withNone)
+  try {
+    const result = await invoke('scan_models', { basePath })
+    if (entry.isRadio) {
+      populateRadios(entry.target, result.models)
+    } else {
+      populateSelect(entry.target, result.models, entry.withNone)
+    }
+  } catch (e) {
+    console.warn(`scan failed for ${entry.storeKey}:`, e)
   }
 }
 

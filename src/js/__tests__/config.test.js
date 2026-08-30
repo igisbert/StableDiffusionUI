@@ -84,12 +84,18 @@ describe('config', () => {
     expect(mockInvoke).not.toHaveBeenCalled()
   })
 
-  it('propagates scan error', async () => {
+  it('does not abort on single scan error', async () => {
     mockStore.get.mockImplementation((key) => {
       if (key === 'llm_vision_path') return Promise.resolve('C:\\vision')
+      if (key === 'models_path') return Promise.resolve('C:\\models')
       return Promise.resolve(null)
     })
-    mockInvoke.mockRejectedValue(new Error('enoent'))
-    await expect(refreshAllSelects()).rejects.toThrow('enoent')
+    mockInvoke.mockImplementation(({ basePath }) => {
+      if (basePath === 'C:\\vision') return Promise.reject(new Error('enoent'))
+      return Promise.resolve({ models: ['ok.gguf'] })
+    })
+    await expect(refreshAllSelects()).resolves.toBeUndefined()
+    expect(mockInvoke).toHaveBeenCalledWith('scan_models', { basePath: 'C:\\vision' })
+    expect(mockInvoke).toHaveBeenCalledWith('scan_models', { basePath: 'C:\\models' })
   })
 })

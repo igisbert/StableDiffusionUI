@@ -62,19 +62,15 @@ export function initUpscale() {
     }
   })
 
-  let isUpscaling = false
   function setUpscaling(running) {
-    isUpscaling = running
-    if (running) startProcess()
-    else endProcess()
     const btnRunUpscale = document.getElementById('btn-run-upscale')
     const btnAbortUpscale = document.getElementById('btn-abort-upscale')
     if (running) {
       btnRun.disabled = true
-      btnRunUpscale.disabled = true
-      btnAbortUpscale.hidden = false
+      if (btnRunUpscale) btnRunUpscale.disabled = true
+      if (btnAbortUpscale) btnAbortUpscale.hidden = false
     } else {
-      btnAbortUpscale.hidden = true
+      if (btnAbortUpscale) btnAbortUpscale.hidden = true
       btnRun.disabled = false
       updateImageOpUI()
     }
