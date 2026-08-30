@@ -169,7 +169,8 @@ export async function getT5xxlPath() { return (await (await getStore()).get('t5x
 export async function getUpscannersPath() { return (await (await getStore()).get('upscalers_path')) || '' }
 
 export async function getPathsPanelOpen() {
-  const configured = await getSdPath() && await getOutputPath() && await getModelsPath()
+  const [sd, out, models, vae, llm] = await Promise.all([getSdPath(), getOutputPath(), getModelsPath(), getVaePath(), getLlmPath()])
+  const configured = sd && out && models && vae && llm
   if (!configured) return true
   return (await (await getStore()).get('paths_panel_open')) ?? false
 }
