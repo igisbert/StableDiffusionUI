@@ -175,6 +175,11 @@ fieldset legend {
     border: 0;
 }
 
+.mt-32 { margin-top: 32px; }
+.icon-14 { width: 14px; height: 14px; }
+.icon-64 { width: 64px; height: 64px; }
+.hint { opacity: 0.8; line-height: 1.4; font-size: var(--text-small); display: flex; align-items: center; gap: var(--space-small); margin-top: 0.5rem; }
+
 /* Main Content */
 main {
     flex-grow: 1;

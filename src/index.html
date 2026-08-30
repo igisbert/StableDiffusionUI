@@ -32,7 +32,7 @@
 <button id="btn-save-preset" class="btn-secondary">Guardar</button>
 </div>
 </div>
-<label for="select-prompt" class="config-label" style="margin-top: 32px;">Prompts</label>
+<label for="select-prompt" class="config-label mt-32">Prompts</label>
 <div class="presets-section">
 <div class="presets-load">
 <select id="select-prompt">
@@ -58,77 +58,77 @@
 <div class="config-group">
 <label class="config-label">Ruta de Stable Diffusion cpp</label>
 <button type="button" class="path-display" id="path-sdcpp" data-action="pick-sdcpp" aria-label="Elegir Ruta de Stable Diffusion cpp">
-<i data-lucide="terminal" style="width: 14px; height: 14px;" aria-hidden="true"></i>
+<i data-lucide="terminal" class="icon-14" aria-hidden="true"></i>
 <span id="path-sdcpp-text">No configurado</span>
 </button>
 </div>
 <div class="config-group">
 <label class="config-label">Ruta de salida</label>
 <button type="button" class="path-display" id="path-output" data-action="pick-output" aria-label="Elegir Ruta de salida">
-<i data-lucide="hard-drive" style="width: 14px; height: 14px;" aria-hidden="true"></i>
+<i data-lucide="hard-drive" class="icon-14" aria-hidden="true"></i>
 <span id="path-output-text">No configurado</span>
 </button>
 </div>
 <div class="config-group">
 <label class="config-label">Ruta de modelos</label>
 <button type="button" class="path-display" id="path-models" data-action="pick-models" aria-label="Elegir Ruta de modelos">
-<i data-lucide="folder" style="width: 14px; height: 14px;" aria-hidden="true"></i>
+<i data-lucide="folder" class="icon-14" aria-hidden="true"></i>
 <span id="path-models-text">No configurado</span>
 </button>
 </div>
 <div class="config-group">
 <label class="config-label">Ruta de VAE</label>
 <button type="button" class="path-display" id="path-vae" data-action="pick-vae" aria-label="Elegir Ruta de VAE">
-<i data-lucide="folder" style="width: 14px; height: 14px;" aria-hidden="true"></i>
+<i data-lucide="folder" class="icon-14" aria-hidden="true"></i>
 <span id="path-vae-text">No configurado</span>
 </button>
 </div>
 <div class="config-group">
 <label class="config-label">Ruta de LLM Encoder</label>
 <button type="button" class="path-display" id="path-llm" data-action="pick-llm" aria-label="Elegir Ruta de LLM Encoder">
-<i data-lucide="folder" style="width: 14px; height: 14px;" aria-hidden="true"></i>
+<i data-lucide="folder" class="icon-14" aria-hidden="true"></i>
 <span id="path-llm-text">No configurado</span>
 </button>
 </div>
 <div class="config-group">
 <label class="config-label">Ruta de LoRA</label>
 <button type="button" class="path-display" id="path-lora" data-action="pick-lora" aria-label="Elegir Ruta de LoRA">
-<i data-lucide="folder" style="width: 14px; height: 14px;" aria-hidden="true"></i>
+<i data-lucide="folder" class="icon-14" aria-hidden="true"></i>
 <span id="path-lora-text">No configurado</span>
 </button>
 </div>
 <div class="config-group">
 <label class="config-label">Ruta de LLM Vision</label>
 <button type="button" class="path-display" id="path-llm-vision" data-action="pick-llm-vision" aria-label="Elegir Ruta de LLM Vision">
-<i data-lucide="eye" style="width: 14px; height: 14px;" aria-hidden="true"></i>
+<i data-lucide="eye" class="icon-14" aria-hidden="true"></i>
 <span id="path-llm-vision-text">No configurado</span>
 </button>
 </div>
 <div class="config-group">
 <label class="config-label">Ruta de CLIP-L</label>
 <button type="button" class="path-display" id="path-clip-l" data-action="pick-clip-l" aria-label="Elegir Ruta de CLIP-L">
-<i data-lucide="folder" style="width: 14px; height: 14px;" aria-hidden="true"></i>
+<i data-lucide="folder" class="icon-14" aria-hidden="true"></i>
 <span id="path-clip-l-text">No configurado</span>
 </button>
 </div>
 <div class="config-group">
 <label class="config-label">Ruta de CLIP-G</label>
 <button type="button" class="path-display" id="path-clip-g" data-action="pick-clip-g" aria-label="Elegir Ruta de CLIP-G">
-<i data-lucide="folder" style="width: 14px; height: 14px;" aria-hidden="true"></i>
+<i data-lucide="folder" class="icon-14" aria-hidden="true"></i>
 <span id="path-clip-g-text">No configurado</span>
 </button>
 </div>
 <div class="config-group">
 <label class="config-label">Ruta de T5XXL</label>
 <button type="button" class="path-display" id="path-t5xxl" data-action="pick-t5xxl" aria-label="Elegir Ruta de T5XXL">
-<i data-lucide="folder" style="width: 14px; height: 14px;" aria-hidden="true"></i>
+<i data-lucide="folder" class="icon-14" aria-hidden="true"></i>
 <span id="path-t5xxl-text">No configurado</span>
 </button>
 </div>
 <div class="config-group">
 <label class="config-label">Ruta de Upscalers</label>
 <button type="button" class="path-display" id="path-upscalers" data-action="pick-upscalers" aria-label="Elegir Ruta de Upscalers">
-<i data-lucide="folder" style="width: 14px; height: 14px;" aria-hidden="true"></i>
+<i data-lucide="folder" class="icon-14" aria-hidden="true"></i>
 <span id="path-upscalers-text">No configurado</span>
 </button>
 </div>
@@ -297,8 +297,8 @@
 <button id="btn-edit-size-quarter" class="btn-secondary size-btn" data-factor="0.25" disabled>25%</button>
 </div>
 </div>
-<p class="input-hint" style="opacity:0.8; line-height:1.4; font-size:12px; display:flex; align-items:center; gap:6px; margin-top:0.5rem;">
-<i data-lucide="lightbulb" style="width:14px; height:14px;"></i>
+<p class="input-hint hint">
+<i data-lucide="lightbulb" class="icon-14" aria-hidden="true"></i>
 Consejo: escribe primero qué <strong>conservar</strong> y luego qué <strong>cambiar/añadir</strong>.
 </p>
 </div>
@@ -461,7 +461,7 @@ EJECUTAR
 <div class="preview-col">
 <div class="canvas-area">
 <div class="canvas-placeholder" id="canvas-placeholder">
-<i data-lucide="image" style="width: 64px; height: 64px;"></i>
+<i data-lucide="image" class="icon-64" aria-hidden="true"></i>
 <p>Vista previa de salida</p>
 </div>
 <img id="preview-img" alt="" />
