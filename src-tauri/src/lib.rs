@@ -1,4 +1,7 @@
+pub mod cli;
 pub mod commands;
+pub mod image;
+pub mod process;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -15,8 +18,8 @@ pub fn run() {
             commands::fs::open_folder,
             commands::inference::run_inference,
             commands::inference::abort_inference,
-            commands::inference::run_upscale,
-            commands::inference::prepare_inpaint_image,
+            commands::upscale::run_upscale,
+            commands::prepare::prepare_inpaint_image,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -1,44 +1,11 @@
 use serde::Deserialize;
-use std::io::{BufRead, BufReader, Cursor};
 use std::path::Path;
-use std::process::{Command, Stdio};
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Mutex;
-use std::time::Duration;
+use std::process::Command;
 use tauri::Emitter;
 
-use exif::{In, Tag};
-use image::DynamicImage;
-
-#[cfg(target_os = "windows")]
-use std::os::windows::process::CommandExt;
-
-#[cfg(target_os = "windows")]
-const CREATE_NO_WINDOW: u32 = 0x08000000;
-
-static CHILD: Mutex<Option<std::process::Child>> = Mutex::new(None);
-static RUNNING: AtomicBool = AtomicBool::new(false);
-
-#[cfg(target_os = "windows")]
-static CHILD_JOB: Mutex<Option<win32job::Job>> = Mutex::new(None);
-
-#[cfg(target_os = "windows")]
-fn assign_child_to_job(child: &std::process::Child) -> Result<(), String> {
-    use std::os::windows::io::AsRawHandle;
-    let job = win32job::Job::create().map_err(|e| e.to_string())?;
-    let mut info = job.query_extended_limit_info().map_err(|e| e.to_string())?;
-    info.limit_kill_on_job_close();
-    job.set_extended_limit_info(&info).map_err(|e| e.to_string())?;
-    job.assign_process(child.as_raw_handle() as isize)
-        .map_err(|e| e.to_string())?;
-    *CHILD_JOB.lock().unwrap() = Some(job);
-    Ok(())
-}
-
-#[cfg(target_os = "windows")]
-fn release_child_job() {
-    *CHILD_JOB.lock().unwrap() = None;
-}
+use crate::cli::builder;
+use crate::image::temp::{save_normalized, TempFiles};
+use crate::process::manager;
 
 #[derive(Deserialize)]
 pub struct InferenceParams {
@@ -91,35 +58,6 @@ pub struct InferenceParams {
     pub mask_image: Option<String>,
 }
 
-fn normalize_orientation(bytes: &[u8]) -> Result<DynamicImage, Box<dyn std::error::Error>> {
-    let orientation = {
-        let mut cursor = Cursor::new(bytes);
-        let exifreader = exif::Reader::new();
-        match exifreader.read_from_container(&mut cursor) {
-            Ok(exif_data) => exif_data
-                .get_field(Tag::Orientation, In::PRIMARY)
-                .and_then(|f| f.value.get_uint(0))
-                .unwrap_or(1),
-            Err(_) => 1,
-        }
-    };
-
-    let img = image::load_from_memory(bytes)?;
-
-    let corrected = match orientation {
-        2 => img.fliph(),
-        3 => img.rotate180(),
-        4 => img.flipv(),
-        5 => img.rotate90().fliph(),
-        6 => img.rotate90(),
-        7 => img.rotate270().fliph(),
-        8 => img.rotate270(),
-        _ => img,
-    };
-
-    Ok(corrected)
-}
-
 fn decode_data_url(data_url: &str) -> Result<Vec<u8>, String> {
     let b64 = data_url
         .split_once(',')
@@ -131,32 +69,8 @@ fn decode_data_url(data_url: &str) -> Result<Vec<u8>, String> {
         .map_err(|e| format!("No se pudo decodificar la máscara: {}", e))
 }
 
-fn cleanup_temp_files(
-    temp_edit: &Option<std::path::PathBuf>,
-    temp_input: &Option<std::path::PathBuf>,
-    temp_mask: &Option<std::path::PathBuf>,
-) {
-    if let Some(temp) = temp_edit {
-        let _ = std::fs::remove_file(temp);
-    }
-    if let Some(temp) = temp_input {
-        let _ = std::fs::remove_file(temp);
-    }
-    if let Some(temp) = temp_mask {
-        let _ = std::fs::remove_file(temp);
-    }
-}
-
 fn resolve_output_dir(base: &Path, has_mask: bool, has_edit: bool, has_input: bool) -> std::path::PathBuf {
-    if has_mask {
-        base.join("inpainting")
-    } else if has_edit {
-        base.join("edit")
-    } else if has_input {
-        base.join("img2img")
-    } else {
-        base.to_path_buf()
-    }
+    builder::resolve_output_dir(base, has_mask, has_edit, has_input)
 }
 
 fn validate_image_params(has_edit: bool, has_input: bool, has_mask: bool) -> Result<(), String> {
@@ -170,45 +84,8 @@ fn validate_image_params(has_edit: bool, has_input: bool, has_mask: bool) -> Res
 }
 
 #[tauri::command]
-pub async fn prepare_inpaint_image(path: String) -> Result<String, String> {
-    tokio::task::spawn_blocking(move || {
-        let bytes = std::fs::read(&path).map_err(|e| e.to_string())?;
-        let orientation = {
-            let mut cursor = Cursor::new(&bytes);
-            let exifreader = exif::Reader::new();
-            exifreader
-                .read_from_container(&mut cursor)
-                .ok()
-                .and_then(|exif_data| {
-                    exif_data
-                        .get_field(Tag::Orientation, In::PRIMARY)
-                        .and_then(|f| f.value.get_uint(0))
-                })
-                .unwrap_or(1)
-        };
-
-        if orientation == 1 {
-            return Ok(path);
-        }
-
-        let corrected = normalize_orientation(&bytes).map_err(|e| e.to_string())?;
-        use std::hash::{Hash, Hasher};
-        let mut hasher = std::collections::hash_map::DefaultHasher::new();
-        path.hash(&mut hasher);
-        let temp_path = std::env::temp_dir().join(format!("sd_frontend_inpaint_{:x}.png", hasher.finish()));
-        corrected.save(&temp_path).map_err(|e| e.to_string())?;
-        Ok(temp_path.to_string_lossy().to_string())
-    })
-    .await
-    .map_err(|e| e.to_string())?
-}
-
-#[tauri::command]
 pub async fn run_inference(app: tauri::AppHandle, params: InferenceParams) -> Result<(), String> {
-    let timestamp = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_secs();
+    let timestamp = builder::now_secs();
 
     let has_mask = params.mask_image.as_ref().is_some_and(|m| !m.is_empty());
     let has_edit_image = params.edit_image.as_ref().is_some_and(|m| !m.is_empty());
@@ -248,67 +125,21 @@ pub async fn run_inference(app: tauri::AppHandle, params: InferenceParams) -> Re
             .arg(Path::new(&params.models_path).join(&params.model));
     }
 
-    if !params.llm.is_empty() {
-        let p = Path::new(&params.llm_path).join(&params.llm);
-        if p.exists() {
-            cmd.arg("--llm").arg(p);
-        }
-    }
-
-    if !params.vae.is_empty() {
-        let p = Path::new(&params.vae_path).join(&params.vae);
-        if p.exists() {
-            cmd.arg("--vae").arg(p);
-        }
-    }
-
+    builder::push_model_arg(&mut cmd, "--llm", &params.llm_path, &params.llm);
+    builder::push_model_arg(&mut cmd, "--vae", &params.vae_path, &params.vae);
     if !params.lora.is_empty() {
         let lora_dir = Path::new(&params.lora_path);
         if lora_dir.exists() {
             cmd.arg("--lora-model-dir").arg(lora_dir);
         }
     }
+    builder::push_model_arg(&mut cmd, "--llm_vision", &params.llm_vision_path, &params.llm_vision);
+    builder::push_model_arg(&mut cmd, "--clip_l", &params.clip_l_path, &params.clip_l);
+    builder::push_model_arg(&mut cmd, "--clip_g", &params.clip_g_path, &params.clip_g);
+    builder::push_model_arg(&mut cmd, "--t5xxl", &params.t5xxl_path, &params.t5xxl);
 
-    if !params.llm_vision.is_empty() {
-        let p = Path::new(&params.llm_vision_path).join(&params.llm_vision);
-        if p.exists() {
-            cmd.arg("--llm_vision").arg(p);
-        }
-    }
-
-    if !params.clip_l.is_empty() {
-        let p = Path::new(&params.clip_l_path).join(&params.clip_l);
-        if p.exists() {
-            cmd.arg("--clip_l").arg(p);
-        }
-    }
-
-    if !params.clip_g.is_empty() {
-        let p = Path::new(&params.clip_g_path).join(&params.clip_g);
-        if p.exists() {
-            cmd.arg("--clip_g").arg(p);
-        }
-    }
-
-    if !params.t5xxl.is_empty() {
-        let p = Path::new(&params.t5xxl_path).join(&params.t5xxl);
-        if p.exists() {
-            cmd.arg("--t5xxl").arg(p);
-        }
-    }
-
-    let mut prompt = params.prompt.clone();
-    if !params.lora.is_empty() {
-        let lora_name = Path::new(&params.lora)
-            .file_stem()
-            .and_then(|s| s.to_str())
-            .unwrap_or(&params.lora);
-        prompt.push_str(&format!(" <lora:{}:{}>", lora_name, params.lora_weight));
-    }
-
-    cmd.arg("-p")
-        .arg(&prompt)
-        .arg("-n")
+    builder::push_prompt(&mut cmd, &params.prompt, &params.lora, params.lora_weight);
+    cmd.arg("-n")
         .arg(&params.negative_prompt)
         .arg("-W")
         .arg(params.width.to_string())
@@ -382,317 +213,78 @@ pub async fn run_inference(app: tauri::AppHandle, params: InferenceParams) -> Re
         }
     }
 
-    let temp_edit = if let Some(ref edit_image) = params.edit_image {
-        let bytes = std::fs::read(edit_image).map_err(|e| e.to_string())?;
-        let corrected = normalize_orientation(&bytes).map_err(|e| e.to_string())?;
-        let temp_path = output_dir.join(format!("temp_edit_{}.png", timestamp));
-        corrected.save(&temp_path).map_err(|e| e.to_string())?;
-        cmd.arg("-r").arg(&temp_path);
-        Some(temp_path)
-    } else {
-        None
-    };
+    let mut temps = TempFiles::new();
 
-    let temp_input = if let Some(ref input_image) = params.input_image {
-        let bytes = std::fs::read(input_image).map_err(|e| {
-            cleanup_temp_files(&temp_edit, &None, &None);
-            e.to_string()
-        })?;
-        let corrected = normalize_orientation(&bytes).map_err(|e| {
-            cleanup_temp_files(&temp_edit, &None, &None);
-            e.to_string()
-        })?;
+    if let Some(ref edit_image) = params.edit_image {
+        let temp_path = output_dir.join(format!("temp_edit_{}.png", timestamp));
+        save_normalized(edit_image, &temp_path)?;
+        cmd.arg("-r").arg(&temp_path);
+        temps.edit = Some(temp_path);
+    }
+
+    if let Some(ref input_image) = params.input_image {
         let temp_path = output_dir.join(format!("temp_input_{}.png", timestamp));
-        if let Err(e) = corrected.save(&temp_path) {
-            cleanup_temp_files(&temp_edit, &None, &None);
-            return Err(e.to_string());
-        }
+        save_normalized(input_image, &temp_path)?;
         cmd.arg("-i").arg(&temp_path);
-        Some(temp_path)
-    } else {
-        None
-    };
+        temps.input = Some(temp_path);
+    }
     if has_input_image {
         if let Some(strength) = params.strength {
             cmd.arg("--strength").arg(strength.to_string());
         }
     }
 
-    let temp_mask = if has_mask {
-        let mask_bytes = match decode_data_url(params.mask_image.as_ref().unwrap()) {
-            Ok(b) => b,
-            Err(e) => {
-                cleanup_temp_files(&temp_edit, &temp_input, &None);
-                return Err(e);
-            }
-        };
-        let mask_img = match image::load_from_memory(&mask_bytes) {
-            Ok(img) => img,
-            Err(e) => {
-                cleanup_temp_files(&temp_edit, &temp_input, &None);
-                return Err(format!("No se pudo leer la máscara: {}", e));
-            }
-        };
+    if has_mask {
+        let mask_bytes = decode_data_url(params.mask_image.as_ref().unwrap())?;
+        let mask_img = image::load_from_memory(&mask_bytes)
+            .map_err(|e| format!("No se pudo leer la máscara: {}", e))?;
         let mask_path = output_dir.join(format!("temp_mask_{}.png", timestamp));
-        if let Err(e) = mask_img.save(&mask_path) {
-            cleanup_temp_files(&temp_edit, &temp_input, &None);
-            return Err(e.to_string());
-        }
+        mask_img.save(&mask_path).map_err(|e| e.to_string())?;
         cmd.arg("--mask").arg(&mask_path);
-        Some(mask_path)
-    } else {
-        None
-    };
-
-    cmd.stdout(Stdio::piped()).stderr(Stdio::piped());
-
-    #[cfg(target_os = "windows")]
-    cmd.creation_flags(CREATE_NO_WINDOW);
-
-    let mut child = match cmd.spawn() {
-        Ok(c) => c,
-        Err(e) => {
-            cleanup_temp_files(&temp_edit, &temp_input, &temp_mask);
-            return Err(format!("No se pudo lanzar sd-cli: {}", e));
-        }
-    };
-
-    #[cfg(target_os = "windows")]
-    if let Err(e) = assign_child_to_job(&child) {
-        let _ = child.kill();
-        cleanup_temp_files(&temp_edit, &temp_input, &temp_mask);
-        return Err(e);
+        temps.mask = Some(mask_path);
     }
 
-    let stdout = child.stdout.take();
-    let stderr = child.stderr.take();
+    let (status, was_running) = manager::spawn_sd_process(cmd, &app).map_err(|e| e.to_string())?;
 
-    RUNNING.store(true, Ordering::SeqCst);
-    *CHILD.lock().unwrap() = Some(child);
-
-    let app_stdout = app.clone();
-    let app_stderr = app.clone();
-
-    let t_stdout = std::thread::spawn(move || {
-        if let Some(stdout) = stdout {
-            let reader = BufReader::new(stdout);
-            for line in reader.lines().flatten() {
-                if !RUNNING.load(Ordering::SeqCst) {
-                    break;
-                }
-                let _ = app_stdout.emit("console-line", &line);
-            }
-        }
-    });
-
-    let t_stderr = std::thread::spawn(move || {
-        if let Some(stderr) = stderr {
-            let reader = BufReader::new(stderr);
-            for line in reader.lines().flatten() {
-                if !RUNNING.load(Ordering::SeqCst) {
-                    break;
-                }
-                let _ = app_stderr.emit("console-line", &line);
-            }
-        }
-    });
-
-    let status = loop {
-        {
-            let mut guard = CHILD.lock().unwrap();
-            match guard.as_mut() {
-                Some(child) => match child.try_wait() {
-                    Ok(Some(exit)) => break Ok(exit),
-                    Ok(None) => {}
-                    Err(e) => break Err(e.to_string()),
-                },
-                None => break Err("No hay proceso hijo".to_string()),
-            }
-        }
-        std::thread::sleep(Duration::from_secs(1));
-    };
-
-    let was_running = RUNNING.swap(false, Ordering::SeqCst);
-    *CHILD.lock().unwrap() = None;
-    #[cfg(target_os = "windows")]
-    release_child_job();
-
-    let _ = t_stdout.join();
-    let _ = t_stderr.join();
+    // Keep temps alive until after spawn; Drop will clean on any return
+    let _keep = &temps;
 
     if !was_running {
-        cleanup_temp_files(&temp_edit, &temp_input, &temp_mask);
         let _ = app.emit("console-line", "[ABORTADO] Inferencia cancelada.");
         let _ = app.emit("inference-aborted", ());
         return Ok(());
     }
 
-    match status {
-        Ok(s) if s.success() => {
-            let prefix = format!("gen_{}", timestamp);
-            let out_dir = &output_dir;
-            let mut files: Vec<String> = Vec::new();
+    if status.success() {
+        let prefix = format!("gen_{}", timestamp);
+        let out_dir = &output_dir;
+        let mut files: Vec<String> = Vec::new();
 
-            if let Ok(entries) = std::fs::read_dir(out_dir) {
-                for entry in entries.flatten() {
-                    let name = entry.file_name();
-                    let name_str = name.to_string_lossy();
-                    if name_str.starts_with(&prefix) && name_str.ends_with(".png") {
-                        files.push(entry.path().to_string_lossy().to_string());
-                    }
+        if let Ok(entries) = std::fs::read_dir(out_dir) {
+            for entry in entries.flatten() {
+                let name = entry.file_name();
+                let name_str = name.to_string_lossy();
+                if name_str.starts_with(&prefix) && name_str.ends_with(".png") {
+                    files.push(entry.path().to_string_lossy().to_string());
                 }
             }
-
-            files.sort();
-            if files.is_empty() {
-                files.push(output_file);
-            }
-
-            cleanup_temp_files(&temp_edit, &temp_input, &temp_mask);
-
-            let _ = app.emit("inference-done", &files);
-            Ok(())
         }
-        Ok(s) => {
-            cleanup_temp_files(&temp_edit, &temp_input, &temp_mask);
-            Err(format!("sd-cli terminó con código {:?}", s.code()))
+
+        files.sort();
+        if files.is_empty() {
+            files.push(output_file);
         }
-        Err(e) => {
-            cleanup_temp_files(&temp_edit, &temp_input, &temp_mask);
-            Err(e)
-        }
+
+        let _ = app.emit("inference-done", &files);
+        Ok(())
+    } else {
+        Err(format!("sd-cli terminó con código {:?}", status.code()))
     }
 }
 
 #[tauri::command]
 pub async fn abort_inference(app: tauri::AppHandle) -> Result<(), String> {
-    RUNNING.store(false, Ordering::SeqCst);
-    let mut guard = CHILD.lock().unwrap();
-    if let Some(child) = guard.as_mut() {
-        let _ = child.kill();
-        let _ = app.emit("console-line", "[ABORTADO] Terminando proceso...");
-    }
-    Ok(())
-}
-
-#[tauri::command]
-pub async fn run_upscale(
-    app: tauri::AppHandle,
-    sd_path: String,
-    output_path: String,
-    upscalers_path: String,
-    model: String,
-    input_image: String,
-) -> Result<(), String> {
-    let scaled_dir = Path::new(&output_path).join("scaled");
-    if !scaled_dir.exists() {
-        std::fs::create_dir_all(&scaled_dir).map_err(|e| e.to_string())?;
-    }
-
-    let timestamp = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_secs();
-    let output_file = scaled_dir.join(format!("scaled_{}.png", timestamp));
-
-    let sd_bin = Path::new(&sd_path).join(format!("sd-cli.{}", std::env::consts::EXE_EXTENSION));
-
-    let upscale_model = Path::new(&upscalers_path).join(&model);
-
-    let mut cmd = Command::new(&sd_bin);
-    cmd.arg("--mode")
-        .arg("upscale")
-        .arg("--upscale-model")
-        .arg(upscale_model)
-        .arg("-i")
-        .arg(&input_image)
-        .arg("-o")
-        .arg(&output_file);
-
-    #[cfg(target_os = "windows")]
-    cmd.creation_flags(CREATE_NO_WINDOW);
-
-    let mut child = cmd
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .map_err(|e| e.to_string())?;
-
-    #[cfg(target_os = "windows")]
-    if let Err(e) = assign_child_to_job(&child) {
-        let _ = child.kill();
-        return Err(e);
-    }
-
-    let stdout = child.stdout.take();
-    let stderr = child.stderr.take();
-
-    RUNNING.store(true, Ordering::SeqCst);
-    *CHILD.lock().unwrap() = Some(child);
-
-    let app_stdout = app.clone();
-    let app_stderr = app.clone();
-
-    let t_stdout = std::thread::spawn(move || {
-        if let Some(stdout) = stdout {
-            let reader = BufReader::new(stdout);
-            for line in reader.lines().flatten() {
-                if !RUNNING.load(Ordering::SeqCst) {
-                    break;
-                }
-                let _ = app_stdout.emit("console-line", &line);
-            }
-        }
-    });
-
-    let t_stderr = std::thread::spawn(move || {
-        if let Some(stderr) = stderr {
-            let reader = BufReader::new(stderr);
-            for line in reader.lines().flatten() {
-                if !RUNNING.load(Ordering::SeqCst) {
-                    break;
-                }
-                let _ = app_stderr.emit("console-line", &line);
-            }
-        }
-    });
-
-    let status = loop {
-        {
-            let mut guard = CHILD.lock().unwrap();
-            match guard.as_mut() {
-                Some(child) => match child.try_wait() {
-                    Ok(Some(exit)) => break Ok(exit),
-                    Ok(None) => {}
-                    Err(e) => break Err(e.to_string()),
-                },
-                None => break Err("No hay proceso hijo".to_string()),
-            }
-        }
-        std::thread::sleep(Duration::from_secs(1));
-    };
-
-    let was_running = RUNNING.swap(false, Ordering::SeqCst);
-    *CHILD.lock().unwrap() = None;
-    #[cfg(target_os = "windows")]
-    release_child_job();
-
-    let _ = t_stdout.join();
-    let _ = t_stderr.join();
-
-    if !was_running {
-        let _ = app.emit("console-line", "[ABORTADO] Upscale cancelado.");
-        return Ok(());
-    }
-
-    match status {
-        Ok(s) if s.success() => {
-            let _ = app.emit("upscale-done", output_file.to_string_lossy().to_string());
-            Ok(())
-        }
-        Ok(s) => Err(format!("sd-cli terminó con código {:?}", s.code())),
-        Err(e) => Err(e),
-    }
+    manager::abort_process(&app)
 }
 
 #[cfg(test)]
