@@ -119,6 +119,39 @@ nav {
     text-overflow: ellipsis;
 }
 
+button.path-display {
+    appearance: none;
+    font: inherit;
+    text-align: left;
+    width: 100%;
+    cursor: pointer;
+}
+
+button.path-display:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+output.console-area {
+    display: block;
+}
+
+form#params-form {
+    margin: 0;
+}
+
+fieldset {
+    border: 0;
+    padding: 0;
+    margin: 0;
+    min-width: 0;
+}
+
+fieldset legend {
+    padding: 0;
+    margin-bottom: .5rem;
+}
+
 /* Main Content */
 main {
     flex-grow: 1;
