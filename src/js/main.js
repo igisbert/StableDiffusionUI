@@ -1,3 +1,4 @@
+import '@fontsource-variable/geist';
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 import { createIcons, icons } from "lucide";
