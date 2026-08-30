@@ -14,7 +14,7 @@
 </div>
 </div>
 <nav>
-<label class="config-label">Preajustes</label>
+<label for="select-preset" class="config-label">Preajustes</label>
 <div class="presets-section">
 <div class="presets-load">
 <select id="select-preset">
@@ -27,11 +27,12 @@
 </div>
 <div class="presets-divider"></div>
 <div class="presets-save">
+<label for="input-preset-name" class="sr-only">Nombre del nuevo preajuste</label>
 <input id="input-preset-name" type="text" placeholder="Nombre del nuevo preajuste…" />
 <button id="btn-save-preset" class="btn-secondary">Guardar</button>
 </div>
 </div>
-<label class="config-label" style="margin-top: 32px;">Prompts</label>
+<label for="select-prompt" class="config-label" style="margin-top: 32px;">Prompts</label>
 <div class="presets-section">
 <div class="presets-load">
 <select id="select-prompt">
@@ -44,13 +45,14 @@
 </div>
 <div class="presets-divider"></div>
 <div class="presets-save">
+<label for="input-prompt-name" class="sr-only">Nombre del nuevo prompt</label>
 <input id="input-prompt-name" type="text" placeholder="Nombre del nuevo prompt…" />
 <button id="btn-save-prompt" class="btn-secondary">Guardar</button>
 </div>
 </div>
 </nav>
 <div class="sidebar-footer">
-<button id="btn-toggle-paths" class="btn-toggle-section"><i data-lucide="folder-cog"></i> Configuración de rutas <i data-lucide="chevron-up" class="chevron"></i></button>
+<button id="btn-toggle-paths" class="btn-toggle-section" aria-expanded="false" aria-controls="paths-collapse"><i data-lucide="folder-cog" aria-hidden="true"></i> Configuración de rutas <i data-lucide="chevron-up" class="chevron" aria-hidden="true"></i></button>
 <div class="paths-collapse" id="paths-collapse">
 <div class="paths-collapse-inner">
 <div class="config-group">
@@ -137,7 +139,7 @@
 <main>
 <header>
 <div class="brand-box">
-<span class="brand-name">StableDiffusionCppUI</span>
+<h1 class="brand-name">StableDiffusionCppUI</h1>
 </div>
 <div class="header-actions">
 <button id="btn-refresh" class="refresh-btn"><i data-lucide="refresh-cw" aria-hidden="true"></i> Actualizar recursos</button>
@@ -197,7 +199,7 @@
 </label>
 </fieldset>
 <div class="image-input-section">
-<button id="btn-toggle-image-input" class="btn-toggle-section"><i data-lucide="image"></i> Imagen como input <i data-lucide="chevron-down" class="chevron"></i></button>
+<button id="btn-toggle-image-input" class="btn-toggle-section" aria-expanded="false" aria-controls="image-input-content"><i data-lucide="image" aria-hidden="true"></i> Imagen como input <i data-lucide="chevron-down" class="chevron" aria-hidden="true"></i></button>
 <div class="image-input-content" id="image-input-content">
 <div class="image-op-group">
 <label class="input-label">Selecciona una imagen</label>
@@ -250,7 +252,7 @@
 <div id="img2img-options" class="op-option-group" style="display:none">
 <div class="img2img-strength-row">
 <div class="img2img-strength-input">
-<label class="input-label">Strength <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
+<label for="input-strength" class="input-label">Strength <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
 <input id="input-strength" type="number" value="0.5" min="0" max="1" step="0.05"/>
 </div>
 <div class="img2img-size-buttons">
@@ -271,7 +273,7 @@
 </div>
 <div class="img2img-strength-row">
 <div class="img2img-strength-input">
-<label class="input-label">Strength <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
+<label for="input-inpaint-strength" class="input-label">Strength <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
 <input id="input-inpaint-strength" type="number" value="0.5" min="0" max="1" step="0.05"/>
 </div>
 <div class="img2img-size-buttons">
@@ -306,69 +308,69 @@ Consejo: escribe primero qué <strong>conservar</strong> y luego qué <strong>ca
 </div>
 <div class="prompt-area">
 <div class="prompt-header">
-<label class="input-label">Prompt <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
+<label for="input-prompt" class="input-label">Prompt <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
 </div>
 <div class="prompt-container">
 <textarea id="input-prompt" placeholder="Introduce el texto descriptivo para la generación de imagen..."></textarea>
-<button id="btn-enhance" class="btn-enhance" style="display:none" title="Mejorar prompt con IA"><i data-lucide="sparkles"></i></button>
+<button id="btn-enhance" class="btn-enhance" style="display:none" title="Mejorar prompt con IA"><i data-lucide="sparkles" aria-hidden="true"></i></button>
 </div>
 </div>
 <div class="negative-prompt">
 <div class="prompt-header">
-<label class="input-label">Negative Prompt <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
+<label for="input-negative" class="input-label">Negative Prompt <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
 </div>
 <textarea id="input-negative" placeholder="Elementos a evitar..."></textarea>
 </div>
 <div class="params-card">
 <div class="params-grid">
 <div class="input-group">
-<label class="input-label">Ancho <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
+<label for="input-width" class="input-label">Ancho <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
 <input id="input-width" type="number" value="512" min="8"/>
 </div>
 <div class="input-group">
-<label class="input-label">Alto <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
+<label for="input-height" class="input-label">Alto <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
 <input id="input-height" type="number" value="512" min="8"/>
 </div>
 <div class="input-group">
-<label class="input-label">Steps <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
+<label for="input-steps" class="input-label">Steps <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
 <input id="input-steps" type="number" value="15"/>
 </div>
 <div class="input-group">
-<label class="input-label">CFG Scale <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
+<label for="input-cfg" class="input-label">CFG Scale <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
 <input id="input-cfg" step="0.5" type="number" value="1"/>
 </div>
 <div class="input-group">
-<label class="input-label">Guidance <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
+<label for="input-guidance" class="input-label">Guidance <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
 <input id="input-guidance" step="0.1" type="number" value="1"/>
 </div>
 <div class="input-group">
-<label class="input-label">Seed <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
+<label for="input-seed" class="input-label">Seed <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
 <input id="input-seed" type="number" value="-1"/>
 </div>
 <div class="input-group">
-<label class="input-label">Lote <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
+<label for="input-batch-count" class="input-label">Lote <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
 <input id="input-batch-count" type="number" value="1" min="1" max="8"/>
 </div>
 <div class="input-group">
-<label class="input-label">VRAM máx. <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
+<label for="input-max-vram" class="input-label">VRAM máx. <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
 <input id="input-max-vram" step="0.1" type="number" value="-1"/>
 </div>
 <div class="input-group">
-<label class="input-label">Hilos <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
+<label for="input-threads" class="input-label">Hilos <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
 <input id="input-threads" type="number" value="-1" min="-1" max="32" step="1"/>
 </div>
 <div class="input-group">
-<label class="input-label">Peso LoRA <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
+<label for="input-lora-weight" class="input-label">Peso LoRA <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
 <input id="input-lora-weight" step="0.1" type="number" min="0" max="2" value="1" disabled/>
 </div>
 </div>
 <div class="sampler-row">
 <div class="input-group">
-<label class="input-label">Sampler <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
+<label for="select-sampler" class="input-label">Sampler <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
 <select id="select-sampler"></select>
 </div>
 <div class="input-group">
-<label class="input-label">Scheduler <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
+<label for="select-scheduler" class="input-label">Scheduler <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
 <select id="select-scheduler"></select>
 </div>
 </div>
@@ -462,7 +464,7 @@ EJECUTAR
 <i data-lucide="image" style="width: 64px; height: 64px;"></i>
 <p>Vista previa de salida</p>
 </div>
-<img id="preview-img" />
+<img id="preview-img" alt="" />
 <div id="preview-gallery" class="preview-gallery"></div>
 </div>
 <div class="actions-bar" id="actions-bar">
@@ -482,17 +484,19 @@ EJECUTAR
 </div>
 </div>
 </main>
-<dialog id="inpaint-dialog" class="inpaint-dialog">
+<dialog id="inpaint-dialog" class="inpaint-dialog" aria-labelledby="inpaint-title">
+<h2 id="inpaint-title" class="sr-only">Editar máscara</h2>
 <div class="inpaint-toolbar">
 <div class="inpaint-tool-group">
-<i data-lucide="brush"></i>
+<i data-lucide="brush" aria-hidden="true"></i>
+<label for="input-brush-size" class="sr-only">Tamaño del pincel</label>
 <input id="input-brush-size" type="range" min="1" max="20" step="0.5" value="5" title="Tamaño del pincel (% del lado menor)"/>
 <span id="brush-size-value">24</span>
 </div>
 <div class="inpaint-tool-select" id="inpaint-tool-select">
-<button id="btn-tool-brush" class="active" type="button" title="Pincel"><i data-lucide="brush"></i></button>
-<button id="btn-tool-rect" type="button" title="Rectángulo"><i data-lucide="square"></i></button>
-<button id="btn-tool-ellipse" type="button" title="Elipse"><i data-lucide="circle"></i></button>
+<button id="btn-tool-brush" class="active" type="button" title="Pincel" aria-pressed="true"><i data-lucide="brush" aria-hidden="true"></i></button>
+<button id="btn-tool-rect" type="button" title="Rectángulo" aria-pressed="false"><i data-lucide="square" aria-hidden="true"></i></button>
+<button id="btn-tool-ellipse" type="button" title="Elipse" aria-pressed="false"><i data-lucide="circle" aria-hidden="true"></i></button>
 </div>
 <div class="inpaint-mode-toggle" id="inpaint-mode-toggle">
 <button id="btn-mode-paint" class="active" type="button">Pintar</button>
@@ -503,7 +507,7 @@ EJECUTAR
 <button id="btn-clear-mask" class="btn-secondary" disabled>Limpiar</button>
 <button id="btn-apply-mask" class="run-btn">Listo</button>
 </div>
-<div class="inpaint-canvas-wrap" id="inpaint-canvas-wrap">
+<div class="inpaint-canvas-wrap" id="inpaint-canvas-wrap" role="img" aria-label="Lienzo de máscara de inpainting">
 <div class="inpaint-canvas-stack">
 <canvas id="inpaint-canvas-base"></canvas>
 <canvas id="inpaint-canvas-overlay"></canvas>
@@ -515,9 +519,9 @@ EJECUTAR
 </div>
 <p class="inpaint-hint">Pinta sobre la zona que quieres regenerar. Lo pintado en rojo se reemplazará.</p>
 </dialog>
-<dialog id="dialog-gemini" class="gemini-dialog">
+<dialog id="dialog-gemini" class="gemini-dialog" aria-labelledby="gemini-title">
 <div class="dialog-header">
-<h3>Configuración Gemini</h3>
+<h3 id="gemini-title">Configuración Gemini</h3>
 <button id="btn-close-gemini" class="dialog-close"><i data-lucide="x" aria-hidden="true"></i></button>
 </div>
 <div class="dialog-body">

@@ -55,7 +55,8 @@ export function initImageInput({ onImageChange } = {}) {
   })
 
   btnToggleImageInput.addEventListener('click', () => {
-    btnToggleImageInput.classList.toggle('open')
+    const open = btnToggleImageInput.classList.toggle('open')
+    btnToggleImageInput.setAttribute('aria-expanded', String(open))
     imageInputContent.classList.toggle('open')
   })
 

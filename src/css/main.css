@@ -152,6 +152,18 @@ fieldset legend {
     margin-bottom: .5rem;
 }
 
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
 /* Main Content */
 main {
     flex-grow: 1;
@@ -598,6 +610,16 @@ textarea {
 
 .toggle-row:hover .input-label {
     color: var(--on-surface);
+}
+
+.toggle-row:has(input:disabled) {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.toggle-row:has(input:disabled) .slider,
+.toggle-row:has(input:disabled) .switch {
+    cursor: not-allowed;
 }
 
 .switch {

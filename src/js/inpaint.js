@@ -251,7 +251,11 @@ export function setBrushMode(mode) {
 export function setTool(selectedTool) {
   tool = selectedTool
   ;['brush', 'rect', 'ellipse'].forEach((name) => {
-    document.getElementById(`btn-tool-${name}`).classList.toggle('active', name === tool)
+    const btn = document.getElementById(`btn-tool-${name}`)
+    if (!btn) return
+    const isActive = name === tool
+    btn.classList.toggle('active', isActive)
+    btn.setAttribute('aria-pressed', String(isActive))
   })
 }
 

@@ -6,6 +6,7 @@ export async function initPathsPanel() {
 
   async function applyPathsPanelOpen(open) {
     btnTogglePaths.classList.toggle('open', open)
+    btnTogglePaths.setAttribute('aria-expanded', String(open))
     pathsCollapse.style.height = open ? 'auto' : '0px'
   }
 
@@ -13,6 +14,7 @@ export async function initPathsPanel() {
 
   btnTogglePaths.addEventListener('click', () => {
     const open = btnTogglePaths.classList.toggle('open')
+    btnTogglePaths.setAttribute('aria-expanded', String(open))
     setPathsPanelOpen(open)
     if (open) {
       pathsCollapse.style.height = `${pathsCollapse.scrollHeight}px`
