@@ -250,9 +250,12 @@ header {
     background-color: var(--surface);
 }
 
-.refresh-btn svg {
+:is(.refresh-btn, button.btn-notification, .btn-toggle-section, .details-chevron, .btn-icon, .btn-enhance) :is(svg, i[data-lucide]) {
     width: 14px;
     height: 14px;
+}
+
+.refresh-btn svg {
     flex-shrink: 0;
 }
 
@@ -270,11 +273,6 @@ button.btn-notification {
     display: flex;
     align-items: center;
     justify-content: center;
-}
-
-button.btn-notification svg {
-    width: 14px;
-    height: 14px;
 }
 
 button.btn-notification.active {
@@ -410,11 +408,6 @@ input[type="number"]:focus {
 
 .btn-toggle-section:hover {
     color: var(--on-surface);
-}
-
-.btn-toggle-section svg {
-    width: 14px;
-    height: 14px;
 }
 
 .btn-toggle-section .chevron {
@@ -741,8 +734,6 @@ button:disabled {
 }
 
 .custom-flags-section summary .details-chevron {
-    width: 14px;
-    height: 14px;
     transition: transform 0.2s ease;
 }
 
@@ -928,6 +919,11 @@ i[data-lucide] {
 }
 
 /* Custom Scrollbar */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #444 var(--surface-raised);
+}
+
 ::-webkit-scrollbar {
     width: 4px;
     height: 4px;
@@ -1236,11 +1232,6 @@ i[data-lucide] {
     display: flex;
 }
 
-.btn-icon svg {
-    width: 14px;
-    height: 14px;
-}
-
 .model-type-row {
     display: flex;
     align-items: center;
@@ -1336,11 +1327,6 @@ i[data-lucide] {
 .btn-enhance:hover:not(:disabled) {
     background-color: var(--surface);
     color: var(--on-surface);
-}
-
-.btn-enhance svg {
-    width: 14px;
-    height: 14px;
 }
 
 .btn-enhance:disabled {
