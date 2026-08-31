@@ -98,11 +98,11 @@
 
 .console-area {
     height: 200px;
-    background-color: #080808;
+    background-color: var(--surface-elevated);
     border: var(--border);
     border-radius: var(--radius);
     padding: 16px;
-    font-family: monospace;
+    font-family: var(--font-mono);
     font-size: var(--text-small);
     color: var(--on-surface-variant);
     overflow-y: auto;
@@ -147,7 +147,7 @@
     padding: 12px 16px;
     border: var(--border);
     border-radius: var(--radius);
-    background-color: #080808;
+    background-color: var(--surface);
 }
 
 .actions-bar .btn-outline {

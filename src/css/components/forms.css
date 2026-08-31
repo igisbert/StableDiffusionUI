@@ -250,7 +250,7 @@ input:checked + .slider:before {
     border-top: 1px solid var(--outline);
     border-radius: 0 0 4px 4px;
     padding: 8px 12px;
-    font-family: monospace;
+    font-family: var(--font-mono);
     font-size: var(--text-small);
     resize: vertical;
     background-color: var(--surface-elevated);

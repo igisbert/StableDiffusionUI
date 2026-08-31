@@ -12,6 +12,7 @@
     --primary-muted: rgba(255, 148, 254, 0.14);
     --primary-soft: rgba(255, 148, 254, 0.07);
     --font-main: 'Geist', sans-serif;
+    --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
     --text-label: 10.5px;
     --tracking-label: 0.06em;
     --font-weight-semibold: 600;
