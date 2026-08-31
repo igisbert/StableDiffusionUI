@@ -1,0 +1,145 @@
+/* Main Content + Header */
+main {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow-y: auto;
+}
+
+header {
+    min-height: var(--header-height);
+    border-bottom: 1px solid var(--outline);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 24px;
+    position: sticky;
+    top: 0;
+    background-color: var(--background);
+    z-index: 10;
+    gap: var(--space-medium);
+}
+
+.brand-box {
+    display: flex;
+    align-items: center;
+    gap: var(--space-medium);
+    flex-shrink: 0;
+}
+
+.brand-name {
+    font-size: 20px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.version-tag {
+    background-color: var(--surface);
+    color: var(--on-surface-variant);
+    padding: 2px 8px;
+    font-size: var(--text-extra-small);
+    border-radius: 2px;
+    font-weight: 500;
+}
+
+.header-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.refresh-btn {
+    background: none;
+    border: var(--border);
+    color: var(--on-surface);
+    padding: 6px 16px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: var(--space-small);
+    font-size: var(--text-medium);
+    white-space: nowrap;
+}
+
+.refresh-btn:hover {
+    background-color: var(--surface);
+}
+
+:is(.refresh-btn, button.btn-notification, .btn-toggle-section, .details-chevron, .btn-icon, .btn-enhance) :is(svg, i[data-lucide]) {
+    width: 14px;
+    height: 14px;
+}
+
+.refresh-btn svg {
+    flex-shrink: 0;
+}
+
+.header-separator {
+    width: 1px;
+    height: 20px;
+    background: var(--outline);
+    margin: 0 4px;
+    flex-shrink: 0;
+}
+
+button.btn-notification {
+    aspect-ratio: 1;
+    padding: 6px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+button.btn-notification.active {
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+button.btn-notification.active svg {
+    color: var(--primary);
+}
+
+@media (max-width: 1000px) {
+    .refresh-btn span,
+    .refresh-btn:not(.btn-notification) {
+        font-size: 0;
+        gap: 0;
+        padding: 6px;
+        aspect-ratio: 1;
+    }
+    .refresh-btn svg {
+        margin: 0;
+    }
+}
+
+@media (max-width: 900px) {
+    .header-actions {
+        gap: var(--space-medium-small);
+    }
+    .header-separator {
+        margin: 0 2px;
+    }
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    color: var(--on-surface-variant);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: var(--radius);
+    transition: background-color 0.2s;
+}
+
+.icon-btn:hover {
+    background-color: var(--surface);
+    color: var(--on-surface);
+}
+
+.content-wrapper {
+    padding: 32px;
+    width: 100%;
+}

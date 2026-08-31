@@ -1,0 +1,63 @@
+/* Prompt Areas + Enhancer */
+
+.prompt-area {
+    position: relative;
+}
+
+.prompt-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.token-count {
+    font-size: var(--text-extra-small);
+    font-family: monospace;
+    color: rgba(185, 202, 203, 0.4);
+}
+
+.prompt-container {
+    position: relative;
+}
+
+.btn-enhance {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: var(--surface);
+    border: var(--border);
+    border-radius: var(--radius);
+    color: var(--on-surface-variant);
+    cursor: pointer;
+    padding: 4px 8px;
+    display: flex;
+    align-items: center;
+    gap: var(--space-extra-small);
+    font-size: var(--text-small-small);
+    aspect-ratio: 1 / 1;
+}
+
+.btn-enhance:hover:not(:disabled) {
+    background-color: var(--surface);
+    color: var(--on-surface);
+}
+
+.btn-enhance:disabled {
+    opacity: 1;
+    cursor: not-allowed;
+}
+
+.btn-enhance:disabled svg {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.model-select-row {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-medium-small);
+}

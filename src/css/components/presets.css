@@ -1,0 +1,58 @@
+/* Presets */
+
+.presets-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.presets-load {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-medium-small);
+}
+
+.presets-load select {
+    background-color: var(--surface);
+    border: var(--border);
+    color: var(--on-surface);
+    padding: 8px;
+    border-radius: var(--radius);
+    font-family: var(--font-main);
+    font-size: var(--text-medium);
+    width: 100%;
+}
+
+.presets-load-actions {
+    display: flex;
+    gap: var(--space-medium-small);
+}
+
+.presets-load-actions button {
+    flex: 1;
+}
+
+.presets-divider {
+    height: 1px;
+    background-color: var(--outline);
+}
+
+.presets-save {
+    display: flex;
+    gap: var(--space-medium-small);
+}
+
+.presets-save input {
+    flex: 1;
+    background-color: var(--surface);
+    border: var(--border);
+    color: var(--on-surface);
+    padding: 8px;
+    border-radius: var(--radius);
+    font-family: var(--font-main);
+    font-size: var(--text-medium);
+}
+
+.presets-save button {
+    flex-shrink: 0;
+}

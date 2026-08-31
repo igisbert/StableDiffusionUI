@@ -1,0 +1,36 @@
+/* Workspace Layout */
+.model-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-medium);
+    margin-bottom: 32px;
+}
+
+.workspace-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: var(--space-medium);
+}
+
+.controls-col {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.controls-col.busy select,
+.controls-col.busy input,
+.controls-col.busy textarea {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+@media (max-width: 1024px) {
+    .workspace-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .model-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}

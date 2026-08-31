@@ -1,541 +1,1209 @@
-<!DOCTYPE html>
+<!doctype html>
 
-<html lang="es"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>StableDiffusionCppUI</title>
-<link rel="stylesheet" href="css/main.css"/>
-</head>
-<body>
-<aside>
-<div class="sidebar-header">
-<div class="logo-placeholder">
-<img src="assets/128x128@2x.png" alt="Logo" class="sidebar-logo"/>
-</div>
-</div>
-<nav>
-<label for="select-preset" class="config-label">Preajustes</label>
-<div class="presets-section">
-<div class="presets-load">
-<select id="select-preset">
-<option value="">— Seleccionar preajuste —</option>
-</select>
-<div class="presets-load-actions">
-<button id="btn-load-preset" class="btn-secondary">Cargar</button>
-<button id="btn-delete-preset" class="btn-danger">Eliminar</button>
-</div>
-</div>
-<div class="presets-divider"></div>
-<div class="presets-save">
-<label for="input-preset-name" class="sr-only">Nombre del nuevo preajuste</label>
-<input id="input-preset-name" type="text" placeholder="Nombre del nuevo preajuste…" />
-<button id="btn-save-preset" class="btn-secondary">Guardar</button>
-</div>
-</div>
-<label for="select-prompt" class="config-label mt-32">Prompts</label>
-<div class="presets-section">
-<div class="presets-load">
-<select id="select-prompt">
-<option value="">— Seleccionar prompt —</option>
-</select>
-<div class="presets-load-actions">
-<button id="btn-load-prompt" class="btn-secondary">Cargar</button>
-<button id="btn-delete-prompt" class="btn-danger">Eliminar</button>
-</div>
-</div>
-<div class="presets-divider"></div>
-<div class="presets-save">
-<label for="input-prompt-name" class="sr-only">Nombre del nuevo prompt</label>
-<input id="input-prompt-name" type="text" placeholder="Nombre del nuevo prompt…" />
-<button id="btn-save-prompt" class="btn-secondary">Guardar</button>
-</div>
-</div>
-</nav>
-<div class="sidebar-footer">
-<button id="btn-toggle-paths" class="btn-toggle-section" aria-expanded="false" aria-controls="paths-collapse"><i data-lucide="folder-cog" aria-hidden="true"></i> Configuración de rutas <i data-lucide="chevron-up" class="chevron" aria-hidden="true"></i></button>
-<div class="paths-collapse" id="paths-collapse">
-<div class="paths-collapse-inner">
-<div class="config-group">
-<label class="config-label">Ruta de Stable Diffusion cpp</label>
-<button type="button" class="path-display" id="path-sdcpp" data-action="pick-sdcpp" aria-label="Elegir Ruta de Stable Diffusion cpp">
-<i data-lucide="terminal" class="icon-14" aria-hidden="true"></i>
-<span id="path-sdcpp-text">No configurado</span>
-</button>
-</div>
-<div class="config-group">
-<label class="config-label">Ruta de salida</label>
-<button type="button" class="path-display" id="path-output" data-action="pick-output" aria-label="Elegir Ruta de salida">
-<i data-lucide="hard-drive" class="icon-14" aria-hidden="true"></i>
-<span id="path-output-text">No configurado</span>
-</button>
-</div>
-<div class="config-group">
-<label class="config-label">Ruta de modelos</label>
-<button type="button" class="path-display" id="path-models" data-action="pick-models" aria-label="Elegir Ruta de modelos">
-<i data-lucide="folder" class="icon-14" aria-hidden="true"></i>
-<span id="path-models-text">No configurado</span>
-</button>
-</div>
-<div class="config-group">
-<label class="config-label">Ruta de VAE</label>
-<button type="button" class="path-display" id="path-vae" data-action="pick-vae" aria-label="Elegir Ruta de VAE">
-<i data-lucide="folder" class="icon-14" aria-hidden="true"></i>
-<span id="path-vae-text">No configurado</span>
-</button>
-</div>
-<div class="config-group">
-<label class="config-label">Ruta de LLM Encoder</label>
-<button type="button" class="path-display" id="path-llm" data-action="pick-llm" aria-label="Elegir Ruta de LLM Encoder">
-<i data-lucide="folder" class="icon-14" aria-hidden="true"></i>
-<span id="path-llm-text">No configurado</span>
-</button>
-</div>
-<div class="config-group">
-<label class="config-label">Ruta de LoRA</label>
-<button type="button" class="path-display" id="path-lora" data-action="pick-lora" aria-label="Elegir Ruta de LoRA">
-<i data-lucide="folder" class="icon-14" aria-hidden="true"></i>
-<span id="path-lora-text">No configurado</span>
-</button>
-</div>
-<div class="config-group">
-<label class="config-label">Ruta de LLM Vision</label>
-<button type="button" class="path-display" id="path-llm-vision" data-action="pick-llm-vision" aria-label="Elegir Ruta de LLM Vision">
-<i data-lucide="eye" class="icon-14" aria-hidden="true"></i>
-<span id="path-llm-vision-text">No configurado</span>
-</button>
-</div>
-<div class="config-group">
-<label class="config-label">Ruta de CLIP-L</label>
-<button type="button" class="path-display" id="path-clip-l" data-action="pick-clip-l" aria-label="Elegir Ruta de CLIP-L">
-<i data-lucide="folder" class="icon-14" aria-hidden="true"></i>
-<span id="path-clip-l-text">No configurado</span>
-</button>
-</div>
-<div class="config-group">
-<label class="config-label">Ruta de CLIP-G</label>
-<button type="button" class="path-display" id="path-clip-g" data-action="pick-clip-g" aria-label="Elegir Ruta de CLIP-G">
-<i data-lucide="folder" class="icon-14" aria-hidden="true"></i>
-<span id="path-clip-g-text">No configurado</span>
-</button>
-</div>
-<div class="config-group">
-<label class="config-label">Ruta de T5XXL</label>
-<button type="button" class="path-display" id="path-t5xxl" data-action="pick-t5xxl" aria-label="Elegir Ruta de T5XXL">
-<i data-lucide="folder" class="icon-14" aria-hidden="true"></i>
-<span id="path-t5xxl-text">No configurado</span>
-</button>
-</div>
-<div class="config-group">
-<label class="config-label">Ruta de Upscalers</label>
-<button type="button" class="path-display" id="path-upscalers" data-action="pick-upscalers" aria-label="Elegir Ruta de Upscalers">
-<i data-lucide="folder" class="icon-14" aria-hidden="true"></i>
-<span id="path-upscalers-text">No configurado</span>
-</button>
-</div>
-</div>
-</div>
-</div>
-</aside>
-<main>
-<header>
-<div class="brand-box">
-<h1 class="brand-name">StableDiffusionCppUI</h1>
-</div>
-<div class="header-actions">
-<button id="btn-refresh" class="refresh-btn"><i data-lucide="refresh-cw" aria-hidden="true"></i> Actualizar recursos</button>
-<button id="btn-gemini-settings" class="refresh-btn" style="display:none"><i data-lucide="sparkles" aria-hidden="true"></i> Configuración Gemini</button>
-<div class="header-separator"></div>
-<button id="btn-notifications" class="refresh-btn btn-notification" aria-label="Notificaciones"></button>
-</div>
-</header>
-<div class="content-wrapper">
-<!-- Model Selection -->
-<div class="model-grid">
-<div class="input-group">
-<label for="select-model" class="input-label">Modelo</label>
-<select id="select-model"><option value="">Ninguno</option></select>
-</div>
-<div class="input-group">
-<label for="select-llm" class="input-label">LLM Encoder</label>
-<select id="select-llm"><option value="">Ninguno</option></select>
-</div>
-<div class="input-group">
-<label for="select-vae" class="input-label">VAE</label>
-<select id="select-vae"><option value="">Ninguno</option></select>
-</div>
-<div class="input-group">
-<label for="select-lora" class="input-label">LoRA</label>
-<select id="select-lora"><option value="">Ninguno</option></select>
-</div>
-<div class="input-group">
-<label for="select-llm-vision" class="input-label">LLM Vision</label>
-<select id="select-llm-vision"><option value="">Ninguno</option></select>
-</div>
-<div class="input-group">
-<label for="select-clip-l" class="input-label">CLIP-L</label>
-<select id="select-clip-l"><option value="">Ninguno</option></select>
-</div>
-<div class="input-group">
-<label for="select-clip-g" class="input-label">CLIP-G</label>
-<select id="select-clip-g"><option value="">Ninguno</option></select>
-</div>
-<div class="input-group">
-<label for="select-t5xxl" class="input-label">T5XXL</label>
-<select id="select-t5xxl"><option value="">Ninguno</option></select>
-</div>
-</div>
-<div class="workspace-grid">
-<!-- Controls Column -->
-<form id="params-form" class="controls-col" onsubmit="return false">
-<fieldset class="model-type-row">
-<legend class="input-label">Modelo: <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></legend>
-<label class="radio-label">
-<input type="radio" name="model-type" value="diffusion" checked/>
-<span>Difusión (--diffusion-model)</span>
-</label>
-<label class="radio-label">
-<input type="radio" name="model-type" value="monolithic"/>
-<span>Monolítico (-m)</span>
-</label>
-</fieldset>
-<div class="image-input-section">
-<button id="btn-toggle-image-input" class="btn-toggle-section" aria-expanded="false" aria-controls="image-input-content"><i data-lucide="image" aria-hidden="true"></i> Imagen como input <i data-lucide="chevron-down" class="chevron" aria-hidden="true"></i></button>
-<div class="image-input-content" id="image-input-content">
-<div class="image-op-group">
-<label class="input-label">Selecciona una imagen</label>
-<div class="image-input-row image-drop-zone" id="image-drop-zone">
-<button id="btn-select-image" class="btn-secondary">Seleccionar</button>
-<span class="image-input-name" id="image-input-name">Ninguna</span>
-<button id="btn-clear-image" class="btn-icon btn-danger btn-clear-image" title="Quitar imagen"><i data-lucide="x"></i></button>
-</div>
-</div>
-<div class="image-op-group">
-<fieldset class="image-op-fieldset">
-<legend class="input-label">Elige una opción</legend>
-<div class="model-type-row image-op-row">
-<label class="radio-label">
-<input type="radio" name="image-op" value="img2img"/>
-<span>img2img</span>
-</label>
-<label class="radio-label">
-<input type="radio" name="image-op" value="inpainting"/>
-<span>Inpainting</span>
-</label>
-<label class="radio-label">
-<input type="radio" name="image-op" value="image-edit"/>
-<span>Image Edit</span>
-</label>
-<label class="radio-label">
-<input type="radio" name="image-op" value="upscale"/>
-<span>Upscale</span>
-</label>
-<label class="radio-label" id="cancel-op-label" style="display:none">
-<input type="radio" name="image-op" value="cancel"/>
-<span>Cancelar</span>
-</label>
-</div>
-</fieldset>
-<div class="image-op-options" id="image-op-options">
-<div id="upscale-options" class="op-option-group">
-<label class="input-label">Modelo de upscale</label>
-<div id="radio-image-upscale-models" class="radio-upscale-group"></div>
-<div class="run-btn-row">
-<button id="btn-run-upscale" class="run-btn" disabled>
-<i data-lucide="play"></i>
- Ejecutar
-</button>
-<button id="btn-abort-upscale" class="btn-abort" title="Cancelar" hidden>
-<i data-lucide="x"></i>
-</button>
-</div>
-</div>
-<div id="img2img-options" class="op-option-group" style="display:none">
-<div class="img2img-strength-row">
-<div class="img2img-strength-input">
-<label for="input-strength" class="input-label">Strength <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
-<input id="input-strength" type="number" value="0.5" min="0" max="1" step="0.05"/>
-</div>
-<div class="img2img-size-buttons">
-<span class="input-label">Rellenar ancho y alto de la imagen</span>
-<div class="size-btn-group">
-<button id="btn-size-full" class="btn-secondary size-btn" data-factor="1" disabled>100%</button>
-<button id="btn-size-three-quarter" class="btn-secondary size-btn" data-factor="0.75" disabled>75%</button>
-<button id="btn-size-half" class="btn-secondary size-btn" data-factor="0.5" disabled>50%</button>
-<button id="btn-size-quarter" class="btn-secondary size-btn" data-factor="0.25" disabled>25%</button>
-</div>
-</div>
-</div>
-</div>
-<div id="inpainting-options" class="op-option-group" style="display:none">
-<div class="inpaint-op-row">
-<button id="btn-open-inpaint" class="btn-secondary" disabled>Editar máscara</button>
-<span id="inpaint-mask-status" class="inpaint-mask-status">Sin máscara</span>
-</div>
-<div class="img2img-strength-row">
-<div class="img2img-strength-input">
-<label for="input-inpaint-strength" class="input-label">Strength <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
-<input id="input-inpaint-strength" type="number" value="0.5" min="0" max="1" step="0.05"/>
-</div>
-<div class="img2img-size-buttons">
-<span class="input-label">Rellenar ancho y alto de la imagen</span>
-<div class="size-btn-group">
-<button id="btn-inpaint-size-full" class="btn-secondary size-btn" data-factor="1" disabled>100%</button>
-<button id="btn-inpaint-size-three-quarter" class="btn-secondary size-btn" data-factor="0.75" disabled>75%</button>
-<button id="btn-inpaint-size-half" class="btn-secondary size-btn" data-factor="0.5" disabled>50%</button>
-<button id="btn-inpaint-size-quarter" class="btn-secondary size-btn" data-factor="0.25" disabled>25%</button>
-</div>
-</div>
-</div>
-</div>
-<div id="image-edit-options" class="op-option-group" style="display:none">
-<div class="img2img-size-buttons">
-<span class="input-label">Rellenar ancho y alto de la imagen</span>
-<div class="size-btn-group">
-<button id="btn-edit-size-full" class="btn-secondary size-btn" data-factor="1" disabled>100%</button>
-<button id="btn-edit-size-three-quarter" class="btn-secondary size-btn" data-factor="0.75" disabled>75%</button>
-<button id="btn-edit-size-half" class="btn-secondary size-btn" data-factor="0.5" disabled>50%</button>
-<button id="btn-edit-size-quarter" class="btn-secondary size-btn" data-factor="0.25" disabled>25%</button>
-</div>
-</div>
-<p class="input-hint hint">
-<i data-lucide="lightbulb" class="icon-14" aria-hidden="true"></i>
-Consejo: escribe primero qué <strong>conservar</strong> y luego qué <strong>cambiar/añadir</strong>.
-</p>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="prompt-area">
-<div class="prompt-header">
-<label for="input-prompt" class="input-label">Prompt <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
-</div>
-<div class="prompt-container">
-<textarea id="input-prompt" placeholder="Introduce el texto descriptivo para la generación de imagen..."></textarea>
-<button id="btn-enhance" class="btn-enhance" style="display:none" title="Mejorar prompt con IA"><i data-lucide="sparkles" aria-hidden="true"></i></button>
-</div>
-</div>
-<div class="negative-prompt">
-<div class="prompt-header">
-<label for="input-negative" class="input-label">Negative Prompt <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
-</div>
-<textarea id="input-negative" placeholder="Elementos a evitar..."></textarea>
-</div>
-<div class="params-card">
-<div class="params-grid">
-<div class="input-group">
-<label for="input-width" class="input-label">Ancho <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
-<input id="input-width" type="number" value="512" min="8"/>
-</div>
-<div class="input-group">
-<label for="input-height" class="input-label">Alto <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
-<input id="input-height" type="number" value="512" min="8"/>
-</div>
-<div class="input-group">
-<label for="input-steps" class="input-label">Steps <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
-<input id="input-steps" type="number" value="15"/>
-</div>
-<div class="input-group">
-<label for="input-cfg" class="input-label">CFG Scale <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
-<input id="input-cfg" step="0.5" type="number" value="1"/>
-</div>
-<div class="input-group">
-<label for="input-guidance" class="input-label">Guidance <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
-<input id="input-guidance" step="0.1" type="number" value="1"/>
-</div>
-<div class="input-group">
-<label for="input-seed" class="input-label">Seed <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
-<input id="input-seed" type="number" value="-1"/>
-</div>
-<div class="input-group">
-<label for="input-batch-count" class="input-label">Lote <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
-<input id="input-batch-count" type="number" value="1" min="1" max="8"/>
-</div>
-<div class="input-group">
-<label for="input-max-vram" class="input-label">VRAM máx. <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
-<input id="input-max-vram" step="0.1" type="number" value="-1"/>
-</div>
-<div class="input-group">
-<label for="input-threads" class="input-label">Hilos <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
-<input id="input-threads" type="number" value="-1" min="-1" max="32" step="1"/>
-</div>
-<div class="input-group">
-<label for="input-lora-weight" class="input-label">Peso LoRA <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
-<input id="input-lora-weight" step="0.1" type="number" min="0" max="2" value="1" disabled/>
-</div>
-</div>
-<div class="sampler-row">
-<div class="input-group">
-<label for="select-sampler" class="input-label">Sampler <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
-<select id="select-sampler"></select>
-</div>
-<div class="input-group">
-<label for="select-scheduler" class="input-label">Scheduler <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></label>
-<select id="select-scheduler"></select>
-</div>
-</div>
-<div class="toggles-list">
-<label class="toggle-row">
-<span class="input-label">Forzar CUDA <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></span>
-<div class="switch">
-<input id="toggle-cuda" type="checkbox"/>
-<span class="slider"></span>
-</div>
-</label>
-<label class="toggle-row">
-<span class="input-label">VAE en CPU <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></span>
-<div class="switch">
-<input id="toggle-vae-cpu" checked="" type="checkbox"/>
-<span class="slider"></span>
-</div>
-</label>
-<label class="toggle-row">
-<span class="input-label">CLIP en CPU <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></span>
-<div class="switch">
-<input id="toggle-clip-cpu" type="checkbox"/>
-<span class="slider"></span>
-</div>
-</label>
-<label class="toggle-row">
-<span class="input-label">Descargar a CPU <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></span>
-<div class="switch">
-<input id="toggle-offload-cpu" type="checkbox"/>
-<span class="slider"></span>
-</div>
-</label>
-<label class="toggle-row">
-<span class="input-label">Flash Attn <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></span>
-<div class="switch">
-<input id="toggle-fa" type="checkbox"/>
-<span class="slider"></span>
-</div>
-</label>
-<label class="toggle-row">
-<span class="input-label">Diffusion Flash Attn <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></span>
-<div class="switch">
-<input id="toggle-diffusion-fa" checked="" type="checkbox"/>
-<span class="slider"></span>
-</div>
-</label>
-<label class="toggle-row">
-<span class="input-label">VAE Tiling <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></span>
-<div class="switch">
-<input id="toggle-vae-tiling" type="checkbox"/>
-<span class="slider"></span>
-</div>
-</label>
-<label class="toggle-row">
-<span class="input-label">MMap <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></span>
-<div class="switch">
-<input id="toggle-mmap" type="checkbox"/>
-<span class="slider"></span>
-</div>
-</label>
-<label class="toggle-row">
-<span class="input-label">Verbose <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></span>
-<div class="switch">
-<input id="toggle-verbose" type="checkbox"/>
-<span class="slider"></span>
-</div>
-</label>
-</div>
-</div>
-<details class="custom-flags-section">
-<summary><i data-lucide="chevron-right" class="details-chevron"></i><span class="input-label">Parámetros y flags personalizados <i data-lucide="circle-question-mark" class="help-icon" aria-hidden="true"></i></span></summary>
-<textarea id="input-custom-flags" rows="4" placeholder="--parametro valor&#10;--flag&#10;--parametro2 valor"></textarea>
-</details>
-<div class="run-row">
-<button id="btn-copy" class="btn-outline" title="Copiar comando">
-<i data-lucide="copy"></i>
-</button>
-<button id="btn-run" class="run-btn">
-<i data-lucide="play"></i>
-EJECUTAR
-</button>
-<button id="btn-abort" class="btn-abort" title="Cancelar" hidden>
-<i data-lucide="x"></i>
-</button>
-</div>
-</form>
-<!-- Preview Column -->
-<div class="preview-col">
-<div class="canvas-area">
-<div class="canvas-placeholder" id="canvas-placeholder">
-<i data-lucide="image" class="icon-64" aria-hidden="true"></i>
-<p>Vista previa de salida</p>
-</div>
-<img id="preview-img" alt="" />
-<div id="preview-gallery" class="preview-gallery"></div>
-</div>
-<div class="actions-bar" id="actions-bar">
-<button id="btn-copy-seed" class="btn-outline" title="Copiar semilla" disabled><i data-lucide="copy"></i> Copiar semilla</button>
-<button id="btn-copy-console" class="btn-outline" title="Copiar salida de la consola" disabled><i data-lucide="copy"></i> Copiar salida de la consola</button>
-<button id="btn-open-output" class="btn-outline" title="Abrir carpeta de salida"><i data-lucide="folder-open"></i> Abrir carpeta de salida</button>
-<button id="btn-upscale" class="btn-outline" title="Upscale" disabled><i data-lucide="maximize-2"></i> Upscale</button>
-</div>
-<div class="popover-upscale" id="popover-upscale">
-<button id="btn-close-upscale" class="btn-icon popover-close"><i data-lucide="x"></i></button>
-<label class="config-label">Modelo de upscale</label>
-<div id="radio-upscale-models" class="radio-upscale-group"></div>
-<button id="btn-run-upscale-popover" class="btn-secondary">Upscale</button>
-</div>
-<output id="console-output" class="console-area" role="log" aria-live="polite" aria-atomic="false"></output>
-</div>
-</div>
-</div>
-</main>
-<dialog id="inpaint-dialog" class="inpaint-dialog" aria-labelledby="inpaint-title">
-<h2 id="inpaint-title" class="sr-only">Editar máscara</h2>
-<div class="inpaint-toolbar">
-<div class="inpaint-tool-group">
-<i data-lucide="brush" aria-hidden="true"></i>
-<label for="input-brush-size" class="sr-only">Tamaño del pincel</label>
-<input id="input-brush-size" type="range" min="1" max="20" step="0.5" value="5" title="Tamaño del pincel (% del lado menor)"/>
-<span id="brush-size-value">24</span>
-</div>
-<div class="inpaint-tool-select" id="inpaint-tool-select">
-<button id="btn-tool-brush" class="active" type="button" title="Pincel" aria-pressed="true"><i data-lucide="brush" aria-hidden="true"></i></button>
-<button id="btn-tool-rect" type="button" title="Rectángulo" aria-pressed="false"><i data-lucide="square" aria-hidden="true"></i></button>
-<button id="btn-tool-ellipse" type="button" title="Elipse" aria-pressed="false"><i data-lucide="circle" aria-hidden="true"></i></button>
-</div>
-<div class="inpaint-mode-toggle" id="inpaint-mode-toggle">
-<button id="btn-mode-paint" class="active" type="button">Pintar</button>
-<button id="btn-mode-erase" type="button">Borrar</button>
-</div>
-<div class="inpaint-toolbar-spacer"></div>
-<button id="btn-undo-mask" class="btn-icon" title="Deshacer" disabled><i data-lucide="undo-2"></i></button>
-<button id="btn-clear-mask" class="btn-secondary" disabled>Limpiar</button>
-<button id="btn-apply-mask" class="run-btn">Listo</button>
-</div>
-<div class="inpaint-canvas-wrap" id="inpaint-canvas-wrap" role="img" aria-label="Lienzo de máscara de inpainting">
-<div class="inpaint-canvas-stack">
-<canvas id="inpaint-canvas-base"></canvas>
-<canvas id="inpaint-canvas-overlay"></canvas>
-</div>
-<div class="inpaint-loading" id="inpaint-loading">
-<span class="inpaint-loading-spinner"></span>
-<span>Ajustando rotación EXIF…</span>
-</div>
-</div>
-<p class="inpaint-hint">Pinta sobre la zona que quieres regenerar. Lo pintado en rojo se reemplazará.</p>
-</dialog>
-<dialog id="dialog-gemini" class="gemini-dialog" aria-labelledby="gemini-title">
-<div class="dialog-header">
-<h3 id="gemini-title">Configuración Gemini</h3>
-<button id="btn-close-gemini" class="dialog-close"><i data-lucide="x" aria-hidden="true"></i></button>
-</div>
-<div class="dialog-body">
-<label for="input-api-key" class="input-label">API Key</label>
-<input id="input-api-key" type="password" placeholder="Introduce tu API key de Google AI"/>
-<div class="model-select-row" id="model-select-row" style="display:none">
-<label for="select-gemini-model" class="input-label">Modelo</label>
-<select id="select-gemini-model"></select>
-</div>
-</div>
-<div class="dialog-footer">
-<button id="btn-delete-api-key" class="btn-secondary-outline" style="display:none">Eliminar API Key</button>
-<button id="btn-save-api-key" class="run-btn">Guardar</button>
-</div>
-</dialog>
-<script type="module" src="js/main.js"></script>
-</body></html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>StableDiffusionCppUI</title>
+    <script type="module" src="js/main.js"></script>
+    <link rel="stylesheet" href="css/main.css" />
+  </head>
+  <body>
+    <aside>
+      <div class="sidebar-header">
+        <div class="logo-placeholder">
+          <img src="assets/128x128@2x.png" alt="Logo" class="sidebar-logo" />
+        </div>
+      </div>
+      <nav>
+        <label for="select-preset" class="config-label">Preajustes</label>
+        <div class="presets-section">
+          <div class="presets-load">
+            <select id="select-preset">
+              <option value="">— Seleccionar preajuste —</option>
+            </select>
+            <div class="presets-load-actions">
+              <button id="btn-load-preset" class="btn-secondary">Cargar</button>
+              <button id="btn-delete-preset" class="btn-danger">
+                Eliminar
+              </button>
+            </div>
+          </div>
+          <div class="presets-divider"></div>
+          <div class="presets-save">
+            <label for="input-preset-name" class="sr-only"
+              >Nombre del nuevo preajuste</label
+            >
+            <input
+              id="input-preset-name"
+              type="text"
+              placeholder="Nombre del nuevo preajuste…"
+            />
+            <button id="btn-save-preset" class="btn-secondary">Guardar</button>
+          </div>
+        </div>
+        <label for="select-prompt" class="config-label mt-32">Prompts</label>
+        <div class="presets-section">
+          <div class="presets-load">
+            <select id="select-prompt">
+              <option value="">— Seleccionar prompt —</option>
+            </select>
+            <div class="presets-load-actions">
+              <button id="btn-load-prompt" class="btn-secondary">Cargar</button>
+              <button id="btn-delete-prompt" class="btn-danger">
+                Eliminar
+              </button>
+            </div>
+          </div>
+          <div class="presets-divider"></div>
+          <div class="presets-save">
+            <label for="input-prompt-name" class="sr-only"
+              >Nombre del nuevo prompt</label
+            >
+            <input
+              id="input-prompt-name"
+              type="text"
+              placeholder="Nombre del nuevo prompt…"
+            />
+            <button id="btn-save-prompt" class="btn-secondary">Guardar</button>
+          </div>
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        <button
+          id="btn-toggle-paths"
+          class="btn-toggle-section"
+          aria-expanded="false"
+          aria-controls="paths-collapse"
+        >
+          <i data-lucide="folder-cog" aria-hidden="true"></i> Configuración de
+          rutas
+          <i data-lucide="chevron-up" class="chevron" aria-hidden="true"></i>
+        </button>
+        <div class="paths-collapse" id="paths-collapse">
+          <div class="paths-collapse-inner">
+            <div class="config-group">
+              <label class="config-label">Ruta de Stable Diffusion cpp</label>
+              <button
+                type="button"
+                class="path-display"
+                id="path-sdcpp"
+                data-action="pick-sdcpp"
+                aria-label="Elegir Ruta de Stable Diffusion cpp"
+              >
+                <i
+                  data-lucide="terminal"
+                  class="icon-14"
+                  aria-hidden="true"
+                ></i>
+                <span id="path-sdcpp-text">No configurado</span>
+              </button>
+            </div>
+            <div class="config-group">
+              <label class="config-label">Ruta de salida</label>
+              <button
+                type="button"
+                class="path-display"
+                id="path-output"
+                data-action="pick-output"
+                aria-label="Elegir Ruta de salida"
+              >
+                <i
+                  data-lucide="hard-drive"
+                  class="icon-14"
+                  aria-hidden="true"
+                ></i>
+                <span id="path-output-text">No configurado</span>
+              </button>
+            </div>
+            <div class="config-group">
+              <label class="config-label">Ruta de modelos</label>
+              <button
+                type="button"
+                class="path-display"
+                id="path-models"
+                data-action="pick-models"
+                aria-label="Elegir Ruta de modelos"
+              >
+                <i data-lucide="folder" class="icon-14" aria-hidden="true"></i>
+                <span id="path-models-text">No configurado</span>
+              </button>
+            </div>
+            <div class="config-group">
+              <label class="config-label">Ruta de VAE</label>
+              <button
+                type="button"
+                class="path-display"
+                id="path-vae"
+                data-action="pick-vae"
+                aria-label="Elegir Ruta de VAE"
+              >
+                <i data-lucide="folder" class="icon-14" aria-hidden="true"></i>
+                <span id="path-vae-text">No configurado</span>
+              </button>
+            </div>
+            <div class="config-group">
+              <label class="config-label">Ruta de LLM Encoder</label>
+              <button
+                type="button"
+                class="path-display"
+                id="path-llm"
+                data-action="pick-llm"
+                aria-label="Elegir Ruta de LLM Encoder"
+              >
+                <i data-lucide="folder" class="icon-14" aria-hidden="true"></i>
+                <span id="path-llm-text">No configurado</span>
+              </button>
+            </div>
+            <div class="config-group">
+              <label class="config-label">Ruta de LoRA</label>
+              <button
+                type="button"
+                class="path-display"
+                id="path-lora"
+                data-action="pick-lora"
+                aria-label="Elegir Ruta de LoRA"
+              >
+                <i data-lucide="folder" class="icon-14" aria-hidden="true"></i>
+                <span id="path-lora-text">No configurado</span>
+              </button>
+            </div>
+            <div class="config-group">
+              <label class="config-label">Ruta de LLM Vision</label>
+              <button
+                type="button"
+                class="path-display"
+                id="path-llm-vision"
+                data-action="pick-llm-vision"
+                aria-label="Elegir Ruta de LLM Vision"
+              >
+                <i data-lucide="eye" class="icon-14" aria-hidden="true"></i>
+                <span id="path-llm-vision-text">No configurado</span>
+              </button>
+            </div>
+            <div class="config-group">
+              <label class="config-label">Ruta de CLIP-L</label>
+              <button
+                type="button"
+                class="path-display"
+                id="path-clip-l"
+                data-action="pick-clip-l"
+                aria-label="Elegir Ruta de CLIP-L"
+              >
+                <i data-lucide="folder" class="icon-14" aria-hidden="true"></i>
+                <span id="path-clip-l-text">No configurado</span>
+              </button>
+            </div>
+            <div class="config-group">
+              <label class="config-label">Ruta de CLIP-G</label>
+              <button
+                type="button"
+                class="path-display"
+                id="path-clip-g"
+                data-action="pick-clip-g"
+                aria-label="Elegir Ruta de CLIP-G"
+              >
+                <i data-lucide="folder" class="icon-14" aria-hidden="true"></i>
+                <span id="path-clip-g-text">No configurado</span>
+              </button>
+            </div>
+            <div class="config-group">
+              <label class="config-label">Ruta de T5XXL</label>
+              <button
+                type="button"
+                class="path-display"
+                id="path-t5xxl"
+                data-action="pick-t5xxl"
+                aria-label="Elegir Ruta de T5XXL"
+              >
+                <i data-lucide="folder" class="icon-14" aria-hidden="true"></i>
+                <span id="path-t5xxl-text">No configurado</span>
+              </button>
+            </div>
+            <div class="config-group">
+              <label class="config-label">Ruta de Upscalers</label>
+              <button
+                type="button"
+                class="path-display"
+                id="path-upscalers"
+                data-action="pick-upscalers"
+                aria-label="Elegir Ruta de Upscalers"
+              >
+                <i data-lucide="folder" class="icon-14" aria-hidden="true"></i>
+                <span id="path-upscalers-text">No configurado</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+    <main>
+      <header>
+        <div class="brand-box">
+          <h1 class="brand-name">StableDiffusionCppUI</h1>
+        </div>
+        <div class="header-actions">
+          <button id="btn-refresh" class="refresh-btn">
+            <i data-lucide="refresh-cw" aria-hidden="true"></i> Actualizar
+            recursos
+          </button>
+          <button
+            id="btn-gemini-settings"
+            class="refresh-btn"
+            style="display: none"
+          >
+            <i data-lucide="sparkles" aria-hidden="true"></i> Configuración
+            Gemini
+          </button>
+          <div class="header-separator"></div>
+          <button
+            id="btn-notifications"
+            class="refresh-btn btn-notification"
+            aria-label="Notificaciones"
+          ></button>
+        </div>
+      </header>
+      <div class="content-wrapper">
+        <!-- Model Selection -->
+        <div class="model-grid">
+          <div class="input-group">
+            <label for="select-model" class="input-label">Modelo</label>
+            <select id="select-model">
+              <option value="">Ninguno</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label for="select-llm" class="input-label">LLM Encoder</label>
+            <select id="select-llm">
+              <option value="">Ninguno</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label for="select-vae" class="input-label">VAE</label>
+            <select id="select-vae">
+              <option value="">Ninguno</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label for="select-lora" class="input-label">LoRA</label>
+            <select id="select-lora">
+              <option value="">Ninguno</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label for="select-llm-vision" class="input-label"
+              >LLM Vision</label
+            >
+            <select id="select-llm-vision">
+              <option value="">Ninguno</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label for="select-clip-l" class="input-label">CLIP-L</label>
+            <select id="select-clip-l">
+              <option value="">Ninguno</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label for="select-clip-g" class="input-label">CLIP-G</label>
+            <select id="select-clip-g">
+              <option value="">Ninguno</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label for="select-t5xxl" class="input-label">T5XXL</label>
+            <select id="select-t5xxl">
+              <option value="">Ninguno</option>
+            </select>
+          </div>
+        </div>
+        <div class="workspace-grid">
+          <!-- Controls Column -->
+          <form id="params-form" class="controls-col" onsubmit="return false;">
+            <fieldset class="model-type-row">
+              <legend class="input-label">
+                Modelo:
+                <i
+                  data-lucide="circle-question-mark"
+                  class="help-icon"
+                  aria-hidden="true"
+                ></i>
+              </legend>
+              <label class="radio-label">
+                <input
+                  type="radio"
+                  name="model-type"
+                  value="diffusion"
+                  checked
+                />
+                <span>Difusión (--diffusion-model)</span>
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="model-type" value="monolithic" />
+                <span>Monolítico (-m)</span>
+              </label>
+            </fieldset>
+            <div class="image-input-section">
+              <button
+                id="btn-toggle-image-input"
+                class="btn-toggle-section"
+                aria-expanded="false"
+                aria-controls="image-input-content"
+              >
+                <i data-lucide="image" aria-hidden="true"></i> Imagen como input
+                <i
+                  data-lucide="chevron-down"
+                  class="chevron"
+                  aria-hidden="true"
+                ></i>
+              </button>
+              <div class="image-input-content" id="image-input-content">
+                <div class="image-op-group">
+                  <label class="input-label">Selecciona una imagen</label>
+                  <div
+                    class="image-input-row image-drop-zone"
+                    id="image-drop-zone"
+                  >
+                    <button id="btn-select-image" class="btn-secondary">
+                      Seleccionar
+                    </button>
+                    <span class="image-input-name" id="image-input-name"
+                      >Ninguna</span
+                    >
+                    <button
+                      id="btn-clear-image"
+                      class="btn-icon btn-danger btn-clear-image"
+                      title="Quitar imagen"
+                    >
+                      <i data-lucide="x"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="image-op-group">
+                  <fieldset class="image-op-fieldset">
+                    <legend class="input-label">Elige una opción</legend>
+                    <div class="model-type-row image-op-row">
+                      <label class="radio-label">
+                        <input type="radio" name="image-op" value="img2img" />
+                        <span>img2img</span>
+                      </label>
+                      <label class="radio-label">
+                        <input
+                          type="radio"
+                          name="image-op"
+                          value="inpainting"
+                        />
+                        <span>Inpainting</span>
+                      </label>
+                      <label class="radio-label">
+                        <input
+                          type="radio"
+                          name="image-op"
+                          value="image-edit"
+                        />
+                        <span>Image Edit</span>
+                      </label>
+                      <label class="radio-label">
+                        <input type="radio" name="image-op" value="upscale" />
+                        <span>Upscale</span>
+                      </label>
+                      <label
+                        class="radio-label"
+                        id="cancel-op-label"
+                        style="display: none"
+                      >
+                        <input type="radio" name="image-op" value="cancel" />
+                        <span>Cancelar</span>
+                      </label>
+                    </div>
+                  </fieldset>
+                  <div class="image-op-options" id="image-op-options">
+                    <div id="upscale-options" class="op-option-group">
+                      <label class="input-label">Modelo de upscale</label>
+                      <div
+                        id="radio-image-upscale-models"
+                        class="radio-upscale-group"
+                      ></div>
+                      <div class="run-btn-row">
+                        <button id="btn-run-upscale" class="run-btn" disabled>
+                          <i data-lucide="play"></i>
+                          Ejecutar
+                        </button>
+                        <button
+                          id="btn-abort-upscale"
+                          class="btn-abort"
+                          title="Cancelar"
+                          hidden
+                        >
+                          <i data-lucide="x"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <div
+                      id="img2img-options"
+                      class="op-option-group"
+                      style="display: none"
+                    >
+                      <div class="img2img-strength-row">
+                        <div class="img2img-strength-input">
+                          <label for="input-strength" class="input-label"
+                            >Strength
+                            <i
+                              data-lucide="circle-question-mark"
+                              class="help-icon"
+                              aria-hidden="true"
+                            ></i
+                          ></label>
+                          <input
+                            id="input-strength"
+                            type="number"
+                            value="0.5"
+                            min="0"
+                            max="1"
+                            step="0.05"
+                          />
+                        </div>
+                        <div class="img2img-size-buttons">
+                          <span class="input-label"
+                            >Rellenar ancho y alto de la imagen</span
+                          >
+                          <div class="size-btn-group">
+                            <button
+                              id="btn-size-full"
+                              class="btn-secondary size-btn"
+                              data-factor="1"
+                              disabled
+                            >
+                              100%
+                            </button>
+                            <button
+                              id="btn-size-three-quarter"
+                              class="btn-secondary size-btn"
+                              data-factor="0.75"
+                              disabled
+                            >
+                              75%
+                            </button>
+                            <button
+                              id="btn-size-half"
+                              class="btn-secondary size-btn"
+                              data-factor="0.5"
+                              disabled
+                            >
+                              50%
+                            </button>
+                            <button
+                              id="btn-size-quarter"
+                              class="btn-secondary size-btn"
+                              data-factor="0.25"
+                              disabled
+                            >
+                              25%
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      id="inpainting-options"
+                      class="op-option-group"
+                      style="display: none"
+                    >
+                      <div class="inpaint-op-row">
+                        <button
+                          id="btn-open-inpaint"
+                          class="btn-secondary"
+                          disabled
+                        >
+                          Editar máscara
+                        </button>
+                        <span
+                          id="inpaint-mask-status"
+                          class="inpaint-mask-status"
+                          >Sin máscara</span
+                        >
+                      </div>
+                      <div class="img2img-strength-row">
+                        <div class="img2img-strength-input">
+                          <label
+                            for="input-inpaint-strength"
+                            class="input-label"
+                            >Strength
+                            <i
+                              data-lucide="circle-question-mark"
+                              class="help-icon"
+                              aria-hidden="true"
+                            ></i
+                          ></label>
+                          <input
+                            id="input-inpaint-strength"
+                            type="number"
+                            value="0.5"
+                            min="0"
+                            max="1"
+                            step="0.05"
+                          />
+                        </div>
+                        <div class="img2img-size-buttons">
+                          <span class="input-label"
+                            >Rellenar ancho y alto de la imagen</span
+                          >
+                          <div class="size-btn-group">
+                            <button
+                              id="btn-inpaint-size-full"
+                              class="btn-secondary size-btn"
+                              data-factor="1"
+                              disabled
+                            >
+                              100%
+                            </button>
+                            <button
+                              id="btn-inpaint-size-three-quarter"
+                              class="btn-secondary size-btn"
+                              data-factor="0.75"
+                              disabled
+                            >
+                              75%
+                            </button>
+                            <button
+                              id="btn-inpaint-size-half"
+                              class="btn-secondary size-btn"
+                              data-factor="0.5"
+                              disabled
+                            >
+                              50%
+                            </button>
+                            <button
+                              id="btn-inpaint-size-quarter"
+                              class="btn-secondary size-btn"
+                              data-factor="0.25"
+                              disabled
+                            >
+                              25%
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      id="image-edit-options"
+                      class="op-option-group"
+                      style="display: none"
+                    >
+                      <div class="img2img-size-buttons">
+                        <span class="input-label"
+                          >Rellenar ancho y alto de la imagen</span
+                        >
+                        <div class="size-btn-group">
+                          <button
+                            id="btn-edit-size-full"
+                            class="btn-secondary size-btn"
+                            data-factor="1"
+                            disabled
+                          >
+                            100%
+                          </button>
+                          <button
+                            id="btn-edit-size-three-quarter"
+                            class="btn-secondary size-btn"
+                            data-factor="0.75"
+                            disabled
+                          >
+                            75%
+                          </button>
+                          <button
+                            id="btn-edit-size-half"
+                            class="btn-secondary size-btn"
+                            data-factor="0.5"
+                            disabled
+                          >
+                            50%
+                          </button>
+                          <button
+                            id="btn-edit-size-quarter"
+                            class="btn-secondary size-btn"
+                            data-factor="0.25"
+                            disabled
+                          >
+                            25%
+                          </button>
+                        </div>
+                      </div>
+                      <p class="input-hint hint">
+                        <i
+                          data-lucide="lightbulb"
+                          class="icon-14"
+                          aria-hidden="true"
+                        ></i>
+                        Consejo: escribe primero qué
+                        <strong>conservar</strong> y luego qué
+                        <strong>cambiar/añadir</strong>.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="prompt-area">
+              <div class="prompt-header">
+                <label for="input-prompt" class="input-label"
+                  >Prompt
+                  <i
+                    data-lucide="circle-question-mark"
+                    class="help-icon"
+                    aria-hidden="true"
+                  ></i
+                ></label>
+              </div>
+              <div class="prompt-container">
+                <textarea
+                  id="input-prompt"
+                  placeholder="Introduce el texto descriptivo para la generación de imagen..."
+                ></textarea>
+                <button
+                  id="btn-enhance"
+                  class="btn-enhance"
+                  style="display: none"
+                  title="Mejorar prompt con IA"
+                >
+                  <i data-lucide="sparkles" aria-hidden="true"></i>
+                </button>
+              </div>
+            </div>
+            <div class="negative-prompt">
+              <div class="prompt-header">
+                <label for="input-negative" class="input-label"
+                  >Negative Prompt
+                  <i
+                    data-lucide="circle-question-mark"
+                    class="help-icon"
+                    aria-hidden="true"
+                  ></i
+                ></label>
+              </div>
+              <textarea
+                id="input-negative"
+                placeholder="Elementos a evitar..."
+              ></textarea>
+            </div>
+            <div class="params-card">
+              <div class="params-grid">
+                <div class="input-group">
+                  <label for="input-width" class="input-label"
+                    >Ancho
+                    <i
+                      data-lucide="circle-question-mark"
+                      class="help-icon"
+                      aria-hidden="true"
+                    ></i
+                  ></label>
+                  <input id="input-width" type="number" value="512" min="8" />
+                </div>
+                <div class="input-group">
+                  <label for="input-height" class="input-label"
+                    >Alto
+                    <i
+                      data-lucide="circle-question-mark"
+                      class="help-icon"
+                      aria-hidden="true"
+                    ></i
+                  ></label>
+                  <input id="input-height" type="number" value="512" min="8" />
+                </div>
+                <div class="input-group">
+                  <label for="input-steps" class="input-label"
+                    >Steps
+                    <i
+                      data-lucide="circle-question-mark"
+                      class="help-icon"
+                      aria-hidden="true"
+                    ></i
+                  ></label>
+                  <input id="input-steps" type="number" value="15" />
+                </div>
+                <div class="input-group">
+                  <label for="input-cfg" class="input-label"
+                    >CFG Scale
+                    <i
+                      data-lucide="circle-question-mark"
+                      class="help-icon"
+                      aria-hidden="true"
+                    ></i
+                  ></label>
+                  <input id="input-cfg" step="0.5" type="number" value="1" />
+                </div>
+                <div class="input-group">
+                  <label for="input-guidance" class="input-label"
+                    >Guidance
+                    <i
+                      data-lucide="circle-question-mark"
+                      class="help-icon"
+                      aria-hidden="true"
+                    ></i
+                  ></label>
+                  <input
+                    id="input-guidance"
+                    step="0.1"
+                    type="number"
+                    value="1"
+                  />
+                </div>
+                <div class="input-group">
+                  <label for="input-seed" class="input-label"
+                    >Seed
+                    <i
+                      data-lucide="circle-question-mark"
+                      class="help-icon"
+                      aria-hidden="true"
+                    ></i
+                  ></label>
+                  <input id="input-seed" type="number" value="-1" />
+                </div>
+                <div class="input-group">
+                  <label for="input-batch-count" class="input-label"
+                    >Lote
+                    <i
+                      data-lucide="circle-question-mark"
+                      class="help-icon"
+                      aria-hidden="true"
+                    ></i
+                  ></label>
+                  <input
+                    id="input-batch-count"
+                    type="number"
+                    value="1"
+                    min="1"
+                    max="8"
+                  />
+                </div>
+                <div class="input-group">
+                  <label for="input-max-vram" class="input-label"
+                    >VRAM máx.
+                    <i
+                      data-lucide="circle-question-mark"
+                      class="help-icon"
+                      aria-hidden="true"
+                    ></i
+                  ></label>
+                  <input
+                    id="input-max-vram"
+                    step="0.1"
+                    type="number"
+                    value="-1"
+                  />
+                </div>
+                <div class="input-group">
+                  <label for="input-threads" class="input-label"
+                    >Hilos
+                    <i
+                      data-lucide="circle-question-mark"
+                      class="help-icon"
+                      aria-hidden="true"
+                    ></i
+                  ></label>
+                  <input
+                    id="input-threads"
+                    type="number"
+                    value="-1"
+                    min="-1"
+                    max="32"
+                    step="1"
+                  />
+                </div>
+                <div class="input-group">
+                  <label for="input-lora-weight" class="input-label"
+                    >Peso LoRA
+                    <i
+                      data-lucide="circle-question-mark"
+                      class="help-icon"
+                      aria-hidden="true"
+                    ></i
+                  ></label>
+                  <input
+                    id="input-lora-weight"
+                    step="0.1"
+                    type="number"
+                    min="0"
+                    max="2"
+                    value="1"
+                    disabled
+                  />
+                </div>
+              </div>
+              <div class="sampler-row">
+                <div class="input-group">
+                  <label for="select-sampler" class="input-label"
+                    >Sampler
+                    <i
+                      data-lucide="circle-question-mark"
+                      class="help-icon"
+                      aria-hidden="true"
+                    ></i
+                  ></label>
+                  <select id="select-sampler"></select>
+                </div>
+                <div class="input-group">
+                  <label for="select-scheduler" class="input-label"
+                    >Scheduler
+                    <i
+                      data-lucide="circle-question-mark"
+                      class="help-icon"
+                      aria-hidden="true"
+                    ></i
+                  ></label>
+                  <select id="select-scheduler"></select>
+                </div>
+              </div>
+              <div class="toggles-list">
+                <label class="toggle-row">
+                  <span class="input-label"
+                    >Forzar CUDA
+                    <i
+                      data-lucide="circle-question-mark"
+                      class="help-icon"
+                      aria-hidden="true"
+                    ></i
+                  ></span>
+                  <div class="switch">
+                    <input id="toggle-cuda" type="checkbox" />
+                    <span class="slider"></span>
+                  </div>
+                </label>
+                <label class="toggle-row">
+                  <span class="input-label"
+                    >VAE en CPU
+                    <i
+                      data-lucide="circle-question-mark"
+                      class="help-icon"
+                      aria-hidden="true"
+                    ></i
+                  ></span>
+                  <div class="switch">
+                    <input id="toggle-vae-cpu" checked="" type="checkbox" />
+                    <span class="slider"></span>
+                  </div>
+                </label>
+                <label class="toggle-row">
+                  <span class="input-label"
+                    >CLIP en CPU
+                    <i
+                      data-lucide="circle-question-mark"
+                      class="help-icon"
+                      aria-hidden="true"
+                    ></i
+                  ></span>
+                  <div class="switch">
+                    <input id="toggle-clip-cpu" type="checkbox" />
+                    <span class="slider"></span>
+                  </div>
+                </label>
+                <label class="toggle-row">
+                  <span class="input-label"
+                    >Descargar a CPU
+                    <i
+                      data-lucide="circle-question-mark"
+                      class="help-icon"
+                      aria-hidden="true"
+                    ></i
+                  ></span>
+                  <div class="switch">
+                    <input id="toggle-offload-cpu" type="checkbox" />
+                    <span class="slider"></span>
+                  </div>
+                </label>
+                <label class="toggle-row">
+                  <span class="input-label"
+                    >Flash Attn
+                    <i
+                      data-lucide="circle-question-mark"
+                      class="help-icon"
+                      aria-hidden="true"
+                    ></i
+                  ></span>
+                  <div class="switch">
+                    <input id="toggle-fa" type="checkbox" />
+                    <span class="slider"></span>
+                  </div>
+                </label>
+                <label class="toggle-row">
+                  <span class="input-label"
+                    >Diffusion Flash Attn
+                    <i
+                      data-lucide="circle-question-mark"
+                      class="help-icon"
+                      aria-hidden="true"
+                    ></i
+                  ></span>
+                  <div class="switch">
+                    <input
+                      id="toggle-diffusion-fa"
+                      checked=""
+                      type="checkbox"
+                    />
+                    <span class="slider"></span>
+                  </div>
+                </label>
+                <label class="toggle-row">
+                  <span class="input-label"
+                    >VAE Tiling
+                    <i
+                      data-lucide="circle-question-mark"
+                      class="help-icon"
+                      aria-hidden="true"
+                    ></i
+                  ></span>
+                  <div class="switch">
+                    <input id="toggle-vae-tiling" type="checkbox" />
+                    <span class="slider"></span>
+                  </div>
+                </label>
+                <label class="toggle-row">
+                  <span class="input-label"
+                    >MMap
+                    <i
+                      data-lucide="circle-question-mark"
+                      class="help-icon"
+                      aria-hidden="true"
+                    ></i
+                  ></span>
+                  <div class="switch">
+                    <input id="toggle-mmap" type="checkbox" />
+                    <span class="slider"></span>
+                  </div>
+                </label>
+                <label class="toggle-row">
+                  <span class="input-label"
+                    >Verbose
+                    <i
+                      data-lucide="circle-question-mark"
+                      class="help-icon"
+                      aria-hidden="true"
+                    ></i
+                  ></span>
+                  <div class="switch">
+                    <input id="toggle-verbose" type="checkbox" />
+                    <span class="slider"></span>
+                  </div>
+                </label>
+              </div>
+            </div>
+            <details class="custom-flags-section">
+              <summary>
+                <i data-lucide="chevron-right" class="details-chevron"></i
+                ><span class="input-label"
+                  >Parámetros y flags personalizados
+                  <i
+                    data-lucide="circle-question-mark"
+                    class="help-icon"
+                    aria-hidden="true"
+                  ></i
+                ></span>
+              </summary>
+              <textarea
+                id="input-custom-flags"
+                rows="4"
+                placeholder="--parametro valor&#10;--flag&#10;--parametro2 valor"
+              ></textarea>
+            </details>
+            <div class="run-row">
+              <button id="btn-copy" class="btn-outline" title="Copiar comando">
+                <i data-lucide="copy"></i>
+              </button>
+              <button id="btn-run" class="run-btn">
+                <i data-lucide="play"></i>
+                EJECUTAR
+              </button>
+              <button id="btn-abort" class="btn-abort" title="Cancelar" hidden>
+                <i data-lucide="x"></i>
+              </button>
+            </div>
+          </form>
+          <!-- Preview Column -->
+          <div class="preview-col">
+            <div class="canvas-area">
+              <div class="canvas-placeholder" id="canvas-placeholder">
+                <i data-lucide="image" class="icon-64" aria-hidden="true"></i>
+                <p>Vista previa de salida</p>
+              </div>
+              <img id="preview-img" alt="" />
+              <div id="preview-gallery" class="preview-gallery"></div>
+            </div>
+            <div class="actions-bar" id="actions-bar">
+              <button
+                id="btn-copy-seed"
+                class="btn-outline"
+                title="Copiar semilla"
+                disabled
+              >
+                <i data-lucide="copy"></i> Copiar semilla
+              </button>
+              <button
+                id="btn-copy-console"
+                class="btn-outline"
+                title="Copiar salida de la consola"
+                disabled
+              >
+                <i data-lucide="copy"></i> Copiar salida de la consola
+              </button>
+              <button
+                id="btn-open-output"
+                class="btn-outline"
+                title="Abrir carpeta de salida"
+              >
+                <i data-lucide="folder-open"></i> Abrir carpeta de salida
+              </button>
+              <button
+                id="btn-upscale"
+                class="btn-outline"
+                title="Upscale"
+                disabled
+              >
+                <i data-lucide="maximize-2"></i> Upscale
+              </button>
+            </div>
+            <div class="popover-upscale" id="popover-upscale">
+              <button id="btn-close-upscale" class="btn-icon popover-close">
+                <i data-lucide="x"></i>
+              </button>
+              <label class="config-label">Modelo de upscale</label>
+              <div id="radio-upscale-models" class="radio-upscale-group"></div>
+              <button id="btn-run-upscale-popover" class="btn-secondary">
+                Upscale
+              </button>
+            </div>
+            <output
+              id="console-output"
+              class="console-area"
+              role="log"
+              aria-live="polite"
+              aria-atomic="false"
+            ></output>
+          </div>
+        </div>
+      </div>
+    </main>
+    <dialog
+      id="inpaint-dialog"
+      class="inpaint-dialog"
+      aria-labelledby="inpaint-title"
+    >
+      <h2 id="inpaint-title" class="sr-only">Editar máscara</h2>
+      <div class="inpaint-toolbar">
+        <div class="inpaint-tool-group">
+          <i data-lucide="brush" aria-hidden="true"></i>
+          <label for="input-brush-size" class="sr-only"
+            >Tamaño del pincel</label
+          >
+          <input
+            id="input-brush-size"
+            type="range"
+            min="1"
+            max="20"
+            step="0.5"
+            value="5"
+            title="Tamaño del pincel (% del lado menor)"
+          />
+          <span id="brush-size-value">24</span>
+        </div>
+        <div class="inpaint-tool-select" id="inpaint-tool-select">
+          <button
+            id="btn-tool-brush"
+            class="active"
+            type="button"
+            title="Pincel"
+            aria-pressed="true"
+          >
+            <i data-lucide="brush" aria-hidden="true"></i>
+          </button>
+          <button
+            id="btn-tool-rect"
+            type="button"
+            title="Rectángulo"
+            aria-pressed="false"
+          >
+            <i data-lucide="square" aria-hidden="true"></i>
+          </button>
+          <button
+            id="btn-tool-ellipse"
+            type="button"
+            title="Elipse"
+            aria-pressed="false"
+          >
+            <i data-lucide="circle" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="inpaint-mode-toggle" id="inpaint-mode-toggle">
+          <button id="btn-mode-paint" class="active" type="button">
+            Pintar
+          </button>
+          <button id="btn-mode-erase" type="button">Borrar</button>
+        </div>
+        <div class="inpaint-toolbar-spacer"></div>
+        <button id="btn-undo-mask" class="btn-icon" title="Deshacer" disabled>
+          <i data-lucide="undo-2"></i>
+        </button>
+        <button id="btn-clear-mask" class="btn-secondary" disabled>
+          Limpiar
+        </button>
+        <button id="btn-apply-mask" class="run-btn">Listo</button>
+      </div>
+      <div
+        class="inpaint-canvas-wrap"
+        id="inpaint-canvas-wrap"
+        role="img"
+        aria-label="Lienzo de máscara de inpainting"
+      >
+        <div class="inpaint-canvas-stack">
+          <canvas id="inpaint-canvas-base"></canvas>
+          <canvas id="inpaint-canvas-overlay"></canvas>
+        </div>
+        <div class="inpaint-loading" id="inpaint-loading">
+          <span class="inpaint-loading-spinner"></span>
+          <span>Ajustando rotación EXIF…</span>
+        </div>
+      </div>
+      <p class="inpaint-hint">
+        Pinta sobre la zona que quieres regenerar. Lo pintado en rojo se
+        reemplazará.
+      </p>
+    </dialog>
+    <dialog
+      id="dialog-gemini"
+      class="gemini-dialog"
+      aria-labelledby="gemini-title"
+    >
+      <div class="dialog-header">
+        <h3 id="gemini-title">Configuración Gemini</h3>
+        <button id="btn-close-gemini" class="dialog-close">
+          <i data-lucide="x" aria-hidden="true"></i>
+        </button>
+      </div>
+      <div class="dialog-body">
+        <label for="input-api-key" class="input-label">API Key</label>
+        <input
+          id="input-api-key"
+          type="password"
+          placeholder="Introduce tu API key de Google AI"
+        />
+        <div
+          class="model-select-row"
+          id="model-select-row"
+          style="display: none"
+        >
+          <label for="select-gemini-model" class="input-label">Modelo</label>
+          <select id="select-gemini-model"></select>
+        </div>
+      </div>
+      <div class="dialog-footer">
+        <button
+          id="btn-delete-api-key"
+          class="btn-secondary-outline"
+          style="display: none"
+        >
+          Eliminar API Key
+        </button>
+        <button id="btn-save-api-key" class="run-btn">Guardar</button>
+      </div>
+    </dialog>
+  </body>
+</html>

@@ -1,0 +1,26 @@
+:root {
+    --primary: #ff94fe;
+    --on-primary: #000000;
+    --background: #000000;
+    --surface: #000000;
+    --surface-raised: #0c0c0c;
+    --on-surface: #e1e1e1;
+    --on-surface-variant: #ffffff;
+    --outline: #ffffff52;
+    --font-main: 'Geist', sans-serif;
+    --sidebar-width: 320px;
+    --header-height: 64px;
+    --radius: 4px;
+    --radius-small: 3px;
+    --radius-medium: 6px;
+    --border: 1px solid var(--outline);
+    --space-extra-small: 4px;
+    --space-small: 6px;
+    --space-medium-small: 8px;
+    --space-medium: 16px;
+    --text-extra-small: 10px;
+    --text-small-small: 11px;
+    --text-small: 12px;
+    --text-medium: 13px;
+    --text-large: 16px;
+}
