@@ -10,6 +10,8 @@
     width: 100%;
     aspect-ratio: 1 / 1;
     background-color: var(--surface-raised);
+    background-image: radial-gradient(circle at 8px 8px, var(--outline-strong) 1px, transparent 0);
+    background-size: 20px 20px;
     border: var(--border);
     border-radius: var(--radius);
     display: flex;
@@ -36,23 +38,17 @@
 }
 
 .canvas-placeholder i[data-lucide] {
-    width: 64px;
-    height: 64px;
-    color: var(--on-surface-variant);
+    width: 10rem;
+    height: 10rem;
+    color: var(--primary);
     opacity: 0.4;
 }
 
 .canvas-placeholder svg {
-    width: 64px;
-    height: 64px;
-    color: var(--on-surface-variant);
+    width: 10rem;
+    height: 10rem;
+    color: var(--primary);
     opacity: 0.4;
-}
-
-.canvas-placeholder p {
-    font-size: 14px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
 }
 
 .preview-gallery {
