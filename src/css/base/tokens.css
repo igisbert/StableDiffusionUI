@@ -6,11 +6,16 @@
     --surface-raised: #18181b;
     --on-surface: #e8e6e1;
     --on-surface-variant: #9a9aa0;
+    --on-surface-faint: #6f6f77;
     --outline: #232329;
     --outline-strong: #2a2a30;
     --primary-muted: rgba(255, 148, 254, 0.14);
     --primary-soft: rgba(255, 148, 254, 0.07);
     --font-main: 'Geist', sans-serif;
+    --text-label: 10.5px;
+    --tracking-label: 0.06em;
+    --font-weight-semibold: 600;
+    --surface-elevated: #0e0e10;
     --sidebar-width: 320px;
     --header-height: 64px;
     --radius: 4px;

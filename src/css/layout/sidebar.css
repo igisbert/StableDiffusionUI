@@ -60,9 +60,12 @@ nav {
 }
 
 .config-label {
-    font-size: var(--text-small);
-    color: var(--on-surface-variant);
-    margin-bottom: 8px;
+    font-size: var(--text-label);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--on-surface-faint);
+    margin-bottom: 7px;
     display: block;
 }
 

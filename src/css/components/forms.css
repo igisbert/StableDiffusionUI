@@ -8,11 +8,14 @@
 }
 
 .input-label {
-  font-size: var(--text-small);
-  color: var(--on-surface-variant);
-  display: flex;
-  align-items: center;
-  gap: var(--space-extra-small);
+    font-size: var(--text-label);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--on-surface-faint);
+    display: flex;
+    align-items: center;
+    gap: 5px;
 }
 
 select {
@@ -242,20 +245,20 @@ input:checked + .slider:before {
 }
 
 .custom-flags-section textarea {
-  width: 100%;
-  border: none;
-  border-top: 1px solid var(--outline);
-  border-radius: 0 0 4px 4px;
-  padding: 8px 12px;
-  font-family: monospace;
-  font-size: var(--text-small);
-  resize: vertical;
-  background-color: #0e0e10;
-  color: var(--on-surface-variant);
-  box-sizing: border-box;
+    width: 100%;
+    border: none;
+    border-top: 1px solid var(--outline);
+    border-radius: 0 0 4px 4px;
+    padding: 8px 12px;
+    font-family: monospace;
+    font-size: var(--text-small);
+    resize: vertical;
+    background-color: var(--surface-elevated);
+    color: var(--on-surface-variant);
+    box-sizing: border-box;
 }
 
 .custom-flags-section textarea:focus {
-  outline: none;
-  background-color: #111114;
+    outline: none;
+    background-color: var(--surface);
 }
