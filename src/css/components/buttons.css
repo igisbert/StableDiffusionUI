@@ -110,19 +110,20 @@ button:disabled {
 }
 
 .btn-danger {
-    background-color: #3a1010;
-    color: #ff6b6b;
-    border: 1px solid #5a2020;
+    background-color: var(--danger-bg);
+    color: var(--danger-text);
+    border: 1px solid var(--danger-border);
     padding: 8px 12px;
     border-radius: var(--radius);
     font-size: var(--text-small);
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: background-color 0.2s, border-color 0.2s;
 }
 
 .btn-danger:hover:not(:disabled) {
-    background-color: #5a2020;
-    color: #ff9999;
+    background-color: color-mix(in srgb, var(--danger-bg) 88%, black);
+    border-color: color-mix(in srgb, var(--danger-border) 88%, black);
+    color: var(--danger-text);
 }
 
 .btn-icon {
@@ -135,12 +136,13 @@ button:disabled {
 }
 
 .btn-icon.btn-danger {
-    color: #ff6b6b;
+    color: var(--danger-text);
 }
 
 .btn-icon.btn-danger:hover:not(:disabled) {
-    color: #ff9999;
-    background-color: #5a2020;
+    color: var(--danger-text);
+    background-color: var(--danger-bg);
+    border-color: var(--danger-border);
 }
 
 .btn-clear-image {
@@ -153,9 +155,9 @@ button:disabled {
 }
 
 .btn-abort {
-    background: transparent;
-    color: #ff4444;
-    border: 1px solid #ff4444;
+    background: var(--danger-bg);
+    color: var(--danger-text);
+    border: 1px solid var(--danger-border);
     aspect-ratio: 1 / 1;
     padding: 0;
     border-radius: var(--radius);
@@ -177,5 +179,6 @@ button:disabled {
 }
 
 .btn-abort:hover:not(:disabled) {
-    background-color: rgba(255, 68, 68, 0.15);
+    background-color: color-mix(in srgb, var(--danger-bg) 88%, black);
+    border-color: color-mix(in srgb, var(--danger-border) 88%, black);
 }
