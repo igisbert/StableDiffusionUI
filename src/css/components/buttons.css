@@ -18,7 +18,8 @@
 }
 
 .run-btn:hover:not(:disabled) {
-    filter: brightness(1.1);
+    filter: brightness(1.06);
+    box-shadow: 0 8px 20px rgba(255, 148, 254, 0.22);
 }
 
 .run-btn:disabled {
@@ -46,9 +47,9 @@ button:disabled {
 }
 
 .btn-outline {
-    background: transparent;
-    color: var(--primary);
-    border: 1px solid var(--primary);
+    background: var(--surface);
+    color: var(--on-surface-variant);
+    border: 1px solid var(--outline);
     aspect-ratio: 1 / 1;
     padding: 0;
     border-radius: var(--radius);
@@ -56,12 +57,14 @@ button:disabled {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s;
+    transition: all 0.18s;
     flex-shrink: 0;
 }
 
 .btn-outline:hover:not(:disabled) {
-    background-color: rgba(255, 148, 254, 0.1);
+    background: var(--surface-raised);
+    border-color: var(--outline-strong);
+    color: var(--on-surface);
 }
 
 .btn-outline i[data-lucide] {
@@ -72,17 +75,18 @@ button:disabled {
 .btn-secondary {
     background-color: var(--surface);
     color: var(--on-surface);
-    border: var(--border);
+    border: 1px solid var(--outline);
     padding: 8px 12px;
     border-radius: var(--radius);
     font-size: var(--text-small);
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: background 0.18s, border-color 0.18s;
 }
 
 .btn-secondary:hover:not(:disabled) {
-    background-color: var(--primary);
-    color: var(--on-primary);
+    background: color-mix(in srgb, var(--primary) 18%, var(--surface));
+    border-color: color-mix(in srgb, var(--primary) 28%, var(--outline));
+    color: var(--primary);
 }
 
 .btn-secondary:disabled {
