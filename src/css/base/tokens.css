@@ -1,12 +1,12 @@
 :root {
     --primary: #ff94fe;
-    --on-primary: #000000;
-    --background: #000000;
-    --surface: #000000;
-    --surface-raised: #0c0c0c;
-    --on-surface: #e1e1e1;
-    --on-surface-variant: #ffffff;
-    --outline: #ffffff52;
+    --on-primary: #0a0a0b;
+    --background: #0a0a0b;
+    --surface: #111113;
+    --surface-raised: #18181b;
+    --on-surface: #e8e6e1;
+    --on-surface-variant: #9a9aa0;
+    --outline: #232329;
     --font-main: 'Geist', sans-serif;
     --sidebar-width: 320px;
     --header-height: 64px;
