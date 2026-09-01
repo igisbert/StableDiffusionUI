@@ -100,15 +100,57 @@
 }
 
 .lora-row:has(input[type="checkbox"]:checked) {
-  background: var(--primary-muted);
+    background: var(--primary-muted);
+}
+
+.lora-row.checked {
+    background: var(--primary-muted);
 }
 
 .lora-row input[type="checkbox"] {
-  flex-shrink: 0;
-  width: 14px;
-  height: 14px;
-  accent-color: var(--primary);
-  cursor: pointer;
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+.lora-check-icon {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    stroke-width: 1.75;
+}
+
+.lora-check-icon.off {
+    color: var(--on-surface-faint);
+    display: block;
+}
+
+.lora-check-icon.on {
+    color: var(--primary);
+    display: none;
+}
+
+.lora-row:has(input[type="checkbox"]:checked) .lora-check-icon.off {
+    display: none;
+}
+
+.lora-row:has(input[type="checkbox"]:checked) .lora-check-icon.on {
+    display: block;
+}
+
+.lora-row.checked .lora-check-icon.off {
+    display: none;
+}
+
+.lora-row.checked .lora-check-icon.on {
+    display: block;
+}
+
+.lora-row:has(input[type="checkbox"]:focus-visible) {
+    box-shadow: 0 0 0 3px var(--primary-muted);
+    border-radius: var(--radius-small);
 }
 
 .lora-row-name {

@@ -1,3 +1,5 @@
+import { createIcons, icons } from "lucide";
+
 let trigger;
 let popover;
 let listEl;
@@ -63,6 +65,16 @@ export function populateLoraList(items) {
         cb.type = 'checkbox';
         cb.value = file;
 
+        const iconOff = document.createElement('i');
+        iconOff.dataset.lucide = 'square';
+        iconOff.className = 'lora-check-icon off';
+        iconOff.setAttribute('aria-hidden', 'true');
+
+        const iconOn = document.createElement('i');
+        iconOn.dataset.lucide = 'square-check-big';
+        iconOn.className = 'lora-check-icon on';
+        iconOn.setAttribute('aria-hidden', 'true');
+
         const name = document.createElement('span');
         name.className = 'lora-row-name';
         name.textContent = file;
@@ -77,19 +89,22 @@ export function populateLoraList(items) {
         weight.value = '1';
         weight.disabled = true;
 
-        cb.addEventListener('change', () => {
+        const syncRow = () => {
+            row.classList.toggle('checked', cb.checked);
             weight.disabled = !cb.checked;
             updateTriggerText();
-            // dispatch change for presets listeners if needed
             document.dispatchEvent(new CustomEvent('lora-change'));
-        });
+        };
+
+        cb.addEventListener('change', syncRow);
 
         // prevent row click from double-toggling when clicking weight input
         weight.addEventListener('click', (e) => e.stopPropagation());
 
-        row.append(cb, name, weight);
+        row.append(cb, iconOff, iconOn, name, weight);
         listEl.appendChild(row);
     }
+    createIcons({ icons });
     updateTriggerText();
 }
 
@@ -119,6 +134,7 @@ export function setLoras(loras) {
             w.value = '1';
             w.disabled = true;
         }
+        row.classList.toggle('checked', cb.checked);
     }
     updateTriggerText();
 }
