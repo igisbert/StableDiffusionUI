@@ -1,5 +1,6 @@
 import { Store } from '@tauri-apps/plugin-store'
 import { invoke } from '@tauri-apps/api/core'
+import { populateLoraList } from './features/lora-multiselect.js'
 
 let store
 
@@ -61,7 +62,7 @@ const MODEL_SCANS = [
   { storeKey: 'models_path', target: 'select-model', withNone: true },
   { storeKey: 'vae_path', target: 'select-vae', withNone: true },
   { storeKey: 'llm_path', target: 'select-llm', withNone: true },
-  { storeKey: 'lora_path', target: 'select-lora', withNone: true },
+  { storeKey: 'lora_path', isLora: true },
   { storeKey: 'llm_vision_path', target: 'select-llm-vision', withNone: true },
   { storeKey: 'clip_l_path', target: 'select-clip-l', withNone: true },
   { storeKey: 'clip_g_path', target: 'select-clip-g', withNone: true },
@@ -72,7 +73,10 @@ const MODEL_SCANS = [
 async function scanGeneric(entry, basePath) {
   try {
     const result = await invoke('scan_models', { basePath })
-    if (entry.isRadio) {
+    if (entry.isLora) {
+      const items = result.loras ?? result.models ?? []
+      populateLoraList(items)
+    } else if (entry.isRadio) {
       populateRadios(entry.target, result.models)
     } else {
       populateSelect(entry.target, result.models, entry.withNone)

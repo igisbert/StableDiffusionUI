@@ -10,5 +10,6 @@
 @import "./components/presets.css";
 @import "./components/prompt.css";
 @import "./components/preview.css";
+@import "./components/lora-multiselect.css";
 @import "./dialogs/gemini.css";
 @import "./dialogs/inpaint.css";

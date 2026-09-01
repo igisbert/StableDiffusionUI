@@ -5,6 +5,7 @@ import { appendLine } from './console.js'
 import { exportMask, isMaskPainted, getPreparedImagePath } from './inpaint.js'
 import { startProcess, endProcess, isBusy } from './busy.js'
 import { getSelectedImageState } from './state/image-state.js'
+import { getLoras } from './features/lora-multiselect.js'
 import { flashCopy } from './ui/clipboard.js'
 
 let isRunning = false
@@ -67,6 +68,8 @@ export async function collectParams() {
     : (getSelectedImageState() || null)
   const maskImage = isInpainting && isMaskPainted() ? exportMask() : null
 
+  const loras = getLoras()
+
   return {
     sd_path: sdPath,
     output_path: outputPath,
@@ -82,13 +85,14 @@ export async function collectParams() {
     model_type: modelType,
     llm: val('select-llm'),
     vae: val('select-vae'),
-    lora: val('select-lora'),
+    lora: loras[0]?.file || '',
+    loras: loras,
     llm_vision: val('select-llm-vision'),
     clip_l: val('select-clip-l'),
     clip_g: val('select-clip-g'),
     t5xxl: val('select-t5xxl'),
     prompt: val('input-prompt'),
-    lora_weight: num('input-lora-weight', 1),
+    lora_weight: loras[0]?.weight ?? 1,
     negative_prompt: val('input-negative'),
     width: int('input-width', 512),
     height: int('input-height', 512),
@@ -133,9 +137,10 @@ export function paramsToCliString(params) {
   if (params.t5xxl) cmd += ' --t5xxl "' + escapeArg(params.t5xxl_path + '\\' + params.t5xxl) + '"'
 
   let prompt = params.prompt
-  if (params.lora) {
-    const loraName = params.lora.replace(/\.[^.]+$/, '')
-    prompt += ' <lora:' + loraName + ':' + params.lora_weight + '>'
+  const loras = params.loras || (params.lora ? [{ file: params.lora, weight: params.lora_weight }] : [])
+  for (const l of loras) {
+    const loraName = l.file.replace(/\.[^.]+$/, '')
+    prompt += ' <lora:' + loraName + ':' + l.weight + '>'
   }
   cmd += ' -p "' + escapeArg(prompt) + '"'
   if (params.negative_prompt) cmd += ' -n "' + escapeArg(params.negative_prompt) + '"'
@@ -185,9 +190,6 @@ async function buildCommand() {
 }
 
 export async function initInference() {
-  document.getElementById('select-lora').addEventListener('change', function() {
-    document.getElementById('input-lora-weight').disabled = !this.value
-  })
 
   const toggleFa = document.getElementById('toggle-fa')
   const toggleDiffFa = document.getElementById('toggle-diffusion-fa')

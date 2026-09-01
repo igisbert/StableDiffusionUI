@@ -285,10 +285,17 @@
             </select>
           </div>
           <div class="input-group">
-            <label for="select-lora" class="input-label">LoRA</label>
-            <select id="select-lora">
+            <label class="input-label">LoRA</label>
+            <select id="select-lora" hidden>
               <option value="">Ninguno</option>
             </select>
+            <button id="btn-lora-trigger" class="lora-trigger" aria-haspopup="listbox" aria-expanded="false" type="button">
+              <span class="lora-trigger-label">Ninguno</span>
+              <i data-lucide="chevron-down" class="lora-trigger-chevron" aria-hidden="true"></i>
+            </button>
+            <div id="popover-lora" class="popover-lora" role="listbox" aria-multiselectable="true">
+              <div id="lora-list"></div>
+            </div>
           </div>
           <div class="input-group">
             <label for="select-llm-vision" class="input-label"

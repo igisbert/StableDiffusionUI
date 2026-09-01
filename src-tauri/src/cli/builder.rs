@@ -1,5 +1,12 @@
+use serde::Deserialize;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+
+#[derive(Deserialize, Clone, Debug)]
+pub struct LoraItem {
+    pub file: String,
+    pub weight: f32,
+}
 
 pub fn now_secs() -> u64 {
     std::time::SystemTime::now()
@@ -38,6 +45,19 @@ pub fn push_prompt(cmd: &mut Command, prompt: &str, lora: &str, lora_weight: f32
             .and_then(|s| s.to_str())
             .unwrap_or(lora);
         full.push_str(&format!(" <lora:{}:{}>", name, lora_weight));
+    }
+    cmd.arg("-p").arg(full);
+}
+
+pub fn push_prompt_with_loras(cmd: &mut Command, prompt: &str, loras: &[LoraItem]) {
+    let mut full = prompt.to_string();
+    for l in loras {
+        if l.file.is_empty() { continue; }
+        let name = Path::new(&l.file)
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or(&l.file);
+        full.push_str(&format!(" <lora:{}:{}>", name, l.weight));
     }
     cmd.arg("-p").arg(full);
 }

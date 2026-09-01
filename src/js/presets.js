@@ -1,4 +1,5 @@
 import { Store } from '@tauri-apps/plugin-store'
+import { getLoras, setLoras } from './features/lora-multiselect.js'
 
 let store
 
@@ -6,7 +7,6 @@ const FIELDS = [
   { id: 'select-model',           type: 'select' },
   { id: 'select-llm',             type: 'select' },
   { id: 'select-vae',             type: 'select' },
-  { id: 'select-lora',            type: 'select' },
   { id: 'select-llm-vision',      type: 'select' },
   { id: 'select-clip-l',          type: 'select' },
   { id: 'select-clip-g',          type: 'select' },
@@ -20,7 +20,6 @@ const FIELDS = [
   { id: 'input-batch-count',      type: 'text'   },
   { id: 'input-max-vram',         type: 'text'   },
   { id: 'input-threads',          type: 'text'   },
-  { id: 'input-lora-weight',      type: 'text'   },
   { id: 'select-sampler',         type: 'select' },
   { id: 'select-scheduler',       type: 'select' },
   { id: 'toggle-cuda',            type: 'toggle' },
@@ -44,6 +43,13 @@ function captureForm() {
     if (!el) continue
     values[field.id] = field.type === 'toggle' ? el.checked : el.value
   }
+  values['loras'] = getLoras()
+  // legacy compat
+  const first = values['loras'][0]
+  if (first) {
+    values['select-lora'] = first.file
+    values['input-lora-weight'] = String(first.weight)
+  }
   values['model-type'] = document.querySelector('input[name="model-type"]:checked')?.value || 'monolithic'
   values['image-op'] = document.querySelector('input[name="image-op"]:checked')?.value || ''
   return values
@@ -58,6 +64,11 @@ function applyForm(values) {
     } else {
       el.value = values[field.id]
     }
+  }
+  if (values['loras'] && Array.isArray(values['loras'])) {
+    setLoras(values['loras'])
+  } else if (values['select-lora']) {
+    setLoras([{ file: values['select-lora'], weight: parseFloat(values['input-lora-weight']) || 1 }])
   }
   if (values['model-type']) {
     const radio = document.querySelector(`input[name="model-type"][value="${values['model-type']}"]`)
@@ -77,7 +88,6 @@ function applyForm(values) {
     }
   }
   document.getElementById('select-model')?.dispatchEvent(new Event('change'))
-  document.getElementById('select-lora')?.dispatchEvent(new Event('change'))
   const faEl = document.getElementById('toggle-fa')
   const diffFaEl = document.getElementById('toggle-diffusion-fa')
   if (faEl && diffFaEl) diffFaEl.disabled = faEl.checked

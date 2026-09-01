@@ -18,6 +18,7 @@ import { initImageOp, updateImageOpUI } from "./features/image-op.js";
 import { initGeminiDialog, updateEnhancerUI } from "./dialogs/gemini-dialog.js";
 import { initUpscale } from "./features/upscale.js";
 import { initPathsPanel } from "./ui/paths-panel.js";
+import { initLoraMultiselect } from "./features/lora-multiselect.js";
 import { flashCopy } from "./ui/clipboard.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -107,6 +108,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   initUpscale();
 
   await initPathsPanel();
+
+  initLoraMultiselect();
 
   const btnRun = document.getElementById("btn-run");
   const btnRunUpscale = document.getElementById("btn-run-upscale");

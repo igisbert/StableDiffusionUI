@@ -4,6 +4,7 @@ use std::process::Command;
 use tauri::Emitter;
 
 use crate::cli::builder;
+use crate::cli::builder::LoraItem;
 use crate::image::temp::{save_normalized, TempFiles};
 use crate::process::manager;
 
@@ -23,8 +24,12 @@ pub struct InferenceParams {
     pub model_type: String,
     pub llm: String,
     pub vae: String,
+    #[serde(default)]
     pub lora: String,
+    #[serde(default)]
     pub lora_weight: f32,
+    #[serde(default)]
+    pub loras: Vec<LoraItem>,
     pub llm_vision: String,
     pub clip_l: String,
     pub clip_g: String,
@@ -127,7 +132,7 @@ pub async fn run_inference(app: tauri::AppHandle, params: InferenceParams) -> Re
 
     builder::push_model_arg(&mut cmd, "--llm", &params.llm_path, &params.llm);
     builder::push_model_arg(&mut cmd, "--vae", &params.vae_path, &params.vae);
-    if !params.lora.is_empty() {
+    if !params.lora.is_empty() || !params.loras.is_empty() {
         let lora_dir = Path::new(&params.lora_path);
         if lora_dir.exists() {
             cmd.arg("--lora-model-dir").arg(lora_dir);
@@ -138,7 +143,11 @@ pub async fn run_inference(app: tauri::AppHandle, params: InferenceParams) -> Re
     builder::push_model_arg(&mut cmd, "--clip_g", &params.clip_g_path, &params.clip_g);
     builder::push_model_arg(&mut cmd, "--t5xxl", &params.t5xxl_path, &params.t5xxl);
 
-    builder::push_prompt(&mut cmd, &params.prompt, &params.lora, params.lora_weight);
+    if !params.loras.is_empty() {
+        builder::push_prompt_with_loras(&mut cmd, &params.prompt, &params.loras);
+    } else {
+        builder::push_prompt(&mut cmd, &params.prompt, &params.lora, params.lora_weight);
+    }
     cmd.arg("-n")
         .arg(&params.negative_prompt)
         .arg("-W")
