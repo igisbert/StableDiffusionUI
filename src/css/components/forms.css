@@ -8,17 +8,18 @@
 }
 
 .input-label {
-    font-size: var(--text-label);
-    font-weight: var(--font-weight-semibold);
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
-    color: var(--on-surface-faint);
-    display: flex;
-    align-items: center;
-    gap: 5px;
+  font-size: var(--text-label);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--on-surface-faint);
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
 select {
+  appearance: base-select;
   width: 100%;
   min-width: 0;
   text-overflow: ellipsis;
@@ -245,20 +246,78 @@ input:checked + .slider:before {
 }
 
 .custom-flags-section textarea {
-    width: 100%;
-    border: none;
-    border-top: 1px solid var(--outline);
-    border-radius: 0 0 4px 4px;
-    padding: 8px 12px;
-    font-family: var(--font-mono);
-    font-size: var(--text-small);
-    resize: vertical;
-    background-color: var(--surface-elevated);
-    color: var(--on-surface-variant);
-    box-sizing: border-box;
+  width: 100%;
+  border: none;
+  border-top: 1px solid var(--outline);
+  border-radius: 0 0 4px 4px;
+  padding: 8px 12px;
+  font-family: var(--font-mono);
+  font-size: var(--text-small);
+  resize: vertical;
+  background-color: var(--surface-elevated);
+  color: var(--on-surface-variant);
+  box-sizing: border-box;
 }
 
 .custom-flags-section textarea:focus {
-    outline: none;
-    background-color: var(--surface);
+  outline: none;
+  background-color: var(--surface);
+}
+
+/* Select picker — base-select (Chromium) */
+select::picker(select) {
+  appearance: base-select;
+  background: var(--surface-raised);
+  border: 1px solid var(--outline-strong);
+  border-radius: var(--radius);
+  padding: 6px;
+  margin-top: 6px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+}
+
+select::picker(select) option {
+  padding: 8px 10px;
+  border-radius: var(--radius-small);
+  background: transparent;
+  color: var(--on-surface);
+  font-size: var(--text-small);
+  margin-top: var(--space-small);
+}
+
+select::picker(select) option:first-child {
+  margin-top: 0;
+}
+
+select::picker(select) option:hover,
+select::picker(select) option:focus {
+  background: color-mix(in srgb, var(--primary) 7%, var(--surface-raised));
+  color: var(--on-surface);
+}
+
+select::picker(select) option:checked {
+  background: var(--primary-muted);
+  color: var(--primary);
+}
+
+option {
+  background: var(--surface-raised);
+  color: var(--on-surface);
+  padding: var(--space-medium-small) var(--space-medium);
+  border-radius: var(--radius-small);
+  margin-top: var(--space-small);
+}
+
+option:first-child {
+  margin-top: 0;
+}
+
+option:hover,
+option:focus {
+  background: color-mix(in srgb, var(--primary) 7%, var(--surface-raised));
+  color: var(--on-surface);
+}
+
+::checkmark {
+  display: none;
+  content: none;
 }
