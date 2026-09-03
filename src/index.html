@@ -326,7 +326,7 @@
         </div>
         <div class="workspace-grid">
           <!-- Controls Column -->
-          <form id="params-form" class="controls-col" onsubmit="return false;">
+          <form id="params-form" class="controls-col">
             <fieldset class="model-type-row">
               <legend class="input-label">
                 Modelo:
@@ -354,6 +354,7 @@
               <button
                 id="btn-toggle-image-input"
                 class="btn-toggle-section"
+                type="button"
                 aria-expanded="false"
                 aria-controls="image-input-content"
               >
@@ -371,17 +372,18 @@
                     class="image-input-row image-drop-zone"
                     id="image-drop-zone"
                   >
-                    <button id="btn-select-image" class="btn-secondary">
+                    <button id="btn-select-image" type="button" class="btn-secondary">
                       Seleccionar
                     </button>
                     <span class="image-input-name" id="image-input-name"
                       >Ninguna</span
                     >
-                    <button
-                      id="btn-clear-image"
-                      class="btn-icon btn-danger btn-clear-image"
-                      title="Quitar imagen"
-                    >
+                      <button
+                        id="btn-clear-image"
+                        type="button"
+                        class="btn-icon btn-danger btn-clear-image"
+                        title="Quitar imagen"
+                      >
                       <i data-lucide="x"></i>
                     </button>
                   </div>
@@ -432,12 +434,13 @@
                         class="radio-upscale-group"
                       ></div>
                       <div class="run-btn-row">
-                        <button id="btn-run-upscale" class="run-btn" disabled>
+                        <button id="btn-run-upscale" type="button" class="run-btn" disabled>
                           <i data-lucide="play"></i>
                           Ejecutar
                         </button>
                         <button
                           id="btn-abort-upscale"
+                          type="button"
                           class="btn-abort"
                           title="Cancelar"
                           hidden
@@ -475,36 +478,40 @@
                             >Rellenar ancho y alto de la imagen</span
                           >
                           <div class="size-btn-group">
-                            <button
-                              id="btn-size-full"
-                              class="btn-secondary size-btn"
-                              data-factor="1"
-                              disabled
-                            >
+                              <button
+                                id="btn-size-full"
+                                type="button"
+                                class="btn-secondary size-btn"
+                                data-factor="1"
+                                disabled
+                              >
                               100%
                             </button>
-                            <button
-                              id="btn-size-three-quarter"
-                              class="btn-secondary size-btn"
-                              data-factor="0.75"
-                              disabled
-                            >
+                              <button
+                                id="btn-size-three-quarter"
+                                type="button"
+                                class="btn-secondary size-btn"
+                                data-factor="0.75"
+                                disabled
+                              >
                               75%
                             </button>
-                            <button
-                              id="btn-size-half"
-                              class="btn-secondary size-btn"
-                              data-factor="0.5"
-                              disabled
-                            >
+                              <button
+                                id="btn-size-half"
+                                type="button"
+                                class="btn-secondary size-btn"
+                                data-factor="0.5"
+                                disabled
+                              >
                               50%
                             </button>
-                            <button
-                              id="btn-size-quarter"
-                              class="btn-secondary size-btn"
-                              data-factor="0.25"
-                              disabled
-                            >
+                              <button
+                                id="btn-size-quarter"
+                                type="button"
+                                class="btn-secondary size-btn"
+                                data-factor="0.25"
+                                disabled
+                              >
                               25%
                             </button>
                           </div>
@@ -519,6 +526,7 @@
                       <div class="inpaint-op-row">
                         <button
                           id="btn-open-inpaint"
+                          type="button"
                           class="btn-secondary"
                           disabled
                         >
@@ -556,36 +564,40 @@
                             >Rellenar ancho y alto de la imagen</span
                           >
                           <div class="size-btn-group">
-                            <button
-                              id="btn-inpaint-size-full"
-                              class="btn-secondary size-btn"
-                              data-factor="1"
-                              disabled
-                            >
+                              <button
+                                id="btn-inpaint-size-full"
+                                type="button"
+                                class="btn-secondary size-btn"
+                                data-factor="1"
+                                disabled
+                              >
                               100%
                             </button>
-                            <button
-                              id="btn-inpaint-size-three-quarter"
-                              class="btn-secondary size-btn"
-                              data-factor="0.75"
-                              disabled
-                            >
+                              <button
+                                id="btn-inpaint-size-three-quarter"
+                                type="button"
+                                class="btn-secondary size-btn"
+                                data-factor="0.75"
+                                disabled
+                              >
                               75%
                             </button>
-                            <button
-                              id="btn-inpaint-size-half"
-                              class="btn-secondary size-btn"
-                              data-factor="0.5"
-                              disabled
-                            >
+                              <button
+                                id="btn-inpaint-size-half"
+                                type="button"
+                                class="btn-secondary size-btn"
+                                data-factor="0.5"
+                                disabled
+                              >
                               50%
                             </button>
-                            <button
-                              id="btn-inpaint-size-quarter"
-                              class="btn-secondary size-btn"
-                              data-factor="0.25"
-                              disabled
-                            >
+                              <button
+                                id="btn-inpaint-size-quarter"
+                                type="button"
+                                class="btn-secondary size-btn"
+                                data-factor="0.25"
+                                disabled
+                              >
                               25%
                             </button>
                           </div>
@@ -602,36 +614,40 @@
                           >Rellenar ancho y alto de la imagen</span
                         >
                         <div class="size-btn-group">
-                          <button
-                            id="btn-edit-size-full"
-                            class="btn-secondary size-btn"
-                            data-factor="1"
-                            disabled
-                          >
+                              <button
+                                id="btn-edit-size-full"
+                                type="button"
+                                class="btn-secondary size-btn"
+                                data-factor="1"
+                                disabled
+                              >
                             100%
                           </button>
-                          <button
-                            id="btn-edit-size-three-quarter"
-                            class="btn-secondary size-btn"
-                            data-factor="0.75"
-                            disabled
-                          >
+                              <button
+                                id="btn-edit-size-three-quarter"
+                                type="button"
+                                class="btn-secondary size-btn"
+                                data-factor="0.75"
+                                disabled
+                              >
                             75%
                           </button>
-                          <button
-                            id="btn-edit-size-half"
-                            class="btn-secondary size-btn"
-                            data-factor="0.5"
-                            disabled
-                          >
+                              <button
+                                id="btn-edit-size-half"
+                                type="button"
+                                class="btn-secondary size-btn"
+                                data-factor="0.5"
+                                disabled
+                              >
                             50%
                           </button>
-                          <button
-                            id="btn-edit-size-quarter"
-                            class="btn-secondary size-btn"
-                            data-factor="0.25"
-                            disabled
-                          >
+                              <button
+                                id="btn-edit-size-quarter"
+                                type="button"
+                                class="btn-secondary size-btn"
+                                data-factor="0.25"
+                                disabled
+                              >
                             25%
                           </button>
                         </div>
@@ -669,6 +685,7 @@
                 ></textarea>
                 <button
                   id="btn-enhance"
+                  type="button"
                   class="btn-enhance"
                   style="display: none"
                   title="Mejorar prompt con IA"
@@ -1013,14 +1030,14 @@
               ></textarea>
             </details>
             <div class="run-row">
-              <button id="btn-copy" class="btn-outline" title="Copiar comando">
+              <button id="btn-copy" type="button" class="btn-outline" title="Copiar comando">
                 <i data-lucide="copy"></i>
               </button>
-              <button id="btn-run" class="run-btn">
+              <button id="btn-run" type="button" class="run-btn">
                 <i data-lucide="play"></i>
                 EJECUTAR
               </button>
-              <button id="btn-abort" class="btn-abort" title="Cancelar" hidden>
+              <button id="btn-abort" type="button" class="btn-abort" title="Cancelar" hidden>
                 <i data-lucide="x"></i>
               </button>
             </div>

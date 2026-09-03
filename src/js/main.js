@@ -111,6 +111,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   initLoraMultiselect();
 
+  document.getElementById('params-form')?.addEventListener('submit', (e) => e.preventDefault());
+
   const btnRun = document.getElementById("btn-run");
   const btnRunUpscale = document.getElementById("btn-run-upscale");
 
