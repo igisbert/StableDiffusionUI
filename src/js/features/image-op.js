@@ -1,10 +1,17 @@
 import { loadInpaintImage, resetInpaint, isMaskPainted } from '../inpaint.js'
 import { getSelectedImages } from '../state/image-state.js'
 
+// Operations that can only use one image; the warning is only meaningful once
+// one of them is selected.
+const SINGLE_IMAGE_OPS = ['img2img', 'inpainting', 'upscale']
+
 export async function refreshInpaintCanvas() {
   const op = document.querySelector('input[name="image-op"]:checked')?.value
   const img = getSelectedImages()[0]
-  if (op !== 'inpainting' || !img) return
+  if (op !== 'inpainting' || !img) {
+    clearInpaintState()
+    return
+  }
   try {
     await loadInpaintImage(img)
     updateInpaintMaskStatus()
@@ -24,7 +31,9 @@ function updateInpaintMaskStatus() {
   if (el) el.textContent = isMaskPainted() ? 'Máscara pintada' : 'Sin máscara'
 }
 
-export function updateImageOpUI() {
+export function updateImageOpUI(
+  imageOp = document.querySelector('input[name="image-op"]:checked')?.value
+) {
   const images = getSelectedImages()
   const hasImage = images.length > 0
   document.querySelectorAll('.size-btn').forEach(btn => {
@@ -33,10 +42,9 @@ export function updateImageOpUI() {
   const btnOpenInpaint = document.getElementById('btn-open-inpaint')
   if (btnOpenInpaint) btnOpenInpaint.disabled = !hasImage
 
-  const op = document.querySelector('input[name="image-op"]:checked')?.value
   const warning = document.getElementById('image-input-warning')
   if (warning) {
-    warning.hidden = images.length <= 1 || op === 'image-edit'
+    warning.hidden = images.length <= 1 || !SINGLE_IMAGE_OPS.includes(imageOp)
   }
 
   updateUpscaleButton(hasImage)
@@ -73,6 +81,8 @@ export function initImageOp() {
         cancelOpLabel.style.display = 'none'
         options.classList.remove('visible')
         for (const el of Object.values(PANELS)) el.style.display = 'none'
+        clearInpaintState()
+        updateImageOpUI('')
         return
       }
 

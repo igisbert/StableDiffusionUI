@@ -382,9 +382,7 @@ pub async fn run_inference(app: tauri::AppHandle, params: InferenceParams) -> Re
     validate_image_params(has_edit_image, has_input_image, has_mask)?;
 
     let output_dir = resolve_output_dir(Path::new(&params.output_path), has_mask, has_edit_image, has_input_image);
-    if output_dir != Path::new(&params.output_path) && !output_dir.exists() {
-        std::fs::create_dir_all(&output_dir).map_err(|e| e.to_string())?;
-    }
+    std::fs::create_dir_all(&output_dir).map_err(|e| e.to_string())?;
 
     let output_file = output_dir
         .join(format!("gen_{}.png", timestamp))

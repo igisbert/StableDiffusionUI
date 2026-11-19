@@ -61,9 +61,13 @@ export async function collectParams() {
 
   const selectedImages = getSelectedImages()
   const editImages = isEdit ? selectedImages : []
-  const inputImage = isEdit ? null : isInpainting
-    ? (getPreparedImagePath() || selectedImages[0] || null)
-    : (selectedImages[0] || null)
+  // Only img2img and inpainting consume a single input image. A loose image
+  // with no operation selected must stay out of the command.
+  const usesInputImage = currentImageOp === 'img2img' || isInpainting
+  const inputImage = isEdit ? null
+    : isInpainting ? (getPreparedImagePath() || selectedImages[0] || null)
+    : usesInputImage ? (selectedImages[0] || null)
+    : null
   const maskImage = isInpainting && isMaskPainted() ? exportMask() : null
 
   const loras = getLoras()

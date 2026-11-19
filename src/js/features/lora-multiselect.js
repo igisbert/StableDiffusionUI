@@ -108,12 +108,17 @@ export function populateLoraList(items) {
     updateTriggerText();
 }
 
+export function normalizeLoraWeight(value) {
+    const weight = parseFloat(value);
+    return Number.isFinite(weight) ? weight : 1;
+}
+
 export function getLoras() {
     if (!listEl) return [];
     const rows = Array.from(listEl.querySelectorAll('.lora-row'));
     return rows.filter(r => r.querySelector('input[type="checkbox"]')?.checked).map(r => ({
         file: r.dataset.lora,
-        weight: parseFloat(r.querySelector('.lora-row-weight')?.value) || 1
+        weight: normalizeLoraWeight(r.querySelector('.lora-row-weight')?.value)
     }));
 }
 

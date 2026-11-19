@@ -73,6 +73,7 @@ function setupDom() {
     <input type="radio" name="image-op" value="img2img" />
     <input type="radio" name="image-op" value="inpainting" />
     <input type="radio" name="image-op" value="image-edit" />
+    <input type="radio" name="image-op" value="upscale" />
     <input id="toggle-fa" type="checkbox" />
     <input id="toggle-diffusion-fa" type="checkbox" checked />
     <input id="toggle-vae-tiling" type="checkbox" />
@@ -100,6 +101,21 @@ describe('collectParams', () => {
     expect(p.edit_images).toEqual([])
     expect(p.input_image).toBeNull()
     expect(p.mask_image).toBeNull()
+    expect(p.strength).toBeNull()
+  })
+
+  it('ignores a loose image when no operation is selected', async () => {
+    vi.mocked(getSelectedImages).mockReturnValue(['C:\\foto.png'])
+    const p = await collectParams()
+    expect(p.input_image).toBeNull()
+    expect(p.strength).toBeNull()
+  })
+
+  it('ignores a loose image when upscaling', async () => {
+    document.querySelector('input[value="upscale"]').checked = true
+    vi.mocked(getSelectedImages).mockReturnValue(['C:\\foto.png'])
+    const p = await collectParams()
+    expect(p.input_image).toBeNull()
     expect(p.strength).toBeNull()
   })
 
