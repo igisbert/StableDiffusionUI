@@ -32,6 +32,23 @@ pub async fn pick_file(app: tauri::AppHandle) -> Result<Option<String>, String> 
 }
 
 #[tauri::command]
+pub async fn pick_images(app: tauri::AppHandle) -> Result<Vec<String>, String> {
+    let (tx, rx) = tokio::sync::oneshot::channel();
+    app.dialog()
+        .file()
+        .add_filter("Imágenes", &["png", "jpg", "jpeg", "webp", "bmp"])
+        .pick_files(move |paths| {
+            let _ = tx.send(paths);
+        });
+    let result = rx.await.map_err(|e| e.to_string())?;
+    Ok(result
+        .unwrap_or_default()
+        .into_iter()
+        .map(|p| p.to_string())
+        .collect())
+}
+
+#[tauri::command]
 pub fn scan_models(base_path: String) -> Result<ModelFiles, String> {
     let files = scan_dir(Path::new(&base_path));
     Ok(ModelFiles {

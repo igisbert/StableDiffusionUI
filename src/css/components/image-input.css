@@ -61,6 +61,156 @@
   gap: var(--space-medium-small);
 }
 
+.image-input-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-small);
+}
+
+.image-input-count {
+  font-size: var(--text-small);
+  color: var(--on-surface-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.image-input-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  &:empty {
+    display: none;
+  }
+}
+
+.image-input-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-medium-small);
+  padding: 4px 6px;
+  border: var(--border);
+  border-radius: var(--radius);
+  background-color: var(--surface-raised);
+  cursor: grab;
+  user-select: none;
+  transition:
+    border-color 0.15s,
+    background-color 0.15s;
+
+  &.dragging {
+    opacity: 0.6;
+    border-color: var(--primary);
+    background-color: var(--primary-soft);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--primary);
+    background-color: var(--primary-soft);
+    box-shadow: inset 3px 0 0 var(--primary);
+  }
+
+  &:focus .image-input-order {
+    color: var(--primary);
+  }
+
+  .image-input-grip {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    color: var(--on-surface-faint);
+    cursor: grab;
+    touch-action: none;
+  }
+
+  .image-input-thumb {
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    object-fit: cover;
+    border-radius: var(--radius-small);
+    background-color: var(--surface);
+  }
+
+  .image-input-name {
+    flex: 1;
+    min-width: 0;
+    text-align: left;
+  }
+
+  .image-input-remove {
+    flex-shrink: 0;
+  }
+}
+
+.image-input-order {
+  font-size: var(--text-small-small);
+  color: var(--on-surface-faint);
+  font-variant-numeric: tabular-nums;
+  min-width: 2.5ch;
+}
+
+.image-input-list.is-reordering {
+  cursor: grabbing;
+
+  .image-input-item {
+    cursor: grabbing;
+  }
+}
+
+#image-input-hint {
+  display: block;
+  line-height: 1.5;
+
+  svg {
+    vertical-align: middle;
+  }
+
+  kbd {
+    font-family: var(--font-mono);
+    font-size: var(--text-extra-small);
+    padding: 1px 4px;
+    border: var(--border);
+    border-radius: var(--radius-small);
+    background-color: var(--surface-raised);
+  }
+}
+
+/* `.hint` lays this one out as flex (icon + text), so the icon stays vertically centered. */
+#image-input-warning {
+  align-items: center;
+
+  svg {
+    flex-shrink: 0;
+  }
+}
+
+/* `.hint` sets display:flex, which would override the hidden attribute. */
+#image-input-hint[hidden],
+#image-input-warning[hidden] {
+  display: none;
+}
+
+.img2img-size-buttons .input-label {
+  flex-wrap: wrap;
+}
+
+.size-label-note {
+  font-size: var(--text-extra-small);
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--on-surface-faint);
+}
+
+.size-label-note[hidden] {
+  display: none;
+}
+
 .image-drop-zone {
   border: 2px dashed rgba(255, 255, 255, 0.15);
   border-radius: var(--radius-medium);
@@ -81,6 +231,12 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+#image-input-name {
+  flex: 1;
+  min-width: 0;
+  color: var(--on-surface-faint);
 }
 
 .image-op-row {

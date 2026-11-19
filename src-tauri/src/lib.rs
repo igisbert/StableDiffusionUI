@@ -13,6 +13,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::fs::pick_folder,
             commands::fs::pick_file,
+            commands::fs::pick_images,
             commands::fs::scan_models,
             commands::fs::ensure_output_dir,
             commands::fs::open_folder,

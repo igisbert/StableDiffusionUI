@@ -1,9 +1,9 @@
 import { loadInpaintImage, resetInpaint, isMaskPainted } from '../inpaint.js'
-import { getSelectedImageState } from '../state/image-state.js'
+import { getSelectedImages } from '../state/image-state.js'
 
 export async function refreshInpaintCanvas() {
   const op = document.querySelector('input[name="image-op"]:checked')?.value
-  const img = getSelectedImageState()
+  const img = getSelectedImages()[0]
   if (op !== 'inpainting' || !img) return
   try {
     await loadInpaintImage(img)
@@ -25,17 +25,24 @@ function updateInpaintMaskStatus() {
 }
 
 export function updateImageOpUI() {
-  const hasImage = !!getSelectedImageState()
+  const images = getSelectedImages()
+  const hasImage = images.length > 0
   document.querySelectorAll('.size-btn').forEach(btn => {
     btn.disabled = !hasImage
   })
   const btnOpenInpaint = document.getElementById('btn-open-inpaint')
   if (btnOpenInpaint) btnOpenInpaint.disabled = !hasImage
-  updateUpscaleButton()
+
+  const op = document.querySelector('input[name="image-op"]:checked')?.value
+  const warning = document.getElementById('image-input-warning')
+  if (warning) {
+    warning.hidden = images.length <= 1 || op === 'image-edit'
+  }
+
+  updateUpscaleButton(hasImage)
 }
 
-function updateUpscaleButton() {
-  const hasImage = !!getSelectedImageState()
+function updateUpscaleButton(hasImage) {
   const btnRunUpscale = document.getElementById('btn-run-upscale')
   if (!btnRunUpscale) return
   const hasModel = !!document.querySelector('input[name="image-upscale-model"]:checked')

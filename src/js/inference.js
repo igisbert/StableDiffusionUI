@@ -4,7 +4,7 @@ import { getSdPath, getOutputPath, getModelsPath, getVaePath, getLlmPath, getLor
 import { appendLine } from './console.js'
 import { exportMask, isMaskPainted, getPreparedImagePath } from './inpaint.js'
 import { startProcess, endProcess, isBusy } from './busy.js'
-import { getSelectedImageState } from './state/image-state.js'
+import { getSelectedImages } from './state/image-state.js'
 import { getLoras } from './features/lora-multiselect.js'
 import { flashCopy } from './ui/clipboard.js'
 
@@ -39,6 +39,20 @@ export function escapeArg(str) {
   return String(str).replace(/"/g, '\\"')
 }
 
+export function buildBackendArg(params) {
+  const modules = []
+  if (params.clip_on_cpu) modules.push('te=cpu')
+  if (params.vae_on_cpu) modules.push('vae=cpu')
+  if (params.force_cuda) modules.unshift('all=cuda0')
+  return modules.join(',')
+}
+
+export function buildFlashAttnArg(params) {
+  if (params.fa) return 'on'
+  if (params.diffusion_fa) return 'off,diffusion=on'
+  return ''
+}
+
 export async function collectParams() {
   const sdPath = await getSdPath()
   const outputPath = await getOutputPath()
@@ -62,10 +76,11 @@ export async function collectParams() {
   const isEdit = currentImageOp === 'image-edit'
   const strengthId = isInpainting ? 'input-inpaint-strength' : 'input-strength'
 
-  const editImage = isEdit ? (getPreparedImagePath() || getSelectedImageState() || null) : null
+  const selectedImages = getSelectedImages()
+  const editImages = isEdit ? selectedImages : []
   const inputImage = isEdit ? null : isInpainting
-    ? (getPreparedImagePath() || getSelectedImageState() || null)
-    : (getSelectedImageState() || null)
+    ? (getPreparedImagePath() || selectedImages[0] || null)
+    : (selectedImages[0] || null)
   const maskImage = isInpainting && isMaskPainted() ? exportMask() : null
 
   const loras = getLoras()
@@ -115,7 +130,7 @@ export async function collectParams() {
     verbose: checked('toggle-verbose'),
     force_cuda: checked('toggle-cuda'),
     custom_flags: val('input-custom-flags'),
-    edit_image: editImage,
+    edit_images: editImages,
     input_image: inputImage,
     strength: inputImage ? num(strengthId, 0.5) : null,
     mask_image: maskImage,
@@ -126,7 +141,9 @@ export function paramsToCliString(params) {
   const flag = params.model_type === 'diffusion' ? '--diffusion-model' : '-m'
 
   let cmd = 'sd-cli.exe'
-  if (params.force_cuda) cmd += ' --backend cuda0 --params-backend cpu'
+  const backend = buildBackendArg(params)
+  if (backend) cmd += ' --backend ' + backend
+  if (params.force_cuda) cmd += ' --params-backend cpu'
   if (params.model) cmd += ' ' + flag + ' "' + escapeArg(params.models_path + '\\' + params.model) + '"'
   if (params.llm) cmd += ' --llm "' + escapeArg(params.llm_path + '\\' + params.llm) + '"'
   if (params.vae) cmd += ' --vae "' + escapeArg(params.vae_path + '\\' + params.vae) + '"'
@@ -154,18 +171,18 @@ export function paramsToCliString(params) {
   if (params.scheduler) cmd += ' --scheduler ' + params.scheduler
   if (params.max_vram !== 0) cmd += ' --max-vram ' + params.max_vram
   if (params.threads !== -1) cmd += ' -t ' + params.threads
-  if (params.vae_on_cpu) cmd += ' --vae-on-cpu'
-  if (params.clip_on_cpu) cmd += ' --clip-on-cpu'
   if (params.offload_to_cpu) cmd += ' --offload-to-cpu'
-  if (params.fa) cmd += ' --fa'
-  else if (params.diffusion_fa) cmd += ' --diffusion-fa'
   if (params.vae_tiling) cmd += ' --vae-tiling'
   if (params.mmap) cmd += ' --mmap'
   if (params.verbose) cmd += ' -v'
+  const flashAttn = buildFlashAttnArg(params)
+  if (flashAttn) cmd += ' --flash-attn ' + flashAttn
   if (params.output_path) cmd += ' -o "' + escapeArg(params.output_path) + '"'
 
-  if (params.edit_image) {
-    cmd += ' -r "' + escapeArg(params.edit_image) + '"'
+  if (params.edit_images?.length) {
+    for (const image of params.edit_images) {
+      cmd += ' -r "' + escapeArg(image) + '"'
+    }
   } else if (params.input_image) {
     cmd += ' -i "' + escapeArg(params.input_image) + '"'
     if (params.strength != null) cmd += ' --strength ' + params.strength
@@ -275,8 +292,8 @@ export async function initInference() {
         return
       }
     }
-    if (currentImageOp === 'image-edit' && !params.edit_image) {
-      appendLine('[ERROR] Selecciona una imagen de entrada para Image Edit.')
+    if (currentImageOp === 'image-edit' && !params.edit_images?.length) {
+      appendLine('[ERROR] Selecciona al menos una imagen de referencia para Image Edit.')
       return
     }
 

@@ -5,7 +5,8 @@ use exif::{In, Tag};
 use image::DynamicImage;
 
 pub struct TempFiles {
-    pub edit: Option<PathBuf>,
+    /// Normalized reference images for image edit (-r), in order.
+    pub refs: Vec<PathBuf>,
     pub input: Option<PathBuf>,
     pub mask: Option<PathBuf>,
 }
@@ -13,7 +14,7 @@ pub struct TempFiles {
 impl TempFiles {
     pub fn new() -> Self {
         Self {
-            edit: None,
+            refs: Vec::new(),
             input: None,
             mask: None,
         }
@@ -22,7 +23,7 @@ impl TempFiles {
 
 impl Drop for TempFiles {
     fn drop(&mut self) {
-        if let Some(p) = &self.edit {
+        for p in &self.refs {
             let _ = std::fs::remove_file(p);
         }
         if let Some(p) = &self.input {
@@ -78,21 +79,25 @@ mod tests {
     #[test]
     fn temp_files_drop_removes_files() {
         let dir = std::env::temp_dir();
-        let p1 = dir.join(format!("test_temp_drop_{}_edit.png", std::process::id()));
-        let p2 = dir.join(format!("test_temp_drop_{}_input.png", std::process::id()));
+        let p1 = dir.join(format!("test_temp_drop_{}_ref0.png", std::process::id()));
+        let p2 = dir.join(format!("test_temp_drop_{}_ref1.png", std::process::id()));
+        let p3 = dir.join(format!("test_temp_drop_{}_input.png", std::process::id()));
         fs::write(&p1, b"a").unwrap();
         fs::write(&p2, b"b").unwrap();
+        fs::write(&p3, b"c").unwrap();
         {
             let _temps = TempFiles {
-                edit: Some(p1.clone()),
-                input: Some(p2.clone()),
+                refs: vec![p1.clone(), p2.clone()],
+                input: Some(p3.clone()),
                 mask: None,
             };
             assert!(p1.exists());
             assert!(p2.exists());
+            assert!(p3.exists());
         }
         assert!(!p1.exists());
         assert!(!p2.exists());
+        assert!(!p3.exists());
     }
 
     #[test]

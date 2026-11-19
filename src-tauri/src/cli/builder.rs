@@ -27,6 +27,49 @@ pub fn resolve_output_dir(base: &Path, has_mask: bool, has_edit: bool, has_input
     }
 }
 
+pub const MAX_REFERENCE_IMAGES: usize = 10;
+
+pub fn backend_assignment(force_cuda: bool, clip_on_cpu: bool, vae_on_cpu: bool) -> String {
+    let mut parts: Vec<&str> = Vec::new();
+    if force_cuda {
+        parts.push("all=cuda0");
+    }
+    if clip_on_cpu {
+        parts.push("te=cpu");
+    }
+    if vae_on_cpu {
+        parts.push("vae=cpu");
+    }
+    parts.join(",")
+}
+
+pub fn push_backend_args(cmd: &mut Command, force_cuda: bool, clip_on_cpu: bool, vae_on_cpu: bool) {
+    let assignment = backend_assignment(force_cuda, clip_on_cpu, vae_on_cpu);
+    if !assignment.is_empty() {
+        cmd.arg("--backend").arg(assignment);
+    }
+    if force_cuda {
+        cmd.arg("--params-backend").arg("cpu");
+    }
+}
+
+pub fn flash_attn_mode(fa: bool, diffusion_fa: bool) -> &'static str {
+    if fa {
+        "on"
+    } else if diffusion_fa {
+        "off,diffusion=on"
+    } else {
+        ""
+    }
+}
+
+pub fn push_flash_attn(cmd: &mut Command, fa: bool, diffusion_fa: bool) {
+    let mode = flash_attn_mode(fa, diffusion_fa);
+    if !mode.is_empty() {
+        cmd.arg("--flash-attn").arg(mode);
+    }
+}
+
 pub fn push_model_arg(cmd: &mut Command, flag: &str, dir: &str, file: &str) {
     if file.is_empty() {
         return;
@@ -82,6 +125,59 @@ mod tests {
         assert_eq!(resolve_output_dir(base, true, false, true), base.join("inpainting"));
         assert_eq!(resolve_output_dir(base, true, true, false), base.join("inpainting"));
         assert_eq!(resolve_output_dir(base, false, true, true), base.join("edit"));
+    }
+
+    #[test]
+    fn backend_assignment_combinations() {
+        assert_eq!(backend_assignment(false, false, false), "");
+        assert_eq!(backend_assignment(false, true, false), "te=cpu");
+        assert_eq!(backend_assignment(false, false, true), "vae=cpu");
+        assert_eq!(backend_assignment(false, true, true), "te=cpu,vae=cpu");
+        assert_eq!(backend_assignment(true, false, false), "all=cuda0");
+        assert_eq!(backend_assignment(true, true, false), "all=cuda0,te=cpu");
+        assert_eq!(backend_assignment(true, true, true), "all=cuda0,te=cpu,vae=cpu");
+    }
+
+    #[test]
+    fn flash_attn_mode_combinations() {
+        assert_eq!(flash_attn_mode(false, false), "");
+        assert_eq!(flash_attn_mode(true, false), "on");
+        assert_eq!(flash_attn_mode(true, true), "on");
+        assert_eq!(flash_attn_mode(false, true), "off,diffusion=on");
+    }
+
+    #[test]
+    fn push_backend_args_empty_when_no_flags() {
+        let mut cmd = Command::new("echo");
+        push_backend_args(&mut cmd, false, false, false);
+        let args: Vec<String> = cmd.get_args().map(|a| a.to_string_lossy().to_string()).collect();
+        assert!(args.is_empty());
+    }
+
+    #[test]
+    fn push_backend_args_force_cuda_params() {
+        let mut cmd = Command::new("echo");
+        push_backend_args(&mut cmd, true, true, true);
+        let args: Vec<String> = cmd.get_args().map(|a| a.to_string_lossy().to_string()).collect();
+        assert_eq!(args, vec!["--backend", "all=cuda0,te=cpu,vae=cpu", "--params-backend", "cpu"]);
+    }
+
+    #[test]
+    fn push_flash_attn_modes() {
+        let mut cmd = Command::new("echo");
+        push_flash_attn(&mut cmd, true, true);
+        let args: Vec<String> = cmd.get_args().map(|a| a.to_string_lossy().to_string()).collect();
+        assert_eq!(args, vec!["--flash-attn", "on"]);
+
+        let mut cmd = Command::new("echo");
+        push_flash_attn(&mut cmd, false, true);
+        let args: Vec<String> = cmd.get_args().map(|a| a.to_string_lossy().to_string()).collect();
+        assert_eq!(args, vec!["--flash-attn", "off,diffusion=on"]);
+
+        let mut cmd = Command::new("echo");
+        push_flash_attn(&mut cmd, false, false);
+        let args: Vec<String> = cmd.get_args().map(|a| a.to_string_lossy().to_string()).collect();
+        assert!(args.is_empty());
     }
 
     #[test]

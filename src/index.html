@@ -367,26 +367,64 @@
               </button>
               <div class="image-input-content" id="image-input-content">
                 <div class="image-op-group">
-                  <label class="input-label">Selecciona una imagen</label>
+                  <div class="image-input-header">
+                    <label class="input-label">Imágenes de entrada</label>
+                    <span class="image-input-count" id="image-input-count"
+                      >0 / 10</span
+                    >
+                  </div>
                   <div
                     class="image-input-row image-drop-zone"
                     id="image-drop-zone"
                   >
-                    <button id="btn-select-image" type="button" class="btn-secondary">
-                      Seleccionar
+                    <button
+                      id="btn-select-image"
+                      type="button"
+                      class="btn-secondary"
+                    >
+                      Añadir imágenes
                     </button>
                     <span class="image-input-name" id="image-input-name"
-                      >Ninguna</span
+                      >o arrastra las imágenes aquí</span
                     >
-                      <button
-                        id="btn-clear-image"
-                        type="button"
-                        class="btn-icon btn-danger btn-clear-image"
-                        title="Quitar imagen"
-                      >
+                    <button
+                      id="btn-clear-image"
+                      type="button"
+                      class="btn-icon btn-danger btn-clear-image"
+                      title="Quitar todas las imágenes"
+                      aria-label="Quitar todas las imágenes"
+                    >
                       <i data-lucide="x"></i>
                     </button>
                   </div>
+                  <ul
+                    id="image-input-list"
+                    class="image-input-list"
+                    aria-label="Imágenes seleccionadas"
+                  ></ul>
+                  <p class="input-hint hint" id="image-input-hint" hidden>
+                    <i
+                      data-lucide="grip-vertical"
+                      class="icon-14"
+                      aria-hidden="true"
+                    ></i>
+                    Arrastra para reordenar (o <kbd>Alt</kbd> +
+                    <kbd>↑</kbd>/<kbd>↓</kbd> con el elemento enfocado). En Image
+                    Edit se envían todas en este orden: nómbralas en el prompt
+                    como <strong>imagen 1</strong>, <strong>imagen 2</strong>…
+                  </p>
+                  <p
+                    class="input-hint hint image-input-warning"
+                    id="image-input-warning"
+                    hidden
+                  >
+                    <i
+                      data-lucide="triangle-alert"
+                      class="icon-14"
+                      aria-hidden="true"
+                    ></i>
+                    Esta operación solo usará la primera imagen.
+                  </p>
                 </div>
                 <div class="image-op-group">
                   <fieldset class="image-op-fieldset">
@@ -474,9 +512,12 @@
                           />
                         </div>
                         <div class="img2img-size-buttons">
-                          <span class="input-label"
-                            >Rellenar ancho y alto de la imagen</span
-                          >
+                          <span class="input-label">
+                            Rellenar ancho y alto de la imagen
+                            <span class="size-label-note" hidden
+                              >(usa las medidas de la primera imagen)</span
+                            >
+                          </span>
                           <div class="size-btn-group">
                               <button
                                 id="btn-size-full"
@@ -560,9 +601,12 @@
                           />
                         </div>
                         <div class="img2img-size-buttons">
-                          <span class="input-label"
-                            >Rellenar ancho y alto de la imagen</span
-                          >
+                          <span class="input-label">
+                            Rellenar ancho y alto de la imagen
+                            <span class="size-label-note" hidden
+                              >(usa las medidas de la primera imagen)</span
+                            >
+                          </span>
                           <div class="size-btn-group">
                               <button
                                 id="btn-inpaint-size-full"
@@ -610,9 +654,12 @@
                       style="display: none"
                     >
                       <div class="img2img-size-buttons">
-                        <span class="input-label"
-                          >Rellenar ancho y alto de la imagen</span
-                        >
+                        <span class="input-label">
+                          Rellenar ancho y alto de la imagen
+                          <span class="size-label-note" hidden
+                            >(usa las medidas de la primera imagen)</span
+                          >
+                        </span>
                         <div class="size-btn-group">
                               <button
                                 id="btn-edit-size-full"

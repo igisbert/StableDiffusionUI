@@ -57,7 +57,8 @@ pub struct InferenceParams {
     pub verbose: bool,
     pub force_cuda: bool,
     pub custom_flags: String,
-    pub edit_image: Option<String>,
+    #[serde(default)]
+    pub edit_images: Vec<String>,
     pub input_image: Option<String>,
     pub strength: Option<f32>,
     pub mask_image: Option<String>,
@@ -88,12 +89,30 @@ fn validate_image_params(has_edit: bool, has_input: bool, has_mask: bool) -> Res
     Ok(())
 }
 
+/// Number of usable reference images (empty entries are ignored).
+fn count_edit_images(edit_images: &[String]) -> usize {
+    edit_images.iter().filter(|p| !p.is_empty()).count()
+}
+
+fn validate_edit_images(edit_images: &[String]) -> Result<usize, String> {
+    let count = count_edit_images(edit_images);
+    if count > builder::MAX_REFERENCE_IMAGES {
+        return Err(format!(
+            "Máximo {} imágenes de referencia (se han recibido {}).",
+            builder::MAX_REFERENCE_IMAGES,
+            count
+        ));
+    }
+    Ok(count)
+}
+
 #[tauri::command]
 pub async fn run_inference(app: tauri::AppHandle, params: InferenceParams) -> Result<(), String> {
     let timestamp = builder::now_secs();
 
     let has_mask = params.mask_image.as_ref().is_some_and(|m| !m.is_empty());
-    let has_edit_image = params.edit_image.as_ref().is_some_and(|m| !m.is_empty());
+    let edit_count = validate_edit_images(&params.edit_images)?;
+    let has_edit_image = edit_count > 0;
     let has_input_image = params.input_image.as_ref().is_some_and(|m| !m.is_empty());
 
     validate_image_params(has_edit_image, has_input_image, has_mask)?;
@@ -113,12 +132,12 @@ pub async fn run_inference(app: tauri::AppHandle, params: InferenceParams) -> Re
 
     let mut cmd = Command::new(&sd_bin);
 
-    if params.force_cuda {
-        cmd.arg("--backend")
-            .arg("cuda0")
-            .arg("--params-backend")
-            .arg("cpu");
-    }
+    builder::push_backend_args(
+        &mut cmd,
+        params.force_cuda,
+        params.clip_on_cpu,
+        params.vae_on_cpu,
+    );
 
     if !params.model.is_empty() {
         let flag = if params.model_type == "diffusion" {
@@ -187,20 +206,10 @@ pub async fn run_inference(app: tauri::AppHandle, params: InferenceParams) -> Re
         cmd.arg("-t").arg(params.threads.to_string());
     }
 
-    if params.vae_on_cpu {
-        cmd.arg("--vae-on-cpu");
-    }
-    if params.clip_on_cpu {
-        cmd.arg("--clip-on-cpu");
-    }
     if params.offload_to_cpu {
         cmd.arg("--offload-to-cpu");
     }
-    if params.fa {
-        cmd.arg("--fa");
-    } else if params.diffusion_fa {
-        cmd.arg("--diffusion-fa");
-    }
+    builder::push_flash_attn(&mut cmd, params.fa, params.diffusion_fa);
     if params.vae_tiling {
         cmd.arg("--vae-tiling");
     }
@@ -224,11 +233,14 @@ pub async fn run_inference(app: tauri::AppHandle, params: InferenceParams) -> Re
 
     let mut temps = TempFiles::new();
 
-    if let Some(ref edit_image) = params.edit_image {
-        let temp_path = output_dir.join(format!("temp_edit_{}.png", timestamp));
+    for (index, edit_image) in params.edit_images.iter().enumerate() {
+        if edit_image.is_empty() {
+            continue;
+        }
+        let temp_path = output_dir.join(format!("temp_ref_{}_{}.png", timestamp, index + 1));
         save_normalized(edit_image, &temp_path)?;
         cmd.arg("-r").arg(&temp_path);
-        temps.edit = Some(temp_path);
+        temps.refs.push(temp_path);
     }
 
     if let Some(ref input_image) = params.input_image {
@@ -357,6 +369,35 @@ mod tests {
         for ((e, i, m), ok) in cases {
             assert_eq!(validate_image_params(e, i, m).is_ok(), ok, "e={e} i={i} m={m}");
         }
+    }
+
+    #[test]
+    fn count_edit_images_ignores_empty() {
+        assert_eq!(count_edit_images(&[]), 0);
+        assert_eq!(count_edit_images(&["".to_string()]), 0);
+        assert_eq!(count_edit_images(&["a.png".to_string()]), 1);
+        assert_eq!(
+            count_edit_images(&["a.png".to_string(), "".to_string(), "b.png".to_string()]),
+            2
+        );
+    }
+
+    #[test]
+    fn validate_edit_images_accepts_up_to_max() {
+        let images: Vec<String> = (0..builder::MAX_REFERENCE_IMAGES)
+            .map(|i| format!("ref_{}.png", i))
+            .collect();
+        assert_eq!(validate_edit_images(&images).unwrap(), builder::MAX_REFERENCE_IMAGES);
+    }
+
+    #[test]
+    fn validate_edit_images_rejects_over_max() {
+        let images: Vec<String> = (0..builder::MAX_REFERENCE_IMAGES + 1)
+            .map(|i| format!("ref_{}.png", i))
+            .collect();
+        let err = validate_edit_images(&images).unwrap_err();
+        assert!(err.contains(&builder::MAX_REFERENCE_IMAGES.to_string()));
+        assert!(err.contains(&(builder::MAX_REFERENCE_IMAGES + 1).to_string()));
     }
 
     #[test]

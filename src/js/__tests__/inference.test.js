@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { paramsToCliString, escapeArg } from '../inference.js'
+import { paramsToCliString, escapeArg, buildBackendArg, buildFlashAttnArg } from '../inference.js'
 
 vi.mock('../config.js', async () => {
   const actual = await vi.importActual('../config.js')
@@ -25,6 +25,7 @@ vi.mock('../inpaint.js', () => ({
 }))
 
 vi.mock('../state/image-state.js', () => ({
+  getSelectedImages: vi.fn(() => []),
   getSelectedImageState: vi.fn(() => null),
   setSelectedImageState: vi.fn(),
   onSelectedImageChange: vi.fn(() => () => {}),
@@ -33,7 +34,7 @@ vi.mock('../state/image-state.js', () => ({
 
 import { collectParams } from '../inference.js'
 import * as inpaint from '../inpaint.js'
-import { getSelectedImageState } from '../state/image-state.js'
+import { getSelectedImages } from '../state/image-state.js'
 
 function baseParams(overrides = {}) {
   return {
@@ -80,7 +81,7 @@ function baseParams(overrides = {}) {
     verbose: false,
     force_cuda: false,
     custom_flags: '',
-    edit_image: null,
+    edit_images: [],
     input_image: null,
     strength: null,
     mask_image: null,
@@ -125,12 +126,27 @@ describe('paramsToCliString', () => {
     expect(cmd).not.toMatch(/--strength/)
   })
 
-  it('edit with edit_image includes -r and not -i', () => {
-    const cmd = paramsToCliString(baseParams({ edit_image: 'C:\\edit.png' }))
+  it('edit with one reference includes -r and not -i', () => {
+    const cmd = paramsToCliString(baseParams({ edit_images: ['C:\\edit.png'] }))
     expect(cmd).toMatch(/\s-r\s+"C:\\edit\.png"/)
     expect(cmd).not.toMatch(/\s-i\s/)
     expect(cmd).not.toMatch(/--strength/)
     expect(cmd).not.toMatch(/--mask/)
+  })
+
+  it('edit with several references emits one -r per image in order', () => {
+    const cmd = paramsToCliString(baseParams({
+      edit_images: ['C:\\one.png', 'C:\\two.png', 'C:\\three.png'],
+    }))
+    const matches = [...cmd.matchAll(/\s-r\s+"([^"]*)"/g)].map(m => m[1])
+    expect(matches).toEqual(['C:\\one.png', 'C:\\two.png', 'C:\\three.png'])
+    expect(cmd).not.toMatch(/\s-i\s/)
+  })
+
+  it('edit with ten references emits ten -r flags', () => {
+    const refs = Array.from({ length: 10 }, (_, i) => `C:\\ref_${i + 1}.png`)
+    const cmd = paramsToCliString(baseParams({ edit_images: refs }))
+    expect([...cmd.matchAll(/\s-r\s/g)]).toHaveLength(10)
   })
 
   it('inpaint with mask includes --mask placeholder', () => {
@@ -145,7 +161,7 @@ describe('paramsToCliString', () => {
   })
 
   it('edit and input are exclusive - edit wins', () => {
-    const cmd = paramsToCliString(baseParams({ edit_image: 'C:\\edit.png', input_image: 'C:\\in.png', strength: 0.5 }))
+    const cmd = paramsToCliString(baseParams({ edit_images: ['C:\\edit.png'], input_image: 'C:\\in.png', strength: 0.5 }))
     expect(cmd).toMatch(/\s-r\s+"C:\\edit\.png"/)
     expect(cmd).not.toMatch(/\s-i\s/)
   })
@@ -186,18 +202,48 @@ describe('paramsToCliString', () => {
     expect(paramsToCliString(baseParams({ max_vram: -1 }))).toMatch(/--max-vram\s+-1/)
   })
 
-  it('fa overrides diffusion_fa', () => {
+  it('fa emits --flash-attn on and overrides diffusion_fa', () => {
     const cmdFa = paramsToCliString(baseParams({ fa: true, diffusion_fa: true }))
-    expect(cmdFa).toMatch(/\s--fa\b/)
-    expect(cmdFa).not.toMatch(/--diffusion-fa/)
+    expect(cmdFa).toMatch(/--flash-attn\s+on\b/)
+    expect(cmdFa).not.toMatch(/diffusion=on/)
 
     const cmdDiff = paramsToCliString(baseParams({ fa: false, diffusion_fa: true }))
-    expect(cmdDiff).toMatch(/--diffusion-fa/)
-    expect(cmdDiff).not.toMatch(/\s--fa\b/)
+    expect(cmdDiff).toMatch(/--flash-attn\s+off,diffusion=on/)
+    expect(cmdDiff).not.toMatch(/--flash-attn\s+on\b/)
 
     const cmdNone = paramsToCliString(baseParams({ fa: false, diffusion_fa: false }))
-    expect(cmdNone).not.toMatch(/--fa/)
+    expect(cmdNone).not.toMatch(/--flash-attn/)
+    expect(cmdNone).not.toMatch(/--fa\b/)
     expect(cmdNone).not.toMatch(/--diffusion-fa/)
+  })
+
+  it('vae/clip on cpu merged into one --backend', () => {
+    const cmd = paramsToCliString(baseParams({ vae_on_cpu: true, clip_on_cpu: true }))
+    expect(cmd).toMatch(/--backend\s+te=cpu,vae=cpu\b/)
+    expect(cmd).not.toMatch(/--vae-on-cpu/)
+    expect(cmd).not.toMatch(/--clip-on-cpu/)
+  })
+
+  it('force cuda keeps params on cpu and merges modules', () => {
+    const cmd = paramsToCliString(baseParams({ force_cuda: true, vae_on_cpu: true }))
+    expect(cmd).toMatch(/--backend\s+all=cuda0,vae=cpu\b/)
+    expect(cmd).toMatch(/--params-backend\s+cpu\b/)
+  })
+
+  it('no --backend when no module needs it', () => {
+    const cmd = paramsToCliString(baseParams())
+    expect(cmd).not.toMatch(/--backend/)
+    expect(cmd).not.toMatch(/--params-backend/)
+  })
+
+  it('backend helpers build assignments', () => {
+    expect(buildBackendArg({})).toBe('')
+    expect(buildBackendArg({ clip_on_cpu: true })).toBe('te=cpu')
+    expect(buildBackendArg({ force_cuda: true, clip_on_cpu: true, vae_on_cpu: true }))
+      .toBe('all=cuda0,te=cpu,vae=cpu')
+    expect(buildFlashAttnArg({ fa: true })).toBe('on')
+    expect(buildFlashAttnArg({ diffusion_fa: true })).toBe('off,diffusion=on')
+    expect(buildFlashAttnArg({})).toBe('')
   })
 
   it('mmap and threads flags', () => {
@@ -271,7 +317,7 @@ describe('collectParams', () => {
       <input id="toggle-clip-cpu" type="checkbox" />
       <input id="toggle-offload-cpu" type="checkbox" />
     `
-    vi.mocked(getSelectedImageState).mockReturnValue(null)
+    vi.mocked(getSelectedImages).mockReturnValue([])
     vi.mocked(inpaint.getPreparedImagePath).mockReturnValue(null)
     vi.mocked(inpaint.isMaskPainted).mockReturnValue(false)
     vi.mocked(inpaint.exportMask).mockReturnValue(null)
@@ -279,7 +325,7 @@ describe('collectParams', () => {
 
   it('t2i without image', async () => {
     const p = await collectParams()
-    expect(p.edit_image).toBeNull()
+    expect(p.edit_images).toEqual([])
     expect(p.input_image).toBeNull()
     expect(p.mask_image).toBeNull()
     expect(p.strength).toBeNull()
@@ -287,16 +333,16 @@ describe('collectParams', () => {
 
   it('img2img uses selected image and strength', async () => {
     document.querySelector('input[value="img2img"]').checked = true
-    vi.mocked(getSelectedImageState).mockReturnValue('C:\\foto.png')
+    vi.mocked(getSelectedImages).mockReturnValue(['C:\\foto.png', 'C:\\extra.png'])
     const p = await collectParams()
     expect(p.input_image).toBe('C:\\foto.png')
     expect(p.strength).toBe(0.75)
-    expect(p.edit_image).toBeNull()
+    expect(p.edit_images).toEqual([])
   })
 
   it('inpainting uses prepared path and mask', async () => {
     document.querySelector('input[value="inpainting"]').checked = true
-    vi.mocked(getSelectedImageState).mockReturnValue('C:\\orig.png')
+    vi.mocked(getSelectedImages).mockReturnValue(['C:\\orig.png'])
     vi.mocked(inpaint.getPreparedImagePath).mockReturnValue('C:\\prepared.png')
     vi.mocked(inpaint.isMaskPainted).mockReturnValue(true)
     vi.mocked(inpaint.exportMask).mockReturnValue('data:image/png;base64,xxx')
@@ -306,11 +352,11 @@ describe('collectParams', () => {
     expect(p.strength).toBe(0.6)
   })
 
-  it('image-edit uses edit_image and no input', async () => {
+  it('image-edit passes every selected image and no input', async () => {
     document.querySelector('input[value="image-edit"]').checked = true
-    vi.mocked(getSelectedImageState).mockReturnValue('C:\\edit.png')
+    vi.mocked(getSelectedImages).mockReturnValue(['C:\\a.png', 'C:\\b.png'])
     const p = await collectParams()
-    expect(p.edit_image).toBe('C:\\edit.png')
+    expect(p.edit_images).toEqual(['C:\\a.png', 'C:\\b.png'])
     expect(p.input_image).toBeNull()
     expect(p.strength).toBeNull()
     expect(p.mask_image).toBeNull()
