@@ -35,24 +35,6 @@ function setRunning(running) {
   }
 }
 
-export function escapeArg(str) {
-  return String(str).replace(/"/g, '\\"')
-}
-
-export function buildBackendArg(params) {
-  const modules = []
-  if (params.clip_on_cpu) modules.push('te=cpu')
-  if (params.vae_on_cpu) modules.push('vae=cpu')
-  if (params.force_cuda) modules.unshift('all=cuda0')
-  return modules.join(',')
-}
-
-export function buildFlashAttnArg(params) {
-  if (params.fa) return 'on'
-  if (params.diffusion_fa) return 'off,diffusion=on'
-  return ''
-}
-
 export async function collectParams() {
   const sdPath = await getSdPath()
   const outputPath = await getOutputPath()
@@ -116,7 +98,7 @@ export async function collectParams() {
     guidance: val('input-guidance') !== '' ? num('input-guidance', 1) : null,
     seed: int('input-seed', -1),
     batch_count: int('input-batch-count', 1),
-    max_vram: num('input-max-vram', -1),
+    max_vram: num('input-max-vram', 0),
     threads: int('input-threads', -1),
     sampler: val('select-sampler'),
     scheduler: val('select-scheduler'),
@@ -137,73 +119,13 @@ export async function collectParams() {
   }
 }
 
-export function paramsToCliString(params) {
-  const flag = params.model_type === 'diffusion' ? '--diffusion-model' : '-m'
-
-  let cmd = 'sd-cli.exe'
-  const backend = buildBackendArg(params)
-  if (backend) cmd += ' --backend ' + backend
-  if (params.force_cuda) cmd += ' --params-backend cpu'
-  if (params.model) cmd += ' ' + flag + ' "' + escapeArg(params.models_path + '\\' + params.model) + '"'
-  if (params.llm) cmd += ' --llm "' + escapeArg(params.llm_path + '\\' + params.llm) + '"'
-  if (params.vae) cmd += ' --vae "' + escapeArg(params.vae_path + '\\' + params.vae) + '"'
-  if (params.lora) cmd += ' --lora-model-dir "' + escapeArg(params.lora_path) + '"'
-  if (params.llm_vision) cmd += ' --llm_vision "' + escapeArg(params.llm_vision_path + '\\' + params.llm_vision) + '"'
-  if (params.clip_l) cmd += ' --clip_l "' + escapeArg(params.clip_l_path + '\\' + params.clip_l) + '"'
-  if (params.clip_g) cmd += ' --clip_g "' + escapeArg(params.clip_g_path + '\\' + params.clip_g) + '"'
-  if (params.t5xxl) cmd += ' --t5xxl "' + escapeArg(params.t5xxl_path + '\\' + params.t5xxl) + '"'
-
-  let prompt = params.prompt
-  const loras = params.loras || (params.lora ? [{ file: params.lora, weight: params.lora_weight }] : [])
-  for (const l of loras) {
-    const loraName = l.file.replace(/\.[^.]+$/, '')
-    prompt += ' <lora:' + loraName + ':' + l.weight + '>'
-  }
-  cmd += ' -p "' + escapeArg(prompt) + '"'
-  if (params.negative_prompt) cmd += ' -n "' + escapeArg(params.negative_prompt) + '"'
-  cmd += ' -W ' + params.width + ' -H ' + params.height
-  if (params.steps != null) cmd += ' --steps ' + params.steps
-  if (params.cfg_scale != null) cmd += ' --cfg-scale ' + params.cfg_scale
-  if (params.guidance != null) cmd += ' --guidance ' + params.guidance
-  cmd += ' -s ' + params.seed
-  cmd += ' -b ' + params.batch_count
-  cmd += ' --sampling-method ' + params.sampler
-  if (params.scheduler) cmd += ' --scheduler ' + params.scheduler
-  if (params.max_vram !== 0) cmd += ' --max-vram ' + params.max_vram
-  if (params.threads !== -1) cmd += ' -t ' + params.threads
-  if (params.offload_to_cpu) cmd += ' --offload-to-cpu'
-  if (params.vae_tiling) cmd += ' --vae-tiling'
-  if (params.mmap) cmd += ' --mmap'
-  if (params.verbose) cmd += ' -v'
-  const flashAttn = buildFlashAttnArg(params)
-  if (flashAttn) cmd += ' --flash-attn ' + flashAttn
-  if (params.output_path) cmd += ' -o "' + escapeArg(params.output_path) + '"'
-
-  if (params.edit_images?.length) {
-    for (const image of params.edit_images) {
-      cmd += ' -r "' + escapeArg(image) + '"'
-    }
-  } else if (params.input_image) {
-    cmd += ' -i "' + escapeArg(params.input_image) + '"'
-    if (params.strength != null) cmd += ' --strength ' + params.strength
-  }
-  if (params.mask_image && params.input_image) {
-    cmd += ' --mask "mask.png"'
-  }
-
-  if (params.custom_flags) {
-    for (const line of params.custom_flags.split('\n')) {
-      const trimmed = line.trim()
-      if (trimmed) cmd += ' ' + trimmed
-    }
-  }
-
-  return cmd
-}
-
-async function buildCommand() {
+/**
+ * Single source of truth lives in Rust (`preview_inference_command`), so the
+ * copied command and the executed command cannot drift apart.
+ */
+export async function buildCommand() {
   const params = await collectParams()
-  return paramsToCliString(params)
+  return invoke('preview_inference_command', { params })
 }
 
 export async function initInference() {
@@ -228,7 +150,7 @@ export async function initInference() {
         idleLabel: '<i data-lucide="copy"></i>',
       })
     } catch (e) {
-      appendLine('[ERROR] No se pudo copiar al portapapeles: ' + e)
+      appendLine('[ERROR] No se pudo copiar el comando: ' + e)
     }
   })
 
@@ -261,6 +183,24 @@ export async function initInference() {
 
     if (!params.model) {
       appendLine('[ERROR] Selecciona un modelo antes de ejecutar.')
+      return
+    }
+
+    if (!params.sampler) {
+      appendLine('[ERROR] Selecciona un método de muestreo (sampler) antes de ejecutar.')
+      return
+    }
+
+    if (params.steps !== null && params.steps < 1) {
+      appendLine('[ERROR] Steps debe ser al menos 1.')
+      return
+    }
+    if (params.cfg_scale !== null && params.cfg_scale < 0) {
+      appendLine('[ERROR] CFG Scale no puede ser negativo.')
+      return
+    }
+    if (params.guidance !== null && params.guidance < 0) {
+      appendLine('[ERROR] Guidance no puede ser negativo.')
       return
     }
 

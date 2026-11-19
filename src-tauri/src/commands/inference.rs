@@ -1,5 +1,5 @@
 use serde::Deserialize;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use tauri::Emitter;
 
@@ -106,9 +106,268 @@ fn validate_edit_images(edit_images: &[String]) -> Result<usize, String> {
     Ok(count)
 }
 
+fn validate_params(params: &InferenceParams) -> Result<(), String> {
+    if params.sampler.trim().is_empty() {
+        return Err("Selecciona un método de muestreo (sampler) antes de continuar.".to_string());
+    }
+    Ok(())
+}
+
+/// Concrete paths the CLI needs. The run uses normalized temp files; the
+/// preview uses the original files and a placeholder mask.
+struct CliPaths {
+    refs: Vec<PathBuf>,
+    input: Option<PathBuf>,
+    mask: Option<PathBuf>,
+    output: Option<PathBuf>,
+}
+
+/// Single source of truth for the argument list: used both by "Copiar"
+/// (`preview_inference_command`) and by the real run.
+fn build_cli_args(params: &InferenceParams, paths: &CliPaths) -> Vec<String> {
+    let mut args: Vec<String> = Vec::new();
+
+    builder::push_backend_args(
+        &mut args,
+        params.force_cuda,
+        params.clip_on_cpu,
+        params.vae_on_cpu,
+    );
+
+    if !params.model.is_empty() {
+        let flag = if params.model_type == "diffusion" {
+            "--diffusion-model"
+        } else {
+            "-m"
+        };
+        args.push(flag.to_string());
+        args.push(
+            Path::new(&params.models_path)
+                .join(&params.model)
+                .to_string_lossy()
+                .into_owned(),
+        );
+    }
+
+    builder::push_model_arg(&mut args, "--llm", &params.llm_path, &params.llm);
+    builder::push_model_arg(&mut args, "--vae", &params.vae_path, &params.vae);
+    if !params.lora.is_empty() || !params.loras.is_empty() {
+        let lora_dir = Path::new(&params.lora_path);
+        if lora_dir.exists() {
+            args.push("--lora-model-dir".to_string());
+            args.push(lora_dir.to_string_lossy().into_owned());
+        }
+    }
+    builder::push_model_arg(&mut args, "--llm_vision", &params.llm_vision_path, &params.llm_vision);
+    builder::push_model_arg(&mut args, "--clip_l", &params.clip_l_path, &params.clip_l);
+    builder::push_model_arg(&mut args, "--clip_g", &params.clip_g_path, &params.clip_g);
+    builder::push_model_arg(&mut args, "--t5xxl", &params.t5xxl_path, &params.t5xxl);
+
+    if !params.loras.is_empty() {
+        builder::push_prompt_with_loras(&mut args, &params.prompt, &params.loras);
+    } else {
+        builder::push_prompt(&mut args, &params.prompt, &params.lora, params.lora_weight);
+    }
+
+    if !params.negative_prompt.is_empty() {
+        args.push("-n".to_string());
+        args.push(params.negative_prompt.clone());
+    }
+
+    args.push("-W".to_string());
+    args.push(params.width.to_string());
+    args.push("-H".to_string());
+    args.push(params.height.to_string());
+    args.push("-s".to_string());
+    args.push(params.seed.to_string());
+    args.push("-b".to_string());
+    args.push(params.batch_count.to_string());
+
+    if !params.sampler.is_empty() {
+        args.push("--sampling-method".to_string());
+        args.push(params.sampler.clone());
+    }
+
+    if let Some(output) = &paths.output {
+        args.push("-o".to_string());
+        args.push(output.to_string_lossy().into_owned());
+    }
+
+    if let Some(steps) = params.steps {
+        args.push("--steps".to_string());
+        args.push(steps.to_string());
+    }
+
+    if let Some(cfg) = params.cfg_scale {
+        args.push("--cfg-scale".to_string());
+        args.push(cfg.to_string());
+    }
+
+    if let Some(guidance) = params.guidance {
+        args.push("--guidance".to_string());
+        args.push(guidance.to_string());
+    }
+
+    if !params.scheduler.is_empty() {
+        args.push("--scheduler".to_string());
+        args.push(params.scheduler.clone());
+    }
+
+    if params.max_vram != 0.0 {
+        args.push("--max-vram".to_string());
+        args.push(params.max_vram.to_string());
+    }
+
+    if params.threads != -1 {
+        args.push("-t".to_string());
+        args.push(params.threads.to_string());
+    }
+
+    if params.offload_to_cpu {
+        args.push("--offload-to-cpu".to_string());
+    }
+    builder::push_flash_attn(&mut args, params.fa, params.diffusion_fa);
+    if params.vae_tiling {
+        args.push("--vae-tiling".to_string());
+    }
+    if params.mmap {
+        args.push("--mmap".to_string());
+    }
+    if params.verbose {
+        args.push("-v".to_string());
+    }
+
+    for reference in &paths.refs {
+        args.push("-r".to_string());
+        args.push(reference.to_string_lossy().into_owned());
+    }
+
+    if let Some(input) = &paths.input {
+        args.push("-i".to_string());
+        args.push(input.to_string_lossy().into_owned());
+        if let Some(strength) = params.strength {
+            args.push("--strength".to_string());
+            args.push(strength.to_string());
+        }
+    }
+
+    if let Some(mask) = &paths.mask {
+        args.push("--mask".to_string());
+        args.push(mask.to_string_lossy().into_owned());
+    }
+
+    for arg in builder::split_custom_flags(&params.custom_flags) {
+        args.push(arg);
+    }
+
+    args
+}
+
+/// Windows/cmd quoting for the copied command line.
+fn quote_arg(arg: &str) -> String {
+    if arg.is_empty() {
+        return "\"\"".to_string();
+    }
+    let needs_quotes = arg
+        .chars()
+        .any(|c| c.is_whitespace() || "\"&|<>^()".contains(c));
+    if !needs_quotes {
+        return arg.to_string();
+    }
+
+    let mut quoted = String::with_capacity(arg.len() + 2);
+    quoted.push('"');
+    let mut backslashes = 0;
+    for c in arg.chars() {
+        match c {
+            '\\' => {
+                backslashes += 1;
+                quoted.push('\\');
+            }
+            '"' => {
+                quoted.push_str(&"\\".repeat(backslashes + 1));
+                quoted.push('"');
+                backslashes = 0;
+            }
+            _ => {
+                backslashes = 0;
+                quoted.push(c);
+            }
+        }
+    }
+    quoted.push_str(&"\\".repeat(backslashes));
+    quoted.push('"');
+    quoted
+}
+
+fn format_command_line(args: &[String]) -> String {
+    let mut line = String::from("sd-cli.exe");
+    for arg in args {
+        line.push(' ');
+        line.push_str(&quote_arg(arg));
+    }
+    line
+}
+
+/// Builds the command exactly like `run_inference` would, but without
+/// touching the filesystem. Original image paths are shown; the mask is a
+/// placeholder because the real one is a temp file created on run.
+#[tauri::command]
+pub fn preview_inference_command(params: InferenceParams) -> Result<String, String> {
+    validate_params(&params)?;
+    let has_mask = params.mask_image.as_ref().is_some_and(|m| !m.is_empty());
+    let edit_count = validate_edit_images(&params.edit_images)?;
+    let has_edit_image = edit_count > 0;
+    let has_input_image = params.input_image.as_ref().is_some_and(|m| !m.is_empty());
+    validate_image_params(has_edit_image, has_input_image, has_mask)?;
+
+    let output = if params.output_path.is_empty() {
+        None
+    } else {
+        let dir = resolve_output_dir(
+            Path::new(&params.output_path),
+            has_mask,
+            has_edit_image,
+            has_input_image,
+        );
+        Some(dir.join(format!("gen_{}.png", builder::now_secs())))
+    };
+
+    let refs: Vec<PathBuf> = params
+        .edit_images
+        .iter()
+        .filter(|p| !p.is_empty())
+        .cloned()
+        .map(PathBuf::from)
+        .collect();
+    let input = if has_input_image {
+        params.input_image.as_ref().map(PathBuf::from)
+    } else {
+        None
+    };
+    let mask = if has_mask {
+        Some(PathBuf::from("mask.png"))
+    } else {
+        None
+    };
+
+    let args = build_cli_args(
+        &params,
+        &CliPaths {
+            refs,
+            input,
+            mask,
+            output,
+        },
+    );
+    Ok(format_command_line(&args))
+}
+
 #[tauri::command]
 pub async fn run_inference(app: tauri::AppHandle, params: InferenceParams) -> Result<(), String> {
     let timestamp = builder::now_secs();
+
+    validate_params(&params)?;
 
     let has_mask = params.mask_image.as_ref().is_some_and(|m| !m.is_empty());
     let edit_count = validate_edit_images(&params.edit_images)?;
@@ -130,140 +389,53 @@ pub async fn run_inference(app: tauri::AppHandle, params: InferenceParams) -> Re
     let sd_bin =
         Path::new(&params.sd_path).join(format!("sd-cli.{}", std::env::consts::EXE_EXTENSION));
 
-    let mut cmd = Command::new(&sd_bin);
-
-    builder::push_backend_args(
-        &mut cmd,
-        params.force_cuda,
-        params.clip_on_cpu,
-        params.vae_on_cpu,
-    );
-
-    if !params.model.is_empty() {
-        let flag = if params.model_type == "diffusion" {
-            "--diffusion-model"
-        } else {
-            "-m"
-        };
-        cmd.arg(flag)
-            .arg(Path::new(&params.models_path).join(&params.model));
-    }
-
-    builder::push_model_arg(&mut cmd, "--llm", &params.llm_path, &params.llm);
-    builder::push_model_arg(&mut cmd, "--vae", &params.vae_path, &params.vae);
-    if !params.lora.is_empty() || !params.loras.is_empty() {
-        let lora_dir = Path::new(&params.lora_path);
-        if lora_dir.exists() {
-            cmd.arg("--lora-model-dir").arg(lora_dir);
-        }
-    }
-    builder::push_model_arg(&mut cmd, "--llm_vision", &params.llm_vision_path, &params.llm_vision);
-    builder::push_model_arg(&mut cmd, "--clip_l", &params.clip_l_path, &params.clip_l);
-    builder::push_model_arg(&mut cmd, "--clip_g", &params.clip_g_path, &params.clip_g);
-    builder::push_model_arg(&mut cmd, "--t5xxl", &params.t5xxl_path, &params.t5xxl);
-
-    if !params.loras.is_empty() {
-        builder::push_prompt_with_loras(&mut cmd, &params.prompt, &params.loras);
-    } else {
-        builder::push_prompt(&mut cmd, &params.prompt, &params.lora, params.lora_weight);
-    }
-    cmd.arg("-n")
-        .arg(&params.negative_prompt)
-        .arg("-W")
-        .arg(params.width.to_string())
-        .arg("-H")
-        .arg(params.height.to_string())
-        .arg("-s")
-        .arg(params.seed.to_string())
-        .arg("-b")
-        .arg(params.batch_count.to_string())
-        .arg("--sampling-method")
-        .arg(&params.sampler)
-        .arg("-o")
-        .arg(&output_file);
-
-    if let Some(steps) = params.steps {
-        cmd.arg("--steps").arg(steps.to_string());
-    }
-
-    if let Some(cfg) = params.cfg_scale {
-        cmd.arg("--cfg-scale").arg(cfg.to_string());
-    }
-
-    if let Some(guid) = params.guidance {
-        cmd.arg("--guidance").arg(guid.to_string());
-    }
-
-    if !params.scheduler.is_empty() {
-        cmd.arg("--scheduler").arg(&params.scheduler);
-    }
-
-    if params.max_vram != 0.0 {
-        cmd.arg("--max-vram").arg(params.max_vram.to_string());
-    }
-
-    if params.threads != -1 {
-        cmd.arg("-t").arg(params.threads.to_string());
-    }
-
-    if params.offload_to_cpu {
-        cmd.arg("--offload-to-cpu");
-    }
-    builder::push_flash_attn(&mut cmd, params.fa, params.diffusion_fa);
-    if params.vae_tiling {
-        cmd.arg("--vae-tiling");
-    }
-    if params.mmap {
-        cmd.arg("--mmap");
-    }
-    if params.verbose {
-        cmd.arg("-v");
-    }
-
-    if !params.custom_flags.is_empty() {
-        for line in params.custom_flags.lines() {
-            let trimmed = line.trim();
-            if !trimmed.is_empty() {
-                for arg in trimmed.split_whitespace() {
-                    cmd.arg(arg);
-                }
-            }
-        }
-    }
-
     let mut temps = TempFiles::new();
 
+    let mut refs = Vec::new();
     for (index, edit_image) in params.edit_images.iter().enumerate() {
         if edit_image.is_empty() {
             continue;
         }
         let temp_path = output_dir.join(format!("temp_ref_{}_{}.png", timestamp, index + 1));
         save_normalized(edit_image, &temp_path)?;
-        cmd.arg("-r").arg(&temp_path);
+        refs.push(temp_path.clone());
         temps.refs.push(temp_path);
     }
 
-    if let Some(ref input_image) = params.input_image {
+    let input = if has_input_image {
+        let source = params.input_image.as_deref().unwrap_or_default();
         let temp_path = output_dir.join(format!("temp_input_{}.png", timestamp));
-        save_normalized(input_image, &temp_path)?;
-        cmd.arg("-i").arg(&temp_path);
-        temps.input = Some(temp_path);
-    }
-    if has_input_image {
-        if let Some(strength) = params.strength {
-            cmd.arg("--strength").arg(strength.to_string());
-        }
-    }
+        save_normalized(source, &temp_path)?;
+        temps.input = Some(temp_path.clone());
+        Some(temp_path)
+    } else {
+        None
+    };
 
-    if has_mask {
-        let mask_bytes = decode_data_url(params.mask_image.as_ref().unwrap())?;
+    let mask = if has_mask {
+        let mask_bytes = decode_data_url(params.mask_image.as_deref().unwrap_or_default())?;
         let mask_img = image::load_from_memory(&mask_bytes)
             .map_err(|e| format!("No se pudo leer la máscara: {}", e))?;
         let mask_path = output_dir.join(format!("temp_mask_{}.png", timestamp));
         mask_img.save(&mask_path).map_err(|e| e.to_string())?;
-        cmd.arg("--mask").arg(&mask_path);
-        temps.mask = Some(mask_path);
-    }
+        temps.mask = Some(mask_path.clone());
+        Some(mask_path)
+    } else {
+        None
+    };
+
+    let args = build_cli_args(
+        &params,
+        &CliPaths {
+            refs,
+            input,
+            mask,
+            output: Some(PathBuf::from(&output_file)),
+        },
+    );
+
+    let mut cmd = Command::new(&sd_bin);
+    cmd.args(&args);
 
     let (status, was_running) = manager::spawn_sd_process(cmd, &app).map_err(|e| e.to_string())?;
 
@@ -311,7 +483,183 @@ pub async fn abort_inference(app: tauri::AppHandle) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::path::Path;
+    use std::path::{Path, PathBuf};
+
+    fn test_params() -> InferenceParams {
+        InferenceParams {
+            sd_path: "C:\\sd".to_string(),
+            output_path: "C:\\out".to_string(),
+            models_path: "C:\\models".to_string(),
+            vae_path: String::new(),
+            llm_path: String::new(),
+            lora_path: String::new(),
+            llm_vision_path: String::new(),
+            clip_l_path: String::new(),
+            clip_g_path: String::new(),
+            t5xxl_path: String::new(),
+            model: String::new(),
+            model_type: "monolithic".to_string(),
+            llm: String::new(),
+            vae: String::new(),
+            lora: String::new(),
+            lora_weight: 1.0,
+            loras: Vec::new(),
+            llm_vision: String::new(),
+            clip_l: String::new(),
+            clip_g: String::new(),
+            t5xxl: String::new(),
+            prompt: "a cat".to_string(),
+            negative_prompt: String::new(),
+            width: 512,
+            height: 512,
+            steps: None,
+            cfg_scale: None,
+            guidance: None,
+            seed: -1,
+            batch_count: 1,
+            max_vram: -1.0,
+            threads: -1,
+            sampler: "euler".to_string(),
+            scheduler: String::new(),
+            vae_on_cpu: false,
+            clip_on_cpu: false,
+            offload_to_cpu: false,
+            fa: false,
+            diffusion_fa: false,
+            vae_tiling: false,
+            mmap: false,
+            verbose: false,
+            force_cuda: false,
+            custom_flags: String::new(),
+            edit_images: Vec::new(),
+            input_image: None,
+            strength: None,
+            mask_image: None,
+        }
+    }
+
+    fn empty_paths() -> CliPaths {
+        CliPaths {
+            refs: Vec::new(),
+            input: None,
+            mask: None,
+            output: None,
+        }
+    }
+
+    #[test]
+    fn empty_optional_fields_are_omitted() {
+        let mut params = test_params();
+        params.prompt = String::new();
+        params.negative_prompt = String::new();
+        params.sampler = String::new();
+        params.scheduler = String::new();
+        params.max_vram = 0.0;
+
+        let args = build_cli_args(&params, &empty_paths());
+        assert!(!args.iter().any(|a| a == "-p"), "empty prompt must be omitted");
+        assert!(!args.iter().any(|a| a == "-n"), "empty negative prompt must be omitted");
+        assert!(!args.iter().any(|a| a == "--sampling-method"));
+        assert!(!args.iter().any(|a| a == "--scheduler"));
+        assert!(!args.iter().any(|a| a == "--max-vram"));
+        assert!(!args.iter().any(|a| a == "--guidance"));
+    }
+
+    #[test]
+    fn negative_prompt_is_emitted_when_present() {
+        let mut params = test_params();
+        params.negative_prompt = "bad".to_string();
+        let args = build_cli_args(&params, &empty_paths());
+        let idx = args.iter().position(|a| a == "-n").expect("-n missing");
+        assert_eq!(args[idx + 1], "bad");
+    }
+
+    #[test]
+    fn sampler_is_emitted_when_present() {
+        let params = test_params();
+        let args = build_cli_args(&params, &empty_paths());
+        let idx = args
+            .iter()
+            .position(|a| a == "--sampling-method")
+            .expect("--sampling-method missing");
+        assert_eq!(args[idx + 1], "euler");
+    }
+
+    #[test]
+    fn guidance_is_emitted_when_present() {
+        let mut params = test_params();
+        params.guidance = Some(3.5);
+        let args = build_cli_args(&params, &empty_paths());
+        let idx = args.iter().position(|a| a == "--guidance").expect("--guidance missing");
+        assert_eq!(args[idx + 1], "3.5");
+    }
+
+    #[test]
+    fn reference_images_keep_order() {
+        let mut params = test_params();
+        params.edit_images = vec!["a.png".into(), "b.png".into()];
+        let paths = CliPaths {
+            refs: vec![PathBuf::from("a.png"), PathBuf::from("b.png")],
+            ..empty_paths()
+        };
+        let args = build_cli_args(&params, &paths);
+        let refs: Vec<String> = args
+            .windows(2)
+            .filter(|w| w[0] == "-r")
+            .map(|w| w[1].clone())
+            .collect();
+        assert_eq!(refs, vec!["a.png".to_string(), "b.png".to_string()]);
+    }
+
+    #[test]
+    fn quote_arg_plain() {
+        assert_eq!(quote_arg("euler"), "euler");
+        assert_eq!(quote_arg("C:\\models\\flux.gguf"), "C:\\models\\flux.gguf");
+    }
+
+    #[test]
+    fn quote_arg_spaces_and_quotes() {
+        assert_eq!(quote_arg("C:\\my models\\flux.gguf"), "\"C:\\my models\\flux.gguf\"");
+        assert_eq!(quote_arg("a \"cat\""), "\"a \\\"cat\\\"\"");
+    }
+
+    #[test]
+    fn quote_arg_trailing_backslash() {
+        assert_eq!(quote_arg("C:\\my dir\\"), "\"C:\\my dir\\\\\"");
+    }
+
+    #[test]
+    fn preview_command_starts_with_binary_and_keeps_images() {
+        let mut params = test_params();
+        params.edit_images = vec!["C:\\a.png".into()];
+        let line = format_command_line(&build_cli_args(
+            &params,
+            &CliPaths {
+                refs: vec![PathBuf::from("C:\\a.png")],
+                ..empty_paths()
+            },
+        ));
+        assert!(line.starts_with("sd-cli.exe "));
+        assert!(line.contains(" -r C:\\a.png"));
+    }
+
+    #[test]
+    fn validate_params_requires_sampler() {
+        let mut params = test_params();
+        params.sampler = "   ".to_string();
+        assert!(validate_params(&params).is_err());
+        params.sampler = "euler".to_string();
+        assert!(validate_params(&params).is_ok());
+    }
+
+    #[test]
+    fn custom_flags_keep_quoted_values() {
+        let mut params = test_params();
+        params.custom_flags = "--foo \"a b\" --bar".to_string();
+        let args = build_cli_args(&params, &empty_paths());
+        assert!(args.windows(2).any(|w| w[0] == "--foo" && w[1] == "a b"));
+        assert!(args.iter().any(|a| a == "--bar"));
+    }
 
     #[test]
     fn resolve_output_dir_exact() {

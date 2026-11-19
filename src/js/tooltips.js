@@ -9,7 +9,7 @@ export const tooltips = {
   'Guidance': 'Parámetro de guía para modelos Flux/Qwen. Controla la adherencia al prompt. Típico: 3.5.',
   'Seed': 'Semilla del generador aleatorio. -1 = aleatorio cada vez. Fijar un valor permite replicar resultados exactos.',
   'Lote': 'Número de imágenes a generar en secuencia. Cada imagen usa una semilla diferente si seed es -1.',
-  'VRAM máx.': 'Máxima memoria VRAM a usar en GB. Negativo = auto-detectar. Útil si tienes otras aplicaciones usando la GPU.',
+  'VRAM máx.': 'Presupuesto de VRAM en GB. 0 = usa la VRAM libre sin límite explícito. Un valor negativo deja esa cantidad de VRAM libre (p. ej. -1 reserva 1 GB libre).',
   'Peso LoRA': 'Peso del adaptador LoRA. Rango: 0 a 2. Valores altos = más influencia del LoRA sobre el prompt.',
   'CLIP-L': 'Encoder de texto CLIP-L. Modelos SDXL/Flux suelen usar este encoder para comprender el prompt.',
   'CLIP-G': 'Encoder de texto CLIP-G. Variante mejorada de CLIP-L usada por algunos modelos SDXL.',

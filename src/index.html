@@ -790,7 +790,7 @@
                       aria-hidden="true"
                     ></i
                   ></label>
-                  <input id="input-steps" type="number" value="15" />
+                  <input id="input-steps" type="number" value="15" min="1" />
                 </div>
                 <div class="input-group">
                   <label for="input-cfg" class="input-label"
@@ -801,7 +801,7 @@
                       aria-hidden="true"
                     ></i
                   ></label>
-                  <input id="input-cfg" step="0.5" type="number" value="1" />
+                  <input id="input-cfg" step="0.5" type="number" value="1" min="0" />
                 </div>
                 <div class="input-group">
                   <label for="input-guidance" class="input-label"
@@ -817,6 +817,7 @@
                     step="0.1"
                     type="number"
                     value="1"
+                    min="0"
                   />
                 </div>
                 <div class="input-group">
@@ -860,7 +861,7 @@
                     id="input-max-vram"
                     step="0.1"
                     type="number"
-                    value="-1"
+                    value="0"
                   />
                 </div>
                 <div class="input-group">

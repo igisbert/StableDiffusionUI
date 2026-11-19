@@ -36,6 +36,12 @@ const FIELDS = [
   { id: 'input-inpaint-strength', type: 'text'   },
 ]
 
+const SAMPLER_ALIASES = {
+  dpmpp2s_a: 'dpm++2s_a',
+  dpmpp2m: 'dpm++2m',
+  dpmpp2mv2: 'dpm++2mv2',
+}
+
 function captureForm() {
   const values = {}
   for (const field of FIELDS) {
@@ -62,7 +68,10 @@ function applyForm(values) {
     if (field.type === 'toggle') {
       el.checked = values[field.id]
     } else {
-      el.value = values[field.id]
+      const value = field.id === 'select-sampler'
+        ? (SAMPLER_ALIASES[values[field.id]] || values[field.id])
+        : values[field.id]
+      el.value = value
     }
   }
   if (values['loras'] && Array.isArray(values['loras'])) {

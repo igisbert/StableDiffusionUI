@@ -11,22 +11,26 @@ async function getStore() {
 
 const SAMPLERS = [
   { value: 'euler',           label: 'Euler' },
-  { value: 'euler_cfg_pp',    label: 'Euler CFG++' },
   { value: 'euler_a',         label: 'Euler Ancestral' },
+  { value: 'euler_cfg_pp',    label: 'Euler CFG++' },
   { value: 'euler_a_cfg_pp',  label: 'Euler Ancestral CFG++' },
+  { value: 'euler_ge',        label: 'Euler GE' },
   { value: 'heun',            label: 'Heun' },
   { value: 'dpm2',            label: 'DPM Solver 2' },
-  { value: 'dpmpp2s_a',       label: 'DPM++ 2S Ancestral' },
-  { value: 'dpmpp2m',         label: 'DPM++ 2M' },
-  { value: 'dpmpp2mv2',       label: 'DPM++ 2M v2' },
-  { value: 'er_sde',          label: 'Extended Reverse SDE' },
+  { value: 'dpm++2s_a',       label: 'DPM++ 2S Ancestral' },
+  { value: 'dpm++2m',         label: 'DPM++ 2M' },
+  { value: 'dpm++2mv2',       label: 'DPM++ 2M v2' },
+  { value: 'dpm++2m_sde',     label: 'DPM++ 2M SDE' },
+  { value: 'dpm++2m_sde_bt',  label: 'DPM++ 2M SDE BT' },
   { value: 'ipndm',           label: 'Improved PNDM' },
   { value: 'ipndm_v',         label: 'Improved PNDM var' },
   { value: 'lcm',             label: 'Latent Consistency' },
+  { value: 'lms',             label: 'LMS' },
   { value: 'ddim_trailing',   label: 'DDIM Trailing' },
   { value: 'tcd',             label: 'Trajectory Consistency' },
   { value: 'res_2s',          label: 'RES 2S' },
   { value: 'res_multistep',   label: 'RES Multipaso' },
+  { value: 'er_sde',          label: 'Extended Reverse SDE' },
 ]
 
 const SCHEDULERS = [

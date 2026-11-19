@@ -18,6 +18,7 @@ pub fn run() {
             commands::fs::ensure_output_dir,
             commands::fs::open_folder,
             commands::inference::run_inference,
+            commands::inference::preview_inference_command,
             commands::inference::abort_inference,
             commands::upscale::run_upscale,
             commands::prepare::prepare_inpaint_image,
