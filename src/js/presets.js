@@ -2,6 +2,7 @@ import { Store } from '@tauri-apps/plugin-store'
 import { getLoras, setLoras } from './features/lora-multiselect.js'
 
 let store
+let defaults = {}
 
 const FIELDS = [
   { id: 'select-model',           type: 'select' },
@@ -43,7 +44,11 @@ const SAMPLER_ALIASES = {
   dpmpp2mv2: 'dpm++2mv2',
 }
 
-function captureForm() {
+function toBool(value) {
+  return value === true || value === 'true'
+}
+
+export function captureForm() {
   const values = {}
   for (const field of FIELDS) {
     const el = document.getElementById(field.id)
@@ -62,42 +67,100 @@ function captureForm() {
   return values
 }
 
-function applyForm(values) {
+function resolveSelectValue(id, value, base) {
+  const raw = value == null ? '' : String(value)
+  const resolved = id === 'select-sampler' ? (SAMPLER_ALIASES[raw] || raw) : raw
+  const el = document.getElementById(id)
+  if (!el) return resolved
+
+  const exists = Array.from(el.options).some(option => option.value === resolved)
+  if (exists) return resolved
+
+  const fallback = base?.[id] ?? ''
+  if (resolved !== '') {
+    console.warn(`[presets] ${id}: "${resolved}" ya no está disponible; se usa "${fallback}".`)
+  }
+  return fallback
+}
+
+function resolveLoras(values) {
+  if (Array.isArray(values['loras'])) return values['loras']
+  if (values['select-lora']) {
+    return [{
+      file: values['select-lora'],
+      weight: parseFloat(values['input-lora-weight']) || 1,
+    }]
+  }
+  return []
+}
+
+function applyModelType(value, base) {
+  const radios = document.querySelectorAll('input[name="model-type"]')
+  const find = (val) => Array.from(radios).find(radio => radio.value === val)
+
+  let target = find(value)
+  if (!target) {
+    if (value) console.warn(`[presets] model-type: "${value}" no es válido; se usa el valor por defecto.`)
+    target = find(base?.['model-type'] || 'monolithic')
+  }
+  if (target) target.checked = true
+}
+
+function openImageInput() {
+  const btnToggle = document.getElementById('btn-toggle-image-input')
+  const content = document.getElementById('image-input-content')
+  if (btnToggle && content) {
+    btnToggle.classList.add('open')
+    content.classList.add('open')
+  }
+}
+
+function applyImageOp(value) {
+  const op = typeof value === 'string' ? value : ''
+  const radios = Array.from(document.querySelectorAll('input[name="image-op"]'))
+  const target = radios.find(radio => radio.value === op)
+
+  if (target) {
+    target.checked = true
+    target.dispatchEvent(new Event('change'))
+    openImageInput()
+    return
+  }
+
+  // No operation saved: reuse the "cancel" branch to uncheck and hide panels.
+  const cancel = radios.find(radio => radio.value === 'cancel')
+  if (cancel) {
+    cancel.checked = true
+    cancel.dispatchEvent(new Event('change'))
+    cancel.checked = false
+  } else {
+    for (const radio of radios) radio.checked = false
+  }
+}
+
+export function applyForm(values, base = defaults) {
+  const merged = { ...base, ...values }
+
   for (const field of FIELDS) {
     const el = document.getElementById(field.id)
-    if (!el || values[field.id] === undefined) continue
+    if (!el) continue
+
+    const value = merged[field.id]
     if (field.type === 'toggle') {
-      el.checked = values[field.id]
+      el.checked = toBool(value)
+    } else if (field.type === 'select') {
+      el.value = resolveSelectValue(field.id, value, base)
     } else {
-      const value = field.id === 'select-sampler'
-        ? (SAMPLER_ALIASES[values[field.id]] || values[field.id])
-        : values[field.id]
-      el.value = value
+      el.value = value == null ? (base?.[field.id] ?? '') : value
     }
   }
-  if (values['loras'] && Array.isArray(values['loras'])) {
-    setLoras(values['loras'])
-  } else if (values['select-lora']) {
-    setLoras([{ file: values['select-lora'], weight: parseFloat(values['input-lora-weight']) || 1 }])
-  }
-  if (values['model-type']) {
-    const radio = document.querySelector(`input[name="model-type"][value="${values['model-type']}"]`)
-    if (radio) radio.checked = true
-  }
-  if (values['image-op']) {
-    const radio = document.querySelector(`input[name="image-op"][value="${values['image-op']}"]`)
-    if (radio) {
-      radio.checked = true
-      radio.dispatchEvent(new Event('change'))
-    }
-    const btnToggle = document.getElementById('btn-toggle-image-input')
-    const content = document.getElementById('image-input-content')
-    if (btnToggle && content) {
-      btnToggle.classList.add('open')
-      content.classList.add('open')
-    }
-  }
+
+  setLoras(resolveLoras(values))
+  applyModelType(merged['model-type'], base)
+  applyImageOp(merged['image-op'])
+
   document.getElementById('select-model')?.dispatchEvent(new Event('change'))
+
   const faEl = document.getElementById('toggle-fa')
   const diffFaEl = document.getElementById('toggle-diffusion-fa')
   if (faEl && diffFaEl) diffFaEl.disabled = faEl.checked
@@ -117,6 +180,7 @@ async function loadPresetList() {
 
 export async function initPresets() {
   store = await Store.load('presets.json')
+  defaults = captureForm()
   await loadPresetList()
 
   document.getElementById('btn-save-preset').addEventListener('click', async () => {
