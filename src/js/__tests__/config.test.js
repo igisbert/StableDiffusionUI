@@ -33,6 +33,7 @@ describe('config', () => {
       <select id="select-clip-l"></select>
       <select id="select-clip-g"></select>
       <select id="select-t5xxl"></select>
+      <select id="select-tokenizer"></select>
       <div id="radio-upscale-models"></div>
       <span id="path-llm-vision-text"></span>
     `
@@ -73,9 +74,10 @@ describe('config', () => {
     mockStore.get.mockImplementation((key) => Promise.resolve(`C:\\${key}`))
     mockInvoke.mockResolvedValue({ models: [] })
     await refreshAllSelects()
-    expect(mockInvoke).toHaveBeenCalledTimes(9)
+    expect(mockInvoke).toHaveBeenCalledTimes(10)
     expect(mockInvoke).toHaveBeenCalledWith('scan_models', { basePath: 'C:\\models_path' })
     expect(mockInvoke).toHaveBeenCalledWith('scan_models', { basePath: 'C:\\llm_vision_path' })
+    expect(mockInvoke).toHaveBeenCalledWith('scan_models', { basePath: 'C:\\tokenizer_path' })
   })
 
   it('does not scan when path missing', async () => {

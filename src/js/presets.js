@@ -11,6 +11,7 @@ const FIELDS = [
   { id: 'select-clip-l',          type: 'select' },
   { id: 'select-clip-g',          type: 'select' },
   { id: 'select-t5xxl',           type: 'select' },
+  { id: 'select-tokenizer',       type: 'select' },
   { id: 'input-width',            type: 'text'   },
   { id: 'input-height',           type: 'text'   },
   { id: 'input-steps',            type: 'text'   },

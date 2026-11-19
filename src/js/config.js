@@ -59,6 +59,7 @@ const PATH_KEYS = [
   { key: 'clip_l_path', action: 'pick-clip-l', display: 'path-clip-l-text' },
   { key: 'clip_g_path', action: 'pick-clip-g', display: 'path-clip-g-text' },
   { key: 't5xxl_path',  action: 'pick-t5xxl',  display: 'path-t5xxl-text' },
+  { key: 'tokenizer_path', action: 'pick-tokenizer', display: 'path-tokenizer-text' },
   { key: 'upscalers_path', action: 'pick-upscalers', display: 'path-upscalers-text' },
 ]
 
@@ -71,6 +72,7 @@ const MODEL_SCANS = [
   { storeKey: 'clip_l_path', target: 'select-clip-l', withNone: true },
   { storeKey: 'clip_g_path', target: 'select-clip-g', withNone: true },
   { storeKey: 't5xxl_path', target: 'select-t5xxl', withNone: true },
+  { storeKey: 'tokenizer_path', target: 'select-tokenizer', withNone: true, listKey: 'tokenizers' },
   { storeKey: 'upscalers_path', target: 'radio-upscale-models', isRadio: true },
 ]
 
@@ -83,7 +85,8 @@ async function scanGeneric(entry, basePath) {
     } else if (entry.isRadio) {
       populateRadios(entry.target, result.models)
     } else {
-      populateSelect(entry.target, result.models, entry.withNone)
+      const items = result[entry.listKey ?? 'models'] ?? []
+      populateSelect(entry.target, items, entry.withNone)
     }
   } catch (e) {
     console.warn(`scan failed for ${entry.storeKey}:`, e)
@@ -110,7 +113,7 @@ export async function initConfig() {
     document.querySelector(`[data-action="${action}"]`)?.addEventListener('click', async () => {
       const path = await invoke('pick_folder')
       if (!path) return
-      if (key === 'output_path' || key === 'models_path' || key === 'vae_path' || key === 'llm_path' || key === 'lora_path' || key === 'llm_vision_path' || key === 'clip_l_path' || key === 'clip_g_path' || key === 't5xxl_path' || key === 'upscalers_path') {
+      if (key === 'output_path' || key === 'models_path' || key === 'vae_path' || key === 'llm_path' || key === 'lora_path' || key === 'llm_vision_path' || key === 'clip_l_path' || key === 'clip_g_path' || key === 't5xxl_path' || key === 'tokenizer_path' || key === 'upscalers_path') {
         await invoke('ensure_output_dir', { path })
       }
       await store.set(key, path)
@@ -174,6 +177,7 @@ export async function getLlmVisionPath() { return (await (await getStore()).get(
 export async function getClipLPath() { return (await (await getStore()).get('clip_l_path')) || '' }
 export async function getClipGPath() { return (await (await getStore()).get('clip_g_path')) || '' }
 export async function getT5xxlPath() { return (await (await getStore()).get('t5xxl_path')) || '' }
+export async function getTokenizerPath() { return (await (await getStore()).get('tokenizer_path')) || '' }
 export async function getUpscannersPath() { return (await (await getStore()).get('upscalers_path')) || '' }
 
 export async function getPathsPanelOpen() {

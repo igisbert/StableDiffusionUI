@@ -20,6 +20,8 @@ pub struct InferenceParams {
     pub clip_l_path: String,
     pub clip_g_path: String,
     pub t5xxl_path: String,
+    #[serde(default)]
+    pub tokenizer_path: String,
     pub model: String,
     pub model_type: String,
     pub llm: String,
@@ -34,6 +36,8 @@ pub struct InferenceParams {
     pub clip_l: String,
     pub clip_g: String,
     pub t5xxl: String,
+    #[serde(default)]
+    pub tokenizer: String,
     pub prompt: String,
     pub negative_prompt: String,
     pub width: u32,
@@ -162,6 +166,7 @@ fn build_cli_args(params: &InferenceParams, paths: &CliPaths) -> Vec<String> {
     builder::push_model_arg(&mut args, "--clip_l", &params.clip_l_path, &params.clip_l);
     builder::push_model_arg(&mut args, "--clip_g", &params.clip_g_path, &params.clip_g);
     builder::push_model_arg(&mut args, "--t5xxl", &params.t5xxl_path, &params.t5xxl);
+    builder::push_model_arg(&mut args, "--tokenizer", &params.tokenizer_path, &params.tokenizer);
 
     if !params.loras.is_empty() {
         builder::push_prompt_with_loras(&mut args, &params.prompt, &params.loras);
@@ -497,6 +502,7 @@ mod tests {
             clip_l_path: String::new(),
             clip_g_path: String::new(),
             t5xxl_path: String::new(),
+            tokenizer_path: String::new(),
             model: String::new(),
             model_type: "monolithic".to_string(),
             llm: String::new(),
@@ -508,6 +514,7 @@ mod tests {
             clip_l: String::new(),
             clip_g: String::new(),
             t5xxl: String::new(),
+            tokenizer: String::new(),
             prompt: "a cat".to_string(),
             negative_prompt: String::new(),
             width: 512,
@@ -563,6 +570,7 @@ mod tests {
         assert!(!args.iter().any(|a| a == "--scheduler"));
         assert!(!args.iter().any(|a| a == "--max-vram"));
         assert!(!args.iter().any(|a| a == "--guidance"));
+        assert!(!args.iter().any(|a| a == "--tokenizer"));
     }
 
     #[test]
@@ -641,6 +649,24 @@ mod tests {
         ));
         assert!(line.starts_with("sd-cli.exe "));
         assert!(line.contains(" -r C:\\a.png"));
+    }
+
+    #[test]
+    fn tokenizer_is_emitted_when_present() {
+        let dir = std::env::temp_dir();
+        let file = format!("tokenizer_{}.json", std::process::id());
+        let path = dir.join(&file);
+        std::fs::write(&path, b"{}").unwrap();
+
+        let mut params = test_params();
+        params.tokenizer_path = dir.to_string_lossy().into_owned();
+        params.tokenizer = file.clone();
+
+        let args = build_cli_args(&params, &empty_paths());
+        let idx = args.iter().position(|a| a == "--tokenizer").expect("--tokenizer missing");
+        assert!(args[idx + 1].ends_with(&file));
+
+        let _ = std::fs::remove_file(&path);
     }
 
     #[test]

@@ -9,6 +9,7 @@ pub struct ModelFiles {
     pub vaes: Vec<String>,
     pub loras: Vec<String>,
     pub text_encoders: Vec<String>,
+    pub tokenizers: Vec<String>,
 }
 
 #[tauri::command]
@@ -48,19 +49,23 @@ pub async fn pick_images(app: tauri::AppHandle) -> Result<Vec<String>, String> {
         .collect())
 }
 
+const MODEL_EXTS: &[&str] = &["safetensors", "ckpt", "bin", "gguf"];
+const TOKENIZER_EXTS: &[&str] = &["json"];
+
 #[tauri::command]
 pub fn scan_models(base_path: String) -> Result<ModelFiles, String> {
-    let files = scan_dir(Path::new(&base_path));
+    let dir = Path::new(&base_path);
+    let files = scan_dir(dir, MODEL_EXTS);
     Ok(ModelFiles {
         models: files.clone(),
         vaes: files.clone(),
         loras: files.clone(),
         text_encoders: files,
+        tokenizers: scan_dir(dir, TOKENIZER_EXTS),
     })
 }
 
-fn scan_dir(dir: &Path) -> Vec<String> {
-    let exts = ["safetensors", "ckpt", "bin", "gguf"];
+fn scan_dir(dir: &Path, exts: &[&str]) -> Vec<String> {
     let Ok(entries) = fs::read_dir(dir) else {
         return vec![];
     };
@@ -144,6 +149,23 @@ mod tests {
         assert_eq!(res.models, res.vaes);
         assert_eq!(res.vaes, res.loras);
         assert_eq!(res.loras, res.text_encoders);
+        assert!(res.tokenizers.is_empty());
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn scan_tokenizers_json() {
+        let dir = tmp_dir("tokenizers");
+        let _ = fs::remove_dir_all(&dir);
+        fs::create_dir_all(&dir).unwrap();
+        fs::write(dir.join("tokenizer.json"), b"{}").unwrap();
+        fs::write(dir.join("moss.json"), b"{}").unwrap();
+        fs::write(dir.join("model.gguf"), b"x").unwrap();
+        let res = scan_models(dir.to_string_lossy().to_string()).unwrap();
+        assert_eq!(res.tokenizers.len(), 2);
+        assert!(res.tokenizers.iter().any(|f| f == "tokenizer.json"));
+        assert!(res.tokenizers.iter().any(|f| f == "moss.json"));
+        assert_eq!(res.models.len(), 1);
         let _ = fs::remove_dir_all(&dir);
     }
 }

@@ -14,6 +14,7 @@ export const tooltips = {
   'CLIP-L': 'Encoder de texto CLIP-L. Modelos SDXL/Flux suelen usar este encoder para comprender el prompt.',
   'CLIP-G': 'Encoder de texto CLIP-G. Variante mejorada de CLIP-L usada por algunos modelos SDXL.',
   'T5XXL': 'Encoder de texto T5XXL. Usado por Flux y otros modelos avanzados para mejor comprensión del lenguaje.',
+  'Tokenizer': 'Fichero tokenizer.json requerido por algunos modelos (PiD, Lens). Si no lo necesitas, déjalo en Ninguno. El nombre del fichero es indiferente.',
   'Sampler': 'Algoritmo de muestreo. DPM++ 2M es buena calidad/velocidad. Euler a es más rápido pero menos detallado.',
   'Scheduler': 'Curva de ruido aplicada durante el denoising. Karras mejora calidad. Normal es el valor por defecto.',
   'VAE en CPU': 'Carga el VAE en CPU en vez de GPU (--backend vae=cpu). Útil si el VAE es muy grande para la VRAM disponible.',

@@ -20,6 +20,7 @@ vi.mock('../config.js', async () => {
     getClipLPath: vi.fn(() => Promise.resolve('C:\\clip_l')),
     getClipGPath: vi.fn(() => Promise.resolve('C:\\clip_g')),
     getT5xxlPath: vi.fn(() => Promise.resolve('C:\\t5xxl')),
+    getTokenizerPath: vi.fn(() => Promise.resolve('C:\\tokenizers')),
   }
 })
 
@@ -50,6 +51,7 @@ function setupDom() {
     <select id="select-clip-l"><option value=""></option></select>
     <select id="select-clip-g"><option value=""></option></select>
     <select id="select-t5xxl"><option value=""></option></select>
+    <select id="select-tokenizer"><option value="">Ninguno</option><option value="moss.json" selected>moss.json</option></select>
     <select id="select-sampler"><option value="euler" selected>euler</option></select>
     <select id="select-scheduler"><option value="karras" selected>karras</option></select>
     <input id="input-prompt" value="a cat" />
@@ -148,6 +150,12 @@ describe('collectParams', () => {
     expect(p.steps).toBeNull()
     expect(p.cfg_scale).toBeNull()
     expect(p.guidance).toBeNull()
+  })
+
+  it('includes the selected tokenizer', async () => {
+    const p = await collectParams()
+    expect(p.tokenizer_path).toBe('C:\\tokenizers')
+    expect(p.tokenizer).toBe('moss.json')
   })
 })
 

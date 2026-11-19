@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
-import { getSdPath, getOutputPath, getModelsPath, getVaePath, getLlmPath, getLoraPath, getLlmVisionPath, getClipLPath, getClipGPath, getT5xxlPath } from './config.js'
+import { getSdPath, getOutputPath, getModelsPath, getVaePath, getLlmPath, getLoraPath, getLlmVisionPath, getClipLPath, getClipGPath, getT5xxlPath, getTokenizerPath } from './config.js'
 import { appendLine } from './console.js'
 import { exportMask, isMaskPainted, getPreparedImagePath } from './inpaint.js'
 import { startProcess, endProcess, isBusy } from './busy.js'
@@ -46,6 +46,7 @@ export async function collectParams() {
   const clipLPath = await getClipLPath()
   const clipGPath = await getClipGPath()
   const t5xxlPath = await getT5xxlPath()
+  const tokenizerPath = await getTokenizerPath()
 
   const val = (id) => document.getElementById(id)?.value ?? ''
   const checked = (id) => document.getElementById(id)?.checked ?? false
@@ -78,6 +79,7 @@ export async function collectParams() {
     clip_l_path: clipLPath,
     clip_g_path: clipGPath,
     t5xxl_path: t5xxlPath,
+    tokenizer_path: tokenizerPath,
     model: val('select-model'),
     model_type: modelType,
     llm: val('select-llm'),
@@ -88,6 +90,7 @@ export async function collectParams() {
     clip_l: val('select-clip-l'),
     clip_g: val('select-clip-g'),
     t5xxl: val('select-t5xxl'),
+    tokenizer: val('select-tokenizer'),
     prompt: val('input-prompt'),
     lora_weight: loras[0]?.weight ?? 1,
     negative_prompt: val('input-negative'),
